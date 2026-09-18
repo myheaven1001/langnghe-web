@@ -9,6 +9,59 @@ function isRole(v: FormDataEntryValue | null): v is Role {
   return v === 'buyer' || v === 'supplier';
 }
 
+// HTML5-spec email pattern (ASCII-only local part + domain). <input
+// type="email"> already runs something close to this on native form
+// submission, but that check doesn't apply here: Server Actions read
+// FormData directly, and a Vietnamese IME (Unikey/Telex) left on while
+// typing an email can silently insert a stray Unicode character (most
+// often "•" in place of "."). Left unvalidated, that character can reach
+// the Supabase request and fail with a low-level, English runtime error
+// instead of a clear message — reject it here first.
+const EMAIL_RE =
+  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
+function isValidEmail(email: string): boolean {
+  return EMAIL_RE.test(email);
+}
+
+const INVALID_EMAIL_MESSAGE =
+  'Email không đúng định dạng. Nếu bạn vừa gõ tiếng Việt, hãy tắt bộ gõ (Unikey/Telex) rồi nhập lại email.';
+
+// Supabase/GoTrue trả error.message bằng tiếng Anh — dịch các trường hợp
+// hay gặp sang tiếng Việt cho người dùng cuối. Message lạ (không khớp rule
+// nào) thì giữ nguyên bản gốc thay vì đoán sai — còn hơn là dịch nhầm.
+function translateAuthError(message: string): string {
+  const rules: [RegExp, string][] = [
+    [/signups not allowed for otp/i, 'Email này chưa có tài khoản. Vui lòng đăng ký trước.'],
+    [/user already registered/i, 'Email này đã có tài khoản. Vui lòng đăng nhập.'],
+    [/email rate limit exceeded/i, 'Bạn yêu cầu mã quá nhiều lần. Vui lòng thử lại sau vài phút.'],
+    [/for security purposes.*after/i, 'Vui lòng đợi một chút trước khi yêu cầu mã mới.'],
+    [/(email address|to be a valid)/i, INVALID_EMAIL_MESSAGE],
+    [/token has expired or is invalid/i, 'Mã xác minh không đúng hoặc đã hết hạn. Vui lòng thử lại.'],
+  ];
+  return rules.find(([re]) => re.test(message))?.[1] ?? message;
+}
+
+// Chạy 1 lời gọi Supabase và quy về cùng 1 dạng { data, error: string } —
+// dùng chung cho cả lỗi có cấu trúc ({error} Supabase trả về) LẪN exception
+// cấp thấp (network/runtime, ví dụ chính request bị lỗi vì input bất
+// thường trước khi tới được Supabase). Không có try/catch nào trong file
+// này được bọc quanh redirect() — Next.js dùng throw để điều hướng, bọc
+// nhầm sẽ khiến điều hướng biến thành "lỗi" bị nuốt mất.
+async function tryAuth<T>(
+  fn: () => PromiseLike<{ data: T | null; error: { message: string } | null }>,
+): Promise<{ data: T | null; error: string | null }> {
+  try {
+    const { data, error } = await fn();
+    return { data, error: error ? translateAuthError(error.message) : null };
+  } catch (err) {
+    return {
+      data: null,
+      error: translateAuthError(err instanceof Error ? err.message : String(err)),
+    };
+  }
+}
+
 // `r`: nonce ngẫu nhiên gắn vào mọi redirect tới /verify-email. Sinh trong
 // Server Action (không phải lúc render) nên hợp lệ với rule "component
 // phải pure" của React — client dùng nó để biết đây là một lượt điều
@@ -33,17 +86,23 @@ export async function sendRegisterOtp(formData: FormData) {
     );
   }
 
+  if (!isValidEmail(email)) {
+    redirect(`/register?type=error&message=${encodeURIComponent(INVALID_EMAIL_MESSAGE)}`);
+  }
+
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      shouldCreateUser: true,
-      data: { role },
-    },
-  });
+  const { error } = await tryAuth(() =>
+    supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: true,
+        data: { role },
+      },
+    }),
+  );
 
   if (error) {
-    redirect(`/register?type=error&message=${encodeURIComponent(error.message)}`);
+    redirect(`/register?type=error&message=${encodeURIComponent(error)}`);
   }
 
   redirect(verifyUrl(email, 'register'));
@@ -64,14 +123,20 @@ export async function sendLoginOtp(formData: FormData) {
     redirect(`${errorPath}?type=error&message=${encodeURIComponent('Vui lòng nhập email.')}`);
   }
 
+  if (!isValidEmail(email)) {
+    redirect(`${errorPath}?type=error&message=${encodeURIComponent(INVALID_EMAIL_MESSAGE)}`);
+  }
+
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { shouldCreateUser: false },
-  });
+  const { error } = await tryAuth(() =>
+    supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false },
+    }),
+  );
 
   if (error) {
-    redirect(`${errorPath}?type=error&message=${encodeURIComponent(error.message)}`);
+    redirect(`${errorPath}?type=error&message=${encodeURIComponent(error)}`);
   }
 
   redirect(verifyUrl(email, 'login'));
@@ -86,13 +151,15 @@ export async function resendOtp(formData: FormData) {
   const mode = formData.get('mode') === 'login' ? 'login' : 'register';
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { shouldCreateUser: mode === 'register' },
-  });
+  const { error } = await tryAuth(() =>
+    supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: mode === 'register' },
+    }),
+  );
 
   if (error) {
-    redirect(verifyUrl(email, mode, { type: 'error', message: error.message }));
+    redirect(verifyUrl(email, mode, { type: 'error', message: error }));
   }
 
   redirect(verifyUrl(email, mode, { resent: '1' }));
@@ -114,18 +181,20 @@ export async function confirmOtp(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+  const { data: verifyData, error: verifyError } = await tryAuth(() =>
+    supabase.auth.verifyOtp({ email, token, type: 'email' }),
+  );
 
-  if (error || !data.user) {
+  if (verifyError || !verifyData?.user) {
     redirect(
       verifyUrl(email, mode, {
         type: 'error',
-        message: error?.message ?? 'Mã xác minh không đúng. Vui lòng thử lại.',
+        message: verifyError ?? 'Mã xác minh không đúng. Vui lòng thử lại.',
       }),
     );
   }
 
-  const user = data.user!;
+  const user = verifyData!.user!;
 
   // public.users.status mặc định 'pending' (set bởi trigger handle_new_user).
   // Lần verify OTP đầu tiên: tạo đúng 1 profile theo role đã chọn lúc đăng
@@ -135,22 +204,21 @@ export async function confirmOtp(formData: FormData) {
   // Lỗi ở đây KHÔNG được bỏ qua: nếu không đọc được profile, coi như chưa
   // xác minh xong thay vì âm thầm rơi xuống màn "🎉 Thành công" bên dưới —
   // tránh báo tài khoản đã sẵn sàng trong khi chưa chắc đã có profile.
-  const { data: profile, error: profileError } = await supabase
-    .from('users')
-    .select('role, status')
-    .eq('id', user.id)
-    .single();
+  const { data: profile, error: profileError } = await tryAuth<{
+    role: Role;
+    status: string;
+  }>(() => supabase.from('users').select('role, status').eq('id', user.id).single());
 
   if (profileError || !profile) {
     redirect(
       verifyUrl(email, mode, {
         type: 'error',
-        message: 'Không thể tải thông tin tài khoản. Vui lòng thử lại.',
+        message: profileError ?? 'Không thể tải thông tin tài khoản. Vui lòng thử lại.',
       }),
     );
   }
 
-  if (profile.status === 'pending') {
+  if (profile!.status === 'pending') {
     // Tên hiển thị mặc định lấy từ phần trước @ của email — chỉ để insert
     // hợp lệ (company_name/shop_name NOT NULL). Chưa set status='active'
     // ở đây: người dùng sửa lại tên thật + điền vài field hồ sơ ở bước
@@ -158,20 +226,18 @@ export async function confirmOtp(formData: FormData) {
     // trước khi tài khoản được coi là active.
     const displayName = email.split('@')[0];
 
-    const { error: insertError } =
-      profile.role === 'supplier'
-        ? await supabase
-            .from('supplier_profiles')
-            .insert({ user_id: user.id, shop_name: displayName })
-        : await supabase
-            .from('buyer_profiles')
-            .insert({ user_id: user.id, company_name: displayName });
+    const { error: insertError } = await tryAuth<null>(() =>
+      profile!.role === 'supplier'
+        ? supabase.from('supplier_profiles').insert({ user_id: user.id, shop_name: displayName })
+        : supabase.from('buyer_profiles').insert({ user_id: user.id, company_name: displayName }),
+    );
 
     // 23505 = unique_violation: bình thường nếu user quay lại xác minh lần
     // 2 trong lúc vẫn 'pending' (dòng profile đã insert ở lần trước) — bỏ
-    // qua. Lỗi khác thì chặn lại, không cho qua bước hồ sơ khi chưa chắc
-    // đã có dòng profile nào được lưu.
-    if (insertError && insertError.code !== '23505') {
+    // qua (tryAuth() đã dịch message, nên check qua chuỗi gốc thay vì mã
+    // lỗi Postgres — chấp nhận được vì đây là câu message cố định của
+    // Postgres, không phải input người dùng).
+    if (insertError && !/duplicate key value/i.test(insertError)) {
       redirect(
         verifyUrl(email, mode, {
           type: 'error',
@@ -180,7 +246,7 @@ export async function confirmOtp(formData: FormData) {
       );
     }
 
-    redirect(verifyUrl(email, mode, { step: 'profile', role: profile.role }));
+    redirect(verifyUrl(email, mode, { step: 'profile', role: profile!.role }));
   }
 
   // Đăng nhập lại (status đã 'active' từ lần verify đầu tiên): quay lại
@@ -215,47 +281,72 @@ export async function completeProfile(formData: FormData) {
   // lại role thật từ public.users để quyết định update đúng bảng, tránh
   // vừa "active" hoá tài khoản vừa lẳng lặng update-trúng-0-dòng vào bảng
   // profile sai.
-  const { data: profile, error: profileError } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
+  const { data: profile, error: profileError } = await tryAuth<{ role: Role }>(() =>
+    supabase.from('users').select('role').eq('id', user!.id).single(),
+  );
 
   if (profileError || !profile) {
     redirect(
       verifyUrl(email, mode, {
         type: 'error',
-        message: 'Không thể tải thông tin tài khoản. Vui lòng thử lại.',
+        message: profileError ?? 'Không thể tải thông tin tài khoản. Vui lòng thử lại.',
       }),
     );
   }
 
-  if (profile.role === 'supplier') {
-    const foundingYear = String(formData.get('foundingYear') ?? '').trim();
-    const monthlyCapacity = String(formData.get('monthlyCapacity') ?? '').trim();
+  const profileUpdate =
+    profile!.role === 'supplier'
+      ? (() => {
+          const foundingYear = String(formData.get('foundingYear') ?? '').trim();
+          const monthlyCapacity = String(formData.get('monthlyCapacity') ?? '').trim();
 
-    await supabase
-      .from('supplier_profiles')
-      .update({
-        shop_name: String(formData.get('shopName') ?? '').trim(),
-        village_origin: String(formData.get('villageOrigin') ?? '').trim() || null,
-        craft_category: String(formData.get('craftCategory') ?? '').trim() || null,
-        founding_year: foundingYear ? Number(foundingYear) : null,
-        monthly_capacity: monthlyCapacity ? Number(monthlyCapacity) : null,
-      })
-      .eq('user_id', user.id);
-  } else {
-    await supabase
-      .from('buyer_profiles')
-      .update({
-        company_name: String(formData.get('companyName') ?? '').trim(),
-        city: String(formData.get('city') ?? '').trim() || null,
-        tax_code: String(formData.get('taxCode') ?? '').trim() || null,
-      })
-      .eq('user_id', user.id);
+          return supabase
+            .from('supplier_profiles')
+            .update({
+              shop_name: String(formData.get('shopName') ?? '').trim(),
+              village_origin: String(formData.get('villageOrigin') ?? '').trim() || null,
+              craft_category: String(formData.get('craftCategory') ?? '').trim() || null,
+              founding_year: foundingYear ? Number(foundingYear) : null,
+              monthly_capacity: monthlyCapacity ? Number(monthlyCapacity) : null,
+            })
+            .eq('user_id', user!.id);
+        })()
+      : supabase
+          .from('buyer_profiles')
+          .update({
+            company_name: String(formData.get('companyName') ?? '').trim(),
+            city: String(formData.get('city') ?? '').trim() || null,
+            tax_code: String(formData.get('taxCode') ?? '').trim() || null,
+          })
+          .eq('user_id', user!.id);
+
+  const { error: updateError } = await tryAuth<null>(() => profileUpdate);
+
+  if (updateError) {
+    redirect(
+      verifyUrl(email, mode, {
+        type: 'error',
+        message: 'Không thể lưu hồ sơ. Vui lòng thử lại.',
+        step: 'profile',
+        role: profile!.role,
+      }),
+    );
   }
 
-  await supabase.from('users').update({ status: 'active' }).eq('id', user.id);
+  const { error: activateError } = await tryAuth<null>(() =>
+    supabase.from('users').update({ status: 'active' }).eq('id', user!.id),
+  );
+
+  if (activateError) {
+    redirect(
+      verifyUrl(email, mode, {
+        type: 'error',
+        message: 'Đã lưu hồ sơ nhưng không thể kích hoạt tài khoản. Vui lòng thử lại.',
+        step: 'profile',
+        role: profile!.role,
+      }),
+    );
+  }
 
   redirect(verifyUrl(email, mode, { verified: '1' }));
 }
