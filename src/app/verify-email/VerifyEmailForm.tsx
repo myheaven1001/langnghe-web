@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } 
 import Link from 'next/link';
 import { useFormStatus } from 'react-dom';
 import { confirmOtp, resendOtp } from '@/app/auth/actions';
+import CompleteProfileForm from './CompleteProfileForm';
 
 // Supabase mặc định giới hạn 1 yêu cầu OTP / 60 giây cho mỗi email — dùng
 // đúng 60s ở đây (thay vì 45s trong mockup) để nút "Gửi lại mã" không bao
@@ -48,6 +49,7 @@ export default function VerifyEmailForm({
   isError,
   justResent,
   verified,
+  profileRole,
   attempt,
 }: {
   email: string;
@@ -56,6 +58,9 @@ export default function VerifyEmailForm({
   isError: boolean;
   justResent: boolean;
   verified: boolean;
+  // Có giá trị khi OTP vừa xác minh thành công lần đầu — hiện bước
+  // "Hoàn thiện hồ sơ" (CompleteProfileForm) trước khi coi là verified.
+  profileRole?: 'buyer' | 'supplier';
   // Nonce ngẫu nhiên sinh ở server mỗi lần redirect về trang này (xem
   // verifyUrl() trong auth/actions.ts) — đổi giá trị ngay cả khi 2 lần
   // liên tiếp trả về CÙNG một message lỗi (ví dụ nhập sai OTP 2 lần).
@@ -131,6 +136,10 @@ export default function VerifyEmailForm({
 
   const token = digits.join('');
   const complete = digits.every((d) => d.length === 1);
+
+  if (profileRole) {
+    return <CompleteProfileForm email={email} mode={mode} role={profileRole} />;
+  }
 
   if (verified) {
     return (

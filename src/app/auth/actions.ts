@@ -126,29 +126,131 @@ export async function confirmOtp(formData: FormData) {
   // Lần verify OTP đầu tiên: tạo đúng 1 profile theo role đã chọn lúc đăng
   // ký, rồi chuyển status → 'active'. Các lần đăng nhập lại sau đó,
   // status đã là 'active' nên khối này tự động bị bỏ qua.
-  const { data: profile } = await supabase
+  //
+  // Lỗi ở đây KHÔNG được bỏ qua: nếu không đọc được profile, coi như chưa
+  // xác minh xong thay vì âm thầm rơi xuống màn "🎉 Thành công" bên dưới —
+  // tránh báo tài khoản đã sẵn sàng trong khi chưa chắc đã có profile.
+  const { data: profile, error: profileError } = await supabase
     .from('users')
     .select('role, status')
     .eq('id', user.id)
     .single();
 
-  if (profile && profile.status === 'pending') {
-    // Tên hiển thị mặc định lấy từ phần trước @ của email — người dùng
-    // chỉnh lại sau ở bước hoàn thiện hồ sơ (chưa tồn tại field nào bắt
-    // buộc phải điền trước khi email được xác minh).
-    const displayName = email.split('@')[0];
-
-    if (profile.role === 'supplier') {
-      await supabase.from('supplier_profiles').insert({ user_id: user.id, shop_name: displayName });
-    } else {
-      await supabase.from('buyer_profiles').insert({ user_id: user.id, company_name: displayName });
-    }
-
-    await supabase.from('users').update({ status: 'active' }).eq('id', user.id);
+  if (profileError || !profile) {
+    redirect(
+      verifyUrl(email, mode, {
+        type: 'error',
+        message: 'Không thể tải thông tin tài khoản. Vui lòng thử lại.',
+      }),
+    );
   }
 
-  // Quay lại chính trang này với verified=1 để hiện màn "🎉 Thành công"
-  // (đúng flow email_verification_page.html) thay vì nhảy thẳng đi —
-  // người dùng tự bấm "Vào Dashboard" ở màn thành công để điều hướng tiếp.
+  if (profile.status === 'pending') {
+    // Tên hiển thị mặc định lấy từ phần trước @ của email — chỉ để insert
+    // hợp lệ (company_name/shop_name NOT NULL). Chưa set status='active'
+    // ở đây: người dùng sửa lại tên thật + điền vài field hồ sơ ở bước
+    // "Hoàn thiện hồ sơ" ngay sau đây (xem completeProfile() bên dưới)
+    // trước khi tài khoản được coi là active.
+    const displayName = email.split('@')[0];
+
+    const { error: insertError } =
+      profile.role === 'supplier'
+        ? await supabase
+            .from('supplier_profiles')
+            .insert({ user_id: user.id, shop_name: displayName })
+        : await supabase
+            .from('buyer_profiles')
+            .insert({ user_id: user.id, company_name: displayName });
+
+    // 23505 = unique_violation: bình thường nếu user quay lại xác minh lần
+    // 2 trong lúc vẫn 'pending' (dòng profile đã insert ở lần trước) — bỏ
+    // qua. Lỗi khác thì chặn lại, không cho qua bước hồ sơ khi chưa chắc
+    // đã có dòng profile nào được lưu.
+    if (insertError && insertError.code !== '23505') {
+      redirect(
+        verifyUrl(email, mode, {
+          type: 'error',
+          message: 'Không thể khởi tạo hồ sơ. Vui lòng thử lại hoặc liên hệ hỗ trợ.',
+        }),
+      );
+    }
+
+    redirect(verifyUrl(email, mode, { step: 'profile', role: profile.role }));
+  }
+
+  // Đăng nhập lại (status đã 'active' từ lần verify đầu tiên): quay lại
+  // trang này với verified=1 để hiện màn "🎉 Thành công" (đúng flow
+  // email_verification_page.html) thay vì nhảy thẳng đi — người dùng tự
+  // bấm "Vào Dashboard" ở màn thành công để điều hướng tiếp.
+  redirect(verifyUrl(email, mode, { verified: '1' }));
+}
+
+// ── 5. Hoàn thiện hồ sơ sau khi verify OTP lần đầu (register) ───────────
+// Chỉ áp dụng các field THẬT SỰ tồn tại trên buyer_profiles/supplier_profiles
+// (xem supabase/migrations/20260905120100_users_and_auth.sql) — bản mockup
+// register_buyer_supplier.html còn có category quan tâm, quy mô nhập hàng,
+// mục đích mua, số thợ, mô tả xưởng, upload ảnh/GPKD... nhưng chưa có cột
+// nào cho các trường đó nên không đưa vào đây (đó là việc của Giai đoạn
+// 3.7 — hồ sơ & xác minh đầy đủ, /settings/profile).
+export async function completeProfile(formData: FormData) {
+  const email = String(formData.get('email') ?? '').trim();
+  const mode = formData.get('mode') === 'login' ? 'login' : 'register';
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login');
+  }
+
+  // `role` không lấy từ formData (client) — hidden field đó chỉ phản ánh
+  // URL lúc render form, người dùng có thể sửa được trước khi submit. Đọc
+  // lại role thật từ public.users để quyết định update đúng bảng, tránh
+  // vừa "active" hoá tài khoản vừa lẳng lặng update-trúng-0-dòng vào bảng
+  // profile sai.
+  const { data: profile, error: profileError } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError || !profile) {
+    redirect(
+      verifyUrl(email, mode, {
+        type: 'error',
+        message: 'Không thể tải thông tin tài khoản. Vui lòng thử lại.',
+      }),
+    );
+  }
+
+  if (profile.role === 'supplier') {
+    const foundingYear = String(formData.get('foundingYear') ?? '').trim();
+    const monthlyCapacity = String(formData.get('monthlyCapacity') ?? '').trim();
+
+    await supabase
+      .from('supplier_profiles')
+      .update({
+        shop_name: String(formData.get('shopName') ?? '').trim(),
+        village_origin: String(formData.get('villageOrigin') ?? '').trim() || null,
+        craft_category: String(formData.get('craftCategory') ?? '').trim() || null,
+        founding_year: foundingYear ? Number(foundingYear) : null,
+        monthly_capacity: monthlyCapacity ? Number(monthlyCapacity) : null,
+      })
+      .eq('user_id', user.id);
+  } else {
+    await supabase
+      .from('buyer_profiles')
+      .update({
+        company_name: String(formData.get('companyName') ?? '').trim(),
+        city: String(formData.get('city') ?? '').trim() || null,
+        tax_code: String(formData.get('taxCode') ?? '').trim() || null,
+      })
+      .eq('user_id', user.id);
+  }
+
+  await supabase.from('users').update({ status: 'active' }).eq('id', user.id);
+
   redirect(verifyUrl(email, mode, { verified: '1' }));
 }

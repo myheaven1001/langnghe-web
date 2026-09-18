@@ -41,19 +41,57 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
-  if (
-    !user &&
-    request.nextUrl.pathname !== '/' &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/register') &&
-    !request.nextUrl.pathname.startsWith('/verify-email') &&
-    !request.nextUrl.pathname.startsWith('/auth')
-  ) {
-    // No user session and not already headed to a public auth route:
-    // redirect to the login page.
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
+  // Per PROJECT_ROADMAP.md, Giai đoạn 2 (marketplace + auth) is public and
+  // Giai đoạn 3+ (buyer/supplier/admin flows) lives under these prefixes —
+  // gate those instead of allow-listing every public route (an allow-list
+  // would otherwise also swallow 404s: any unmatched/typo'd URL doesn't
+  // match a known public prefix either, so it'd redirect to /login instead
+  // of rendering not-found.tsx).
+  const PRIVATE_PREFIXES = [
+    '/dashboard',
+    '/rfq',
+    '/orders',
+    '/settings',
+    '/supplier',
+    '/messages',
+    '/notifications',
+    '/admin',
+  ];
+
+  // Exact-or-`/`-boundary match — plain startsWith would also match e.g. a
+  // future public `/suppliers` (directory) or `/supplier-faq` page against
+  // the `/supplier` prefix and wrongly gate them behind login too.
+  const pathname = request.nextUrl.pathname;
+  const isPrivatePath = PRIVATE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+
+  if (isPrivatePath) {
+    if (!user) {
+      // No session at all: straight to login.
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+
+    // Has a session, but may still be mid-onboarding: confirmOtp() creates
+    // the auth session before completeProfile() flips public.users.status
+    // to 'active' (see src/app/auth/actions.ts), so a user who verified
+    // OTP and then abandoned the "Hoàn thiện hồ sơ" step already holds a
+    // valid session here. Without this check they could reach any private
+    // route with only a placeholder profile.
+    const { data: profile } = await supabase
+      .from('users')
+      .select('status')
+      .eq('id', user.sub)
+      .single();
+
+    if (profile?.status !== 'active') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      url.search = '';
+      return NextResponse.redirect(url);
+    }
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.

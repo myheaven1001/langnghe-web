@@ -34,11 +34,14 @@ export default async function VerifyEmailPage({
     message?: string;
     resent?: string;
     verified?: string;
+    step?: string;
+    role?: string;
     r?: string;
   }>;
 }) {
-  const { email, mode: rawMode, type, message, resent, verified, r } = await searchParams;
+  const { email, mode: rawMode, type, message, resent, verified, step, role, r } = await searchParams;
   const mode = rawMode === 'login' ? 'login' : 'register';
+  const showProfileStep = step === 'profile' && (role === 'buyer' || role === 'supplier');
 
   // Không có email trong URL nghĩa là vào thẳng trang này mà chưa qua bước
   // gửi OTP — không có gì để xác minh, đưa về nơi khởi đầu hợp lý.
@@ -78,37 +81,49 @@ export default async function VerifyEmailPage({
             </div>
 
             <div className="flex flex-col">
-              {[
-                { state: 'done' as const, label: 'Tạo tài khoản', sub: 'Đã hoàn tất' },
-                { state: 'active' as const, label: 'Xác minh email', sub: 'Đang thực hiện' },
-                {
-                  state: 'todo' as const,
-                  label: 'Khám phá & bắt đầu',
-                  sub: 'Tìm nguồn hàng hoặc đăng sản phẩm',
-                },
-              ].map((step, i, arr) => (
-                <div key={step.label} className="relative flex gap-3 pb-5.5">
+              {(showProfileStep
+                ? [
+                    { state: 'done' as const, label: 'Tạo tài khoản', sub: 'Đã hoàn tất' },
+                    { state: 'done' as const, label: 'Xác minh email', sub: 'Đã hoàn tất' },
+                    { state: 'active' as const, label: 'Hoàn thiện hồ sơ', sub: 'Đang thực hiện' },
+                    {
+                      state: 'todo' as const,
+                      label: 'Khám phá & bắt đầu',
+                      sub: 'Tìm nguồn hàng hoặc đăng sản phẩm',
+                    },
+                  ]
+                : [
+                    { state: 'done' as const, label: 'Tạo tài khoản', sub: 'Đã hoàn tất' },
+                    { state: 'active' as const, label: 'Xác minh email', sub: 'Đang thực hiện' },
+                    {
+                      state: 'todo' as const,
+                      label: 'Khám phá & bắt đầu',
+                      sub: 'Tìm nguồn hàng hoặc đăng sản phẩm',
+                    },
+                  ]
+              ).map((s, i, arr) => (
+                <div key={s.label} className="relative flex gap-3 pb-5.5">
                   {i < arr.length - 1 && (
                     <div className="absolute top-6.5 bottom-0 left-[11px] w-[1.5px] bg-white/15" />
                   )}
                   <div
                     className={`z-10 flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
-                      step.state === 'done'
+                      s.state === 'done'
                         ? 'bg-[#00A650] text-white'
-                        : step.state === 'active'
+                        : s.state === 'active'
                           ? 'bg-[#C4622D] text-white'
                           : 'border-[1.5px] border-white/25 bg-white/10 text-white/40'
                     }`}
                   >
-                    {step.state === 'done' ? '✓' : i + 1}
+                    {s.state === 'done' ? '✓' : i + 1}
                   </div>
                   <div>
                     <div
-                      className={`pt-0.5 text-[13px] font-semibold ${step.state === 'todo' ? 'text-white/45' : 'text-white'}`}
+                      className={`pt-0.5 text-[13px] font-semibold ${s.state === 'todo' ? 'text-white/45' : 'text-white'}`}
                     >
-                      {step.label}
+                      {s.label}
                     </div>
-                    <div className="mt-0.5 text-[11.5px] text-white/45">{step.sub}</div>
+                    <div className="mt-0.5 text-[11.5px] text-white/45">{s.sub}</div>
                   </div>
                 </div>
               ))}
@@ -135,6 +150,7 @@ export default async function VerifyEmailPage({
             isError={type === 'error'}
             justResent={resent === '1'}
             verified={verified === '1'}
+            profileRole={showProfileStep ? (role as 'buyer' | 'supplier') : undefined}
             attempt={r ?? ''}
           />
         </div>
