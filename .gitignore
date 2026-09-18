@@ -40,3 +40,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# supabase CLI local link/cache state — machine-specific, regenerate with
+# `supabase link`
+/supabase/.temp
