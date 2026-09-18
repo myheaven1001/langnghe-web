@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useFormStatus } from 'react-dom';
 import { sendLoginOtp } from '@/app/auth/actions';
 
@@ -40,9 +41,14 @@ export default function LoginForm({ message, type }: { message?: string; type?: 
       )}
 
       <div className="mb-5">
-        <label htmlFor="email" className="mb-1.5 block text-xs font-semibold">
-          Email
-        </label>
+        <div className="mb-1.5 flex items-baseline justify-between">
+          <label htmlFor="email" className="block text-xs font-semibold">
+            Email
+          </label>
+          <Link href="/forgot-password" className="text-[11px] font-semibold text-[#E53333]">
+            Không đăng nhập được?
+          </Link>
+        </div>
         <input
           id="email"
           name="email"

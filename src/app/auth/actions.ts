@@ -52,11 +52,16 @@ export async function sendRegisterOtp(formData: FormData) {
 // ── 2. Đăng nhập lại: gửi OTP, KHÔNG tạo user mới ───────────────────────
 // shouldCreateUser: false — nếu email chưa từng đăng ký, Supabase trả lỗi
 // thay vì âm thầm tạo tài khoản mới qua form đăng nhập.
+//
+// Dùng chung cho cả /login và /forgot-password (dưới OTP auth, "quên mật
+// khẩu" chính là "xin mã đăng nhập mới") — errorPath cho biết quay lại
+// trang nào nếu có lỗi, mặc định /login khi form không truyền field này.
 export async function sendLoginOtp(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
+  const errorPath = String(formData.get('errorPath') ?? '/login');
 
   if (!email) {
-    redirect(`/login?type=error&message=${encodeURIComponent('Vui lòng nhập email.')}`);
+    redirect(`${errorPath}?type=error&message=${encodeURIComponent('Vui lòng nhập email.')}`);
   }
 
   const supabase = await createClient();
@@ -66,7 +71,7 @@ export async function sendLoginOtp(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/login?type=error&message=${encodeURIComponent(error.message)}`);
+    redirect(`${errorPath}?type=error&message=${encodeURIComponent(error.message)}`);
   }
 
   redirect(verifyUrl(email, 'login'));
