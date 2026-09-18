@@ -22,10 +22,10 @@ interface NotifGroup {
 
 // Chỉ những notification_type THẬT SỰ tồn tại trong enum notification_type
 // (20260905120000_extensions_and_enums.sql + quote_rejected thêm ở
-// 20260919090000). Prototype còn có nhóm "Tranh chấp" (dispute_opened/
-// dispute_resolved), "Escrow đã giải ngân" (escrow_released), "Nhắc đánh
-// giá xưởng" (không có notification_type cho review) và "Khuyến mãi & tin
-// tức" (không có type marketing) — tất cả đều thuộc Sprint 4/chưa có type
+// 20260919090000 + dispute_opened/dispute_resolved thêm ở 20260930090100).
+// Prototype còn có nhóm "Escrow đã giải ngân" (escrow_released), "Nhắc
+// đánh giá xưởng" (không có notification_type cho review) và "Khuyến mãi
+// & tin tức" (không có type marketing) — thuộc Sprint 4/chưa có type
 // tương ứng, bỏ khỏi trang này thay vì tạo hàng bật/tắt cho thứ chưa tồn
 // tại trong DB.
 const GROUPS: NotifGroup[] = [
@@ -61,6 +61,11 @@ const GROUPS: NotifGroup[] = [
         types: ['order_delivered'],
         name: 'Đơn hàng đã giao thành công',
         desc: 'Khi đơn vị vận chuyển xác nhận giao hàng',
+      },
+      {
+        types: ['dispute_opened', 'dispute_resolved'],
+        name: 'Tranh chấp đơn hàng mở / được giải quyết',
+        desc: 'Khi admin ghi nhận hoặc giải quyết tranh chấp trên đơn hàng của bạn',
       },
     ],
   },
@@ -260,7 +265,10 @@ export function NotificationPreferencesGrid({
                     />
                   </div>
                   <div className="flex w-[74px] shrink-0 justify-center">
-                    <Switch checked={valueFor(item, 'email')} onChange={(next) => toggle(item, 'email', next)} />
+                    <Switch
+                      checked={valueFor(item, 'email')}
+                      onChange={(next) => toggle(item, 'email', next)}
+                    />
                   </div>
                 </div>
               ))}
@@ -288,16 +296,24 @@ export function NotificationPreferencesGrid({
         </div>
 
         <div className="border-brand-border rounded-[10px] border bg-white p-4">
-          <div className="text-brand-sub mb-3 text-xs font-bold tracking-[.04em] uppercase">💡 Ghi chú</div>
+          <div className="text-brand-sub mb-3 text-xs font-bold tracking-[.04em] uppercase">
+            💡 Ghi chú
+          </div>
           {[
-            ['🔒', 'Thông báo về xác minh tài khoản luôn bật trong ứng dụng để đảm bảo bạn không bỏ lỡ.'],
+            [
+              '🔒',
+              'Thông báo về xác minh tài khoản luôn bật trong ứng dụng để đảm bảo bạn không bỏ lỡ.',
+            ],
             [
               '✉️',
               'Bạn có thể tắt email nhưng vẫn nhận đầy đủ thông báo trong ứng dụng và chuông 🔔 ở góc trên.',
             ],
             ['⏱️', 'Thay đổi được lưu tự động ngay khi bạn bật/tắt.'],
           ].map(([icon, text]) => (
-            <div key={text} className="text-brand-sub mb-2.5 flex gap-2 text-xs leading-relaxed last:mb-0">
+            <div
+              key={text}
+              className="text-brand-sub mb-2.5 flex gap-2 text-xs leading-relaxed last:mb-0"
+            >
               <span className="shrink-0">{icon}</span>
               <span>{text}</span>
             </div>

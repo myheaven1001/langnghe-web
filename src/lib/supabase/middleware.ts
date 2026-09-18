@@ -82,11 +82,23 @@ export async function updateSession(request: NextRequest) {
     // route with only a placeholder profile.
     const { data: profile } = await supabase
       .from('users')
-      .select('status')
+      .select('status, role')
       .eq('id', user.sub)
       .single();
 
     if (profile?.status !== 'active') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      url.search = '';
+      return NextResponse.redirect(url);
+    }
+
+    // /admin/* is further gated to role = 'admin' — that role is never
+    // self-assigned (see handle_new_user() in the users_and_auth migration),
+    // so any other authenticated, active user is bounced to '/' same as an
+    // unrelated private route they have no business in.
+    const isAdminPath = pathname === '/admin' || pathname.startsWith('/admin/');
+    if (isAdminPath && profile.role !== 'admin') {
       const url = request.nextUrl.clone();
       url.pathname = '/';
       url.search = '';

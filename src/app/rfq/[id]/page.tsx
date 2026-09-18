@@ -70,7 +70,11 @@ interface Step {
 // stepper — không suy luận ngược từ quote data, tránh lệch nếu sau này có
 // đường đi khác tới cùng 1 status (vd. admin tự đóng RFQ).
 function buildSteps(rfq: Pick<RfqDetail, 'status' | 'created_at'>, respondedCount: number): Step[] {
-  const sentStep: Step = { label: 'Đã gửi yêu cầu', time: formatVnDate(rfq.created_at), state: 'done' };
+  const sentStep: Step = {
+    label: 'Đã gửi yêu cầu',
+    time: formatVnDate(rfq.created_at),
+    state: 'done',
+  };
   const hasQuotes = respondedCount > 0;
 
   if (rfq.status === 'cancelled') {
@@ -139,35 +143,41 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
   if (!rfqData) notFound();
   const rfq = rfqData as unknown as RfqDetail;
 
-  const [{ data: quotesData }, { data: targetsData }, { data: unreadCount }, { count: activeRfqCount }] =
-    await Promise.all([
-      supabase
-        .from('rfq_quotes')
-        .select(
-          'id, supplier_id, unit_price, min_qty, lead_time_days, note, valid_until, status, created_at, supplier_profiles(shop_name, village_origin, craft_category, rating_avg)',
-        )
-        .eq('rfq_id', id)
-        .order('unit_price', { ascending: true }),
-      supabase
-        .from('rfq_targets')
-        .select('supplier_id, supplier_profiles(shop_name, village_origin)')
-        .eq('rfq_id', id),
-      supabase
-        .from('notifications')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false)
-        .then((r) => ({ data: r.count ?? 0 })),
-      supabase
-        .from('rfq_requests')
-        .select('id', { count: 'exact', head: true })
-        .eq('buyer_id', buyer.id)
-        .in('status', ['published', 'quoted', 'negotiating']),
-    ]);
+  const [
+    { data: quotesData },
+    { data: targetsData },
+    { data: unreadCount },
+    { count: activeRfqCount },
+  ] = await Promise.all([
+    supabase
+      .from('rfq_quotes')
+      .select(
+        'id, supplier_id, unit_price, min_qty, lead_time_days, note, valid_until, status, created_at, supplier_profiles(shop_name, village_origin, craft_category, rating_avg)',
+      )
+      .eq('rfq_id', id)
+      .order('unit_price', { ascending: true }),
+    supabase
+      .from('rfq_targets')
+      .select('supplier_id, supplier_profiles(shop_name, village_origin)')
+      .eq('rfq_id', id),
+    supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_read', false)
+      .then((r) => ({ data: r.count ?? 0 })),
+    supabase
+      .from('rfq_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('buyer_id', buyer.id)
+      .in('status', ['published', 'quoted', 'negotiating']),
+  ]);
 
   const quotes = (quotesData ?? []) as unknown as QuoteRow[];
   const targets = (targetsData ?? []) as unknown as TargetRow[];
-  const pendingTargets = targets.filter((t) => !quotes.some((q) => q.supplier_id === t.supplier_id));
+  const pendingTargets = targets.filter(
+    (t) => !quotes.some((q) => q.supplier_id === t.supplier_id),
+  );
   const targetCount = targets.length || quotes.length || 1;
 
   const supplierIds = quotes.map((q) => q.supplier_id);
@@ -286,7 +296,11 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
             </span>
             <span>
               Hạn chót:{' '}
-              <b className={remaining !== null && remaining <= 2 ? 'text-brand-red' : 'text-brand-ink'}>
+              <b
+                className={
+                  remaining !== null && remaining <= 2 ? 'text-brand-red' : 'text-brand-ink'
+                }
+              >
                 {deadline
                   ? remaining !== null && remaining <= 0
                     ? `hết hạn (${formatVnDate(deadline)})`
@@ -346,7 +360,9 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                 </div>
                 <div className="bg-brand-bg rounded-lg px-3 py-2.5">
                   <div className="text-brand-light mb-0.5 text-[10.5px]">Ngành hàng</div>
-                  <div className="text-[13px] font-bold">{rfq.categories?.name ?? 'Chưa phân loại'}</div>
+                  <div className="text-[13px] font-bold">
+                    {rfq.categories?.name ?? 'Chưa phân loại'}
+                  </div>
                 </div>
                 <div className="bg-brand-bg rounded-lg px-3 py-2.5">
                   <div className="text-brand-light mb-0.5 text-[10.5px]">Thời hạn báo giá</div>
@@ -388,7 +404,10 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
 
             <div className="flex flex-col gap-3.5 px-[18px] pb-[18px]">
               {quotes.map((quote) => {
-                const isBest = bestPrice !== null && quote.unit_price === bestPrice && quote.status !== 'rejected';
+                const isBest =
+                  bestPrice !== null &&
+                  quote.unit_price === bestPrice &&
+                  quote.status !== 'rejected';
                 const isVerified = verifiedSupplierIds.has(quote.supplier_id);
                 const canAccept = !isSettled && ACTIVE_QUOTE_STATUSES.includes(quote.status);
                 const totalValue = quote.unit_price * rfq.quantity;
@@ -428,8 +447,12 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
-                        <div className="font-tight text-lg font-bold">{formatVnd(quote.unit_price)}</div>
-                        <div className="text-brand-light text-[10.5px]">/ {rfq.unit ?? 'đơn vị'}</div>
+                        <div className="font-tight text-lg font-bold">
+                          {formatVnd(quote.unit_price)}
+                        </div>
+                        <div className="text-brand-light text-[10.5px]">
+                          / {rfq.unit ?? 'đơn vị'}
+                        </div>
                       </div>
                     </div>
 
@@ -437,7 +460,9 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                       <div className="text-brand-sub text-[11.5px]">
                         Số lượng tối thiểu
                         <b className="text-brand-ink block text-[12.5px]">
-                          {quote.min_qty ? `${quote.min_qty.toLocaleString('vi-VN')} ${rfq.unit ?? ''}` : '—'}
+                          {quote.min_qty
+                            ? `${quote.min_qty.toLocaleString('vi-VN')} ${rfq.unit ?? ''}`
+                            : '—'}
                         </b>
                       </div>
                       <div className="text-brand-sub text-[11.5px]">
@@ -454,7 +479,9 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                       </div>
                       <div className="text-brand-sub text-[11.5px]">
                         Tổng giá trị
-                        <b className="text-brand-ink block text-[12.5px]">{formatVnd(totalValue)}</b>
+                        <b className="text-brand-ink block text-[12.5px]">
+                          {formatVnd(totalValue)}
+                        </b>
                       </div>
                     </div>
 
@@ -481,7 +508,7 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                           supplierName={quote.supplier_profiles?.shop_name ?? 'xưởng này'}
                         />
                         <Link
-                          href="/messages"
+                          href={`/messages/${rfq.id}?quote=${quote.id}`}
                           className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] px-3.5 py-2 text-xs font-semibold"
                         >
                           💬 Nhắn tin
@@ -506,7 +533,9 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                     </div>
                     <div className="text-brand-light mt-0.5 text-[11px]">
                       Chưa gửi báo giá
-                      {deadline ? ` · còn ${remaining !== null && remaining > 0 ? remaining : 0} ngày để phản hồi` : ''}
+                      {deadline
+                        ? ` · còn ${remaining !== null && remaining > 0 ? remaining : 0} ngày để phản hồi`
+                        : ''}
                     </div>
                   </div>
                 </div>
@@ -525,7 +554,7 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
               {steps.map((step, i) => (
                 <div key={step.label} className="relative flex gap-2.5 pb-5 last:pb-0">
                   {i < steps.length - 1 && (
-                    <div className="bg-brand-border absolute top-[22px] left-[10px] bottom-0 w-[1.5px]" />
+                    <div className="bg-brand-border absolute top-[22px] bottom-0 left-[10px] w-[1.5px]" />
                   )}
                   <div
                     className={`z-10 flex h-[21px] w-[21px] shrink-0 items-center justify-center rounded-full border-2 text-[10px] ${
