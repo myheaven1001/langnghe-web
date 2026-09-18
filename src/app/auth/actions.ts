@@ -38,6 +38,16 @@ function translateAuthError(message: string): string {
     [/for security purposes.*after/i, 'Vui lòng đợi một chút trước khi yêu cầu mã mới.'],
     [/(email address|to be a valid)/i, INVALID_EMAIL_MESSAGE],
     [/token has expired or is invalid/i, 'Mã xác minh không đúng hoặc đã hết hạn. Vui lòng thử lại.'],
+    // Không phải lỗi Supabase có cấu trúc — exception cấp thấp (network,
+    // hoặc input chứa ký tự khiến chính request bị lỗi trước khi tới được
+    // Supabase, như "Cannot convert argument to a ByteString..." khi email
+    // dính ký tự lạ từ IME). Bắt theo nhóm thay vì từng message cụ thể vì
+    // các message này đến từ engine JS/network, không phải API có hợp đồng
+    // ổn định.
+    [
+      /ByteString|Failed to fetch|NetworkError|is not valid JSON|character at index/i,
+      'Có lỗi kỹ thuật khi gửi yêu cầu. Vui lòng kiểm tra lại email (tắt bộ gõ tiếng Việt nếu có) rồi thử lại.',
+    ],
   ];
   return rules.find(([re]) => re.test(message))?.[1] ?? message;
 }
@@ -149,6 +159,10 @@ export async function sendLoginOtp(formData: FormData) {
 export async function resendOtp(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
   const mode = formData.get('mode') === 'login' ? 'login' : 'register';
+
+  if (!isValidEmail(email)) {
+    redirect(verifyUrl(email, mode, { type: 'error', message: INVALID_EMAIL_MESSAGE }));
+  }
 
   const supabase = await createClient();
   const { error } = await tryAuth(() =>
