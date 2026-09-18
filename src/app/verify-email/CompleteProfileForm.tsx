@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { completeProfile } from '@/app/auth/actions';
-
-const BUYER_CITIES = ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ', 'Bình Dương'];
+import { BUYER_CITIES } from '@/lib/constants';
 
 const CRAFT_CATEGORIES = ['Gốm sứ', 'Mây tre đan', 'Đồ gỗ', 'Lụa & thêu', 'Sơn mài', 'Đúc đồng'];
 
