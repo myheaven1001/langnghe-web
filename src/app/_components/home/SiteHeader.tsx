@@ -1,0 +1,97 @@
+import Link from 'next/link';
+
+// Matches .topbar + header + .search-box from the prototype. "Đăng nhập" /
+// "Đăng ký" link to the real /login and /register routes already built in
+// this app; everything else (search, "trở thành nhà cung cấp", "Mua sỉ
+// ngay") stays a placeholder until those flows exist.
+const SEARCH_CATEGORIES = [
+  'Tất cả',
+  'Gốm sứ',
+  'Mây tre đan',
+  'Đồ gỗ mỹ nghệ',
+  'Lụa & thêu ren',
+  'Sơn mài & khảm trai',
+  'Đúc đồng & kim loại',
+  'Đá mỹ nghệ',
+  'Tranh & giấy dân gian',
+  'Thêu & may mặc',
+  'Đồ da thủ công',
+];
+
+export function SiteHeader() {
+  return (
+    <>
+      <div className="bg-[#333] py-1 text-[11px] text-[#ccc]">
+        <div className="mx-auto flex max-w-[1200px] flex-col items-start gap-1 px-4 py-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0 sm:py-0">
+          <span>Chào mừng đến LàngNghề.vn — Chợ sỉ thủ công mỹ nghệ Việt Nam</span>
+          <div>
+            <a href="#" className="ml-3 first:ml-0 hover:text-white">
+              Trở thành nhà cung cấp
+            </a>
+            <a href="#" className="ml-3 hover:text-white">
+              Hỗ trợ
+            </a>
+            <a href="#" className="ml-3 hover:text-white">
+              Tiếng Việt
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <header className="bg-[#B5482E] py-2.5">
+        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-4 px-4 sm:flex-nowrap">
+          <div className="font-tight order-1 shrink-0 text-[22px] font-bold whitespace-nowrap text-white">
+            LàngNghề<span className="ml-1 text-sm font-normal opacity-70">.vn</span>
+          </div>
+
+          <div className="order-3 flex min-w-0 flex-1 basis-full sm:order-2 sm:max-w-[680px] sm:basis-auto">
+            <select
+              aria-label="Chọn ngành hàng để tìm kiếm"
+              className="h-[38px] w-[72px] shrink-0 truncate rounded-l border-none bg-black/15 px-2 text-xs text-white outline-none sm:w-auto sm:px-2.5"
+            >
+              {SEARCH_CATEGORIES.map((c) => (
+                <option key={c} className="bg-white text-[#333]">
+                  {c}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              placeholder="Tìm sản phẩm, nhà cung cấp, làng nghề..."
+              className="h-[38px] min-w-0 flex-1 border-none px-3.5 text-sm outline-none"
+            />
+            <button
+              type="button"
+              aria-label="Tìm kiếm"
+              className="h-[38px] shrink-0 rounded-r bg-[#C97A3D] px-3 text-sm font-semibold whitespace-nowrap text-white sm:px-5"
+            >
+              <span aria-hidden="true">🔍</span>
+              <span className="hidden sm:inline"> Tìm kiếm</span>
+            </button>
+          </div>
+
+          <div className="order-2 ml-auto flex shrink-0 items-center gap-3 sm:order-3 sm:ml-0">
+            <Link
+              href="/login"
+              className="rounded border border-white/40 px-3 py-[5px] text-xs text-white"
+            >
+              Đăng nhập
+            </Link>
+            <Link
+              href="/register"
+              className="rounded border border-white/40 px-3 py-[5px] text-xs text-white"
+            >
+              Đăng ký
+            </Link>
+            <button
+              type="button"
+              className="rounded bg-white px-3 py-[5px] text-xs font-semibold whitespace-nowrap text-[#B5482E]"
+            >
+              Mua sỉ ngay
+            </button>
+          </div>
+        </div>
+      </header>
+    </>
+  );
+}

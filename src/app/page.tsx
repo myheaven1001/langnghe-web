@@ -1,69 +1,79 @@
-import Image from 'next/image';
+import type { Metadata } from 'next';
+import { inter, interTight } from '@/lib/fonts';
+import { SiteHeader } from './_components/home/SiteHeader';
+import { NavTabs } from './_components/home/NavTabs';
+import { CategorySidebar } from './_components/home/CategorySidebar';
+import { HeroBanners } from './_components/home/HeroBanners';
+import { QuickCategories } from './_components/home/QuickCategories';
+import { Section } from './_components/home/Section';
+import { ProductCard } from './_components/home/ProductCard';
+import { TrustFooter } from './_components/home/TrustFooter';
+import {
+  NAV_TABS,
+  CATEGORY_GROUPS,
+  QUICK_CATEGORIES,
+  FLASH_SALE_PRODUCTS,
+  FEATURED_PRODUCTS,
+  CERAMIC_PRODUCTS,
+  TRUST_ITEMS,
+} from './_components/home/data';
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: 'LàngNghề.vn — Chợ sỉ thủ công mỹ nghệ Việt Nam',
+  description: 'Chợ sỉ làng nghề Việt Nam — kết nối buyer với 1.200+ xưởng thủ công mỹ nghệ.',
+};
+
+const PRODUCT_GRID = 'grid grid-cols-2 gap-2 p-2 sm:grid-cols-3 lg:grid-cols-5';
+
+// Ported from langnghe_1688_style.html (Trang chủ). Layout, content and
+// interactions (sidebar accordion, nav tabs) are preserved; data below is
+// still hardcoded pending the real marketplace API.
+export default function HomePage() {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex w-full max-w-3xl flex-1 flex-col items-center justify-between bg-white px-16 py-32 sm:items-start dark:bg-black">
-        <Image
-          className="h-5 w-[100px] dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl leading-10 font-semibold tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{' '}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{' '}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{' '}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{' '}
-            or the{' '}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{' '}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="bg-foreground text-background flex h-12 w-full items-center justify-center gap-2 rounded-full px-5 transition-colors hover:bg-[#383838] md:w-[158px] dark:hover:bg-[#ccc]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div
+      className={`${inter.variable} ${interTight.variable} min-h-screen bg-[#F7F3ED] font-[family-name:var(--font-inter)] text-[13px] text-[#2A2420]`}
+    >
+      <SiteHeader />
+      <NavTabs tabs={NAV_TABS} />
+
+      <div className="mx-auto grid max-w-[1200px] grid-cols-1 gap-3 px-4 py-3 lg:grid-cols-[180px_1fr]">
+        <CategorySidebar groups={CATEGORY_GROUPS} />
+
+        <div className="flex flex-col gap-2.5">
+          <HeroBanners />
+
+          <QuickCategories items={QUICK_CATEGORIES} />
+
+          <Section title={<>⚡ Ưu đãi lô hàng tuần này</>} countdown="3 ngày">
+            <div className={PRODUCT_GRID}>
+              {FLASH_SALE_PRODUCTS.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </Section>
+
+          <Section title={<>🎯 Sản phẩm nổi bật</>}>
+            <div className={PRODUCT_GRID}>
+              {FEATURED_PRODUCTS.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </Section>
+
+          <Section
+            title={<>🏺 Gốm sứ — Đặc sản Bát Tràng & Phù Lãng</>}
+            moreLabel="Xem toàn bộ gốm sứ →"
           >
-            <Image
-              className="h-[14px] w-4 dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] md:w-[158px] dark:border-white/[.145] dark:hover:bg-[#1a1a1a]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <div className={PRODUCT_GRID}>
+              {CERAMIC_PRODUCTS.map((product) => (
+                <ProductCard key={product.id} product={product} compact />
+              ))}
+            </div>
+          </Section>
+
+          <TrustFooter items={TRUST_ITEMS} />
         </div>
-      </main>
+      </div>
     </div>
   );
 }
