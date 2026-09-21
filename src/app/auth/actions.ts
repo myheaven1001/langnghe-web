@@ -162,6 +162,14 @@ export async function registerAccount(formData: FormData) {
   if (passwordError) back(passwordError);
 
   const supabase = await createClient();
+
+  // Lượt đăng ký trước của email này bị bỏ dở (không nhận được mã, hoặc xong
+  // OTP nhưng chưa hoàn thiện hồ sơ) → xoá đi để đăng ký lại từ đầu, thay vì
+  // kẹt ở "email đã có tài khoản". Chỉ xoá tài khoản 'pending' chưa có dữ liệu
+  // (xem migration 20261003090000). Lỗi ở đây (ví dụ migration chưa chạy) không
+  // được chặn đăng ký → bỏ qua.
+  await supabase.rpc('reclaim_incomplete_signup', { p_email: email });
+
   const { data, error } = await tryAuth(() =>
     supabase.auth.signUp({ email, password, options: { data: { role } } }),
   );
