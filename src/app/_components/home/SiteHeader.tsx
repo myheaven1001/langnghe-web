@@ -2,8 +2,9 @@ import Link from 'next/link';
 
 // Matches .topbar + header + .search-box from the prototype. "Đăng nhập" /
 // "Đăng ký" link to the real /login and /register routes already built in
-// this app; everything else (search, "trở thành nhà cung cấp", "Mua sỉ
-// ngay") stays a placeholder until those flows exist.
+// this app; the search box submits to /search (which logs the query to
+// search_logs); "trở thành nhà cung cấp", "Mua sỉ ngay" stay placeholders
+// until those flows exist.
 const SEARCH_CATEGORIES = [
   'Tất cả',
   'Gốm sứ',
@@ -44,7 +45,11 @@ export function SiteHeader() {
             LàngNghề<span className="ml-1 text-sm font-normal opacity-70">.vn</span>
           </div>
 
-          <div className="order-3 flex min-w-0 flex-1 basis-full sm:order-2 sm:max-w-[680px] sm:basis-auto">
+          <form
+            action="/search"
+            method="get"
+            className="order-3 flex min-w-0 flex-1 basis-full sm:order-2 sm:max-w-[680px] sm:basis-auto"
+          >
             <select
               aria-label="Chọn ngành hàng để tìm kiếm"
               className="h-[38px] w-[72px] shrink-0 truncate rounded-l border-none bg-black/15 px-2 text-xs text-white outline-none sm:w-auto sm:px-2.5"
@@ -57,18 +62,19 @@ export function SiteHeader() {
             </select>
             <input
               type="text"
+              name="q"
               placeholder="Tìm sản phẩm, nhà cung cấp, làng nghề..."
               className="h-[38px] min-w-0 flex-1 border-none px-3.5 text-sm outline-none"
             />
             <button
-              type="button"
+              type="submit"
               aria-label="Tìm kiếm"
               className="h-[38px] shrink-0 rounded-r bg-[#C97A3D] px-3 text-sm font-semibold whitespace-nowrap text-white sm:px-5"
             >
               <span aria-hidden="true">🔍</span>
               <span className="hidden sm:inline"> Tìm kiếm</span>
             </button>
-          </div>
+          </form>
 
           <div className="order-2 ml-auto flex shrink-0 items-center gap-3 sm:order-3 sm:ml-0">
             <Link

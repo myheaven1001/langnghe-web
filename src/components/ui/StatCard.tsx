@@ -13,8 +13,9 @@ const ICON_BG_CLASSNAMES: Record<PillTone, string> = {
   purple: 'bg-status-purple-soft',
 };
 
-const DELTA_CLASSNAMES: Record<'up' | 'new', string> = {
+const DELTA_CLASSNAMES: Record<'up' | 'down' | 'new', string> = {
   up: 'bg-status-green-soft text-status-green',
+  down: 'bg-status-red-soft text-status-red',
   new: 'bg-status-amber-soft text-status-amber',
 };
 
@@ -30,7 +31,7 @@ export function StatCard({
   icon: ReactNode;
   iconTone: PillTone;
   delta?: ReactNode;
-  deltaTone?: 'up' | 'new';
+  deltaTone?: 'up' | 'down' | 'new';
   value: ReactNode;
   label: ReactNode;
   onClick?: () => void;
