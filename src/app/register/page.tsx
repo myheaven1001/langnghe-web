@@ -22,9 +22,9 @@ const playfair = Playfair_Display({
 export default async function RegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ message?: string }>;
+  searchParams: Promise<{ message?: string; email?: string; role?: string }>;
 }) {
-  const { message } = await searchParams;
+  const { message, email, role } = await searchParams;
 
   return (
     <div
@@ -42,7 +42,11 @@ export default async function RegisterPage({
         </span>
       </header>
 
-      <RegisterForm message={message} />
+      <RegisterForm
+        message={message}
+        email={email}
+        initialRole={role === 'supplier' ? 'supplier' : role === 'buyer' ? 'buyer' : undefined}
+      />
     </div>
   );
 }

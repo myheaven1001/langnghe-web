@@ -1,7 +1,7 @@
 'use client';
 
 import { useFormStatus } from 'react-dom';
-import { sendLoginOtp } from '@/app/auth/actions';
+import { sendResetOtp } from '@/app/auth/actions';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -17,22 +17,14 @@ function SubmitButton() {
   );
 }
 
-// Reuses the same sendLoginOtp() Server Action as /login — "quên mật khẩu"
-// and "đăng nhập" are the same operation under email-OTP auth, this page
-// just frames it for someone who can't get into their account.
-export default function ForgotPasswordForm({
-  message,
-  type,
-}: {
-  message?: string;
-  type?: string;
-}) {
+// Gửi OTP tới email → /verify-email (mode=reset) → /reset-password để đặt
+// mật khẩu mới. Cũng là đường để tài khoản cũ (đăng ký bằng OTP, chưa có mật
+// khẩu) đặt mật khẩu lần đầu.
+export default function ForgotPasswordForm({ message, type }: { message?: string; type?: string }) {
   const isError = type !== 'success' && !!message;
 
   return (
-    <form action={sendLoginOtp} className="flex flex-col">
-      <input type="hidden" name="errorPath" value="/forgot-password" />
-
+    <form action={sendResetOtp} className="flex flex-col">
       {message && (
         <div
           className={`mb-4 flex items-center gap-2 rounded-lg border px-3.5 py-2.5 text-xs ${

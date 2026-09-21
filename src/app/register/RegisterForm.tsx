@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useFormStatus } from 'react-dom';
-import { sendRegisterOtp } from '@/app/auth/actions';
+import { registerAccount } from '@/app/auth/actions';
+import PasswordInput from '@/app/auth/_components/PasswordInput';
 
 type Role = 'buyer' | 'supplier';
 
@@ -103,8 +104,16 @@ function SubmitButton() {
   );
 }
 
-export default function RegisterForm({ message }: { message?: string }) {
-  const [role, setRole] = useState<Role>('buyer');
+export default function RegisterForm({
+  message,
+  email,
+  initialRole,
+}: {
+  message?: string;
+  email?: string;
+  initialRole?: Role;
+}) {
+  const [role, setRole] = useState<Role>(initialRole ?? 'buyer');
   const leftContent = LEFT_CONTENT[role];
 
   return (
@@ -152,7 +161,7 @@ export default function RegisterForm({ message }: { message?: string }) {
       <div className="flex flex-col justify-center bg-white px-9 py-10">
         <div className="text-[22px] font-bold">Tạo tài khoản</div>
         <div className="mt-1 mb-7 text-[13px] leading-normal text-[#555]">
-          Miễn phí, không cần mật khẩu — chỉ cần email và mã xác minh 6 số.
+          Miễn phí — đặt mật khẩu, rồi xác minh email bằng mã 6 số.
         </div>
 
         <div className="mb-6 flex gap-1 rounded-lg bg-[#F5F3EF] p-1">
@@ -179,7 +188,7 @@ export default function RegisterForm({ message }: { message?: string }) {
           </div>
         )}
 
-        <form action={sendRegisterOtp} className="flex flex-col gap-4">
+        <form action={registerAccount} className="flex flex-col gap-4">
           {/* role đi kèm request gửi OTP — trigger DB đọc field này để tạo
               đúng buyer_profiles/supplier_profiles sau khi verify (xem
               src/app/auth/actions.ts + supabase/migrations). */}
@@ -196,6 +205,7 @@ export default function RegisterForm({ message }: { message?: string }) {
               type="email"
               required
               autoComplete="email"
+              defaultValue={email}
               placeholder={role === 'buyer' ? 'lan@shopname.com' : 'minh@xuong-gom.vn'}
               className="w-full rounded-md border-[1.5px] border-[#E0DDD8] px-3 py-2.5 text-[13px] transition-colors outline-none focus:border-[#E53333]"
             />
@@ -204,6 +214,22 @@ export default function RegisterForm({ message }: { message?: string }) {
               {role === 'buyer' ? 'mua sỉ' : 'nhà cung cấp'}.
             </div>
           </div>
+
+          <PasswordInput
+            id="password"
+            name="password"
+            label="Mật khẩu *"
+            autoComplete="new-password"
+            minLength={8}
+            hint="Ít nhất 8 ký tự."
+          />
+          <PasswordInput
+            id="confirmPassword"
+            name="confirmPassword"
+            label="Nhập lại mật khẩu *"
+            autoComplete="new-password"
+            minLength={8}
+          />
 
           <SubmitButton />
         </form>

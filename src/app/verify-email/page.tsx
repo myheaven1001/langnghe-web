@@ -39,14 +39,24 @@ export default async function VerifyEmailPage({
     r?: string;
   }>;
 }) {
-  const { email, mode: rawMode, type, message, resent, verified, step, role, r } = await searchParams;
-  const mode = rawMode === 'login' ? 'login' : 'register';
+  const {
+    email,
+    mode: rawMode,
+    type,
+    message,
+    resent,
+    verified,
+    step,
+    role,
+    r,
+  } = await searchParams;
+  const mode = rawMode === 'reset' ? 'reset' : 'register';
   const showProfileStep = step === 'profile' && (role === 'buyer' || role === 'supplier');
 
   // Không có email trong URL nghĩa là vào thẳng trang này mà chưa qua bước
   // gửi OTP — không có gì để xác minh, đưa về nơi khởi đầu hợp lý.
   if (!email) {
-    redirect(mode === 'login' ? '/login' : '/register');
+    redirect(mode === 'reset' ? '/forgot-password' : '/register');
   }
 
   return (
@@ -70,10 +80,12 @@ export default async function VerifyEmailPage({
           </div>
           <div className="relative">
             <div className="mb-3.5 text-[10px] font-semibold tracking-[.12em] text-[#C4622D] uppercase">
-              Chỉ còn một bước nữa
+              {mode === 'reset' ? 'Khôi phục tài khoản' : 'Chỉ còn một bước nữa'}
             </div>
             <div className="mb-3.5 font-[family-name:var(--font-playfair)] text-[30px] leading-[1.25] font-semibold text-white">
-              Xác minh email để bắt đầu mua bán sỉ
+              {mode === 'reset'
+                ? 'Xác minh email để đặt mật khẩu mới'
+                : 'Xác minh email để bắt đầu mua bán sỉ'}
             </div>
             <div className="mb-7 text-[13px] leading-[1.7] text-white/60">
               Xác minh giúp bảo vệ tài khoản của bạn và đảm bảo mọi giao dịch trên LàngNghề.vn đều

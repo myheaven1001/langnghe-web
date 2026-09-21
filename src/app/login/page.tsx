@@ -48,9 +48,9 @@ const STATS = [
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ message?: string; type?: string }>;
+  searchParams: Promise<{ message?: string; type?: string; email?: string }>;
 }) {
-  const { message, type } = await searchParams;
+  const { message, type, email } = await searchParams;
 
   return (
     <div
@@ -115,7 +115,7 @@ export default async function LoginPage({
             Chào mừng trở lại — tiếp tục mua bán sỉ dễ dàng hơn.
           </div>
 
-          <LoginForm message={message} type={type} />
+          <LoginForm message={message} type={type} email={email} />
 
           <div className="mt-5 text-center text-xs text-[#555]">
             Chưa có tài khoản?{' '}

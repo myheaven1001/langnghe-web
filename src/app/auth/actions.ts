@@ -24,8 +24,37 @@ function isValidEmail(email: string): boolean {
   return EMAIL_RE.test(email);
 }
 
+const MIN_PASSWORD_LENGTH = 8;
+// GoTrue băm mật khẩu bằng bcrypt, chỉ đọc 72 byte đầu — từ chối dài hơn thay vì
+// âm thầm cắt bớt.
+const MAX_PASSWORD_LENGTH = 72;
+
+// Trả về message lỗi, hoặc null nếu mật khẩu hợp lệ.
+function validatePassword(password: string, confirm: string | null): string | null {
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return `Mật khẩu phải có ít nhất ${MIN_PASSWORD_LENGTH} ký tự.`;
+  }
+  if (new TextEncoder().encode(password).length > MAX_PASSWORD_LENGTH) {
+    return `Mật khẩu quá dài (tối đa ${MAX_PASSWORD_LENGTH} byte).`;
+  }
+  if (confirm !== null && password !== confirm) {
+    return 'Mật khẩu nhập lại không khớp.';
+  }
+  return null;
+}
+
+// Trang chủ theo role sau khi đăng nhập.
+function homePathFor(role: string): string {
+  if (role === 'admin') return '/admin';
+  if (role === 'supplier') return '/supplier/dashboard';
+  return '/dashboard';
+}
+
 const INVALID_EMAIL_MESSAGE =
   'Email không đúng định dạng. Nếu bạn vừa gõ tiếng Việt, hãy tắt bộ gõ (Unikey/Telex) rồi nhập lại email.';
+
+const SAME_PASSWORD_RE = /different from the old password/i;
+const SAME_PASSWORD_MESSAGE = 'Mật khẩu mới phải khác mật khẩu hiện tại.';
 
 // Supabase/GoTrue trả error.message bằng tiếng Anh — dịch các trường hợp
 // hay gặp sang tiếng Việt cho người dùng cuối. Message lạ (không khớp rule
@@ -33,11 +62,28 @@ const INVALID_EMAIL_MESSAGE =
 function translateAuthError(message: string): string {
   const rules: [RegExp, string][] = [
     [/signups not allowed for otp/i, 'Email này chưa có tài khoản. Vui lòng đăng ký trước.'],
+    [/invalid login credentials/i, 'Email hoặc mật khẩu không đúng.'],
+    [
+      /email not confirmed/i,
+      'Email chưa được xác minh. Hãy chọn "Quên mật khẩu" để nhận mã xác minh.',
+    ],
+    [
+      /(request rate limit|too many requests)/i,
+      'Bạn thử quá nhiều lần. Vui lòng đợi vài phút rồi thử lại.',
+    ],
+    [SAME_PASSWORD_RE, SAME_PASSWORD_MESSAGE],
+    [
+      /weak password|password (is )?(too )?weak|should be at least|should contain/i,
+      'Mật khẩu quá yếu. Hãy dùng mật khẩu dài và khó đoán hơn.',
+    ],
     [/user already registered/i, 'Email này đã có tài khoản. Vui lòng đăng nhập.'],
     [/email rate limit exceeded/i, 'Bạn yêu cầu mã quá nhiều lần. Vui lòng thử lại sau vài phút.'],
     [/for security purposes.*after/i, 'Vui lòng đợi một chút trước khi yêu cầu mã mới.'],
     [/(email address|to be a valid)/i, INVALID_EMAIL_MESSAGE],
-    [/token has expired or is invalid/i, 'Mã xác minh không đúng hoặc đã hết hạn. Vui lòng thử lại.'],
+    [
+      /token has expired or is invalid/i,
+      'Mã xác minh không đúng hoặc đã hết hạn. Vui lòng thử lại.',
+    ],
     // Không phải lỗi Supabase có cấu trúc — exception cấp thấp (network,
     // hoặc input chứa ký tự khiến chính request bị lỗi trước khi tới được
     // Supabase, như "Cannot convert argument to a ByteString..." khi email
@@ -59,11 +105,16 @@ function translateAuthError(message: string): string {
 // này được bọc quanh redirect() — Next.js dùng throw để điều hướng, bọc
 // nhầm sẽ khiến điều hướng biến thành "lỗi" bị nuốt mất.
 async function tryAuth<T>(
-  fn: () => PromiseLike<{ data: T | null; error: { message: string } | null }>,
+  // `{ user: null }`: nhánh lỗi của signInWithPassword()/updateUser() trả
+  // data.user = null thay vì data = null — vẫn hợp lệ, dữ liệu đó bị bỏ đi ở
+  // dưới vì error luôn được kiểm tra trước.
+  fn: () => PromiseLike<{ data: T | { user: null } | null; error: { message: string } | null }>,
 ): Promise<{ data: T | null; error: string | null }> {
   try {
     const { data, error } = await fn();
-    return { data, error: error ? translateAuthError(error.message) : null };
+    return error
+      ? { data: null, error: translateAuthError(error.message) }
+      : { data: data as T | null, error: null };
   } catch (err) {
     return {
       data: null,
@@ -77,64 +128,118 @@ async function tryAuth<T>(
 // phải pure" của React — client dùng nó để biết đây là một lượt điều
 // hướng MỚI (kể cả khi 2 lần nhập sai liên tiếp cho cùng message lỗi) và
 // tự xoá 6 ô OTP, xem VerifyEmailForm.tsx.
-function verifyUrl(email: string, mode: 'register' | 'login', extra?: Record<string, string>) {
+type OtpMode = 'register' | 'reset';
+
+function verifyUrl(email: string, mode: OtpMode, extra?: Record<string, string>) {
   const params = new URLSearchParams({ email, mode, r: crypto.randomUUID().slice(0, 8), ...extra });
   return `/verify-email?${params.toString()}`;
 }
 
-// ── 1. Đăng ký: gửi OTP cho email mới, gắn kèm role đã chọn ─────────────
+// ── 1. Đăng ký: email + mật khẩu + role → Supabase gửi mã xác nhận 6 số ──
 // role được lưu vào auth.users.raw_user_meta_data qua options.data — trigger
 // public.handle_new_user() (xem supabase/migrations) tự đọc field này khi
 // tạo dòng public.users, nên không cần truyền lại role ở bước verify.
-export async function sendRegisterOtp(formData: FormData) {
+//
+// Cần "Confirm email" BẬT trong Supabase Auth và mẫu email "Confirm signup"
+// chứa {{ .Token }}: signUp() khi đó tạo user chưa xác nhận + gửi mã, chưa có
+// session cho tới khi confirmOtp() (verifyOtp type 'signup') thành công.
+export async function registerAccount(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
   const role = formData.get('role');
+  const password = String(formData.get('password') ?? '');
 
-  if (!email || !isRole(role)) {
+  // Giữ lại email + role khi báo lỗi để người dùng khỏi nhập lại (KHÔNG giữ
+  // mật khẩu — không bao giờ đưa mật khẩu lên URL).
+  const back = (message: string) =>
     redirect(
-      `/register?type=error&message=${encodeURIComponent('Vui lòng nhập email và chọn loại tài khoản.')}`,
+      `/register?${new URLSearchParams({ type: 'error', message, email, role: isRole(role) ? role : '' })}`,
     );
-  }
 
-  if (!isValidEmail(email)) {
-    redirect(`/register?type=error&message=${encodeURIComponent(INVALID_EMAIL_MESSAGE)}`);
-  }
+  if (!email || !isRole(role)) back('Vui lòng nhập email và chọn loại tài khoản.');
+  if (!isValidEmail(email)) back(INVALID_EMAIL_MESSAGE);
+
+  const passwordError = validatePassword(password, String(formData.get('confirmPassword') ?? ''));
+  if (passwordError) back(passwordError);
 
   const supabase = await createClient();
-  const { error } = await tryAuth(() =>
-    supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: true,
-        data: { role },
-      },
-    }),
+  const { data, error } = await tryAuth(() =>
+    supabase.auth.signUp({ email, password, options: { data: { role } } }),
   );
+  if (error) back(error);
 
-  if (error) {
-    redirect(`/register?type=error&message=${encodeURIComponent(error)}`);
+  // Email đã có tài khoản đã xác nhận: Supabase (chống dò email) không báo
+  // lỗi mà trả về user "giả" với identities rỗng và KHÔNG gửi mã.
+  if (data?.user && data.user.identities?.length === 0) {
+    back('Email này đã có tài khoản. Vui lòng đăng nhập (hoặc chọn "Quên mật khẩu").');
   }
 
   redirect(verifyUrl(email, 'register'));
 }
 
-// ── 2. Đăng nhập lại: gửi OTP, KHÔNG tạo user mới ───────────────────────
-// shouldCreateUser: false — nếu email chưa từng đăng ký, Supabase trả lỗi
-// thay vì âm thầm tạo tài khoản mới qua form đăng nhập.
+// ── 2. Đăng nhập bằng email + mật khẩu ──────────────────────────────────
+// Lỗi luôn là 1 message chung ("Email hoặc mật khẩu không đúng") dù sai email
+// hay sai mật khẩu — không để lộ email nào đã đăng ký. Brute-force do
+// Supabase Auth tự giới hạn theo IP (auth.rate_limit).
 //
-// Dùng chung cho cả /login và /forgot-password (dưới OTP auth, "quên mật
-// khẩu" chính là "xin mã đăng nhập mới") — errorPath cho biết quay lại
-// trang nào nếu có lỗi, mặc định /login khi form không truyền field này.
-export async function sendLoginOtp(formData: FormData) {
+// Người dùng cũ đăng ký khi hệ thống còn dùng OTP thuần chưa có mật khẩu →
+// đăng nhập sẽ báo sai; họ dùng "Quên mật khẩu" (OTP) để đặt mật khẩu lần đầu.
+export async function loginWithPassword(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
-  const errorPath = String(formData.get('errorPath') ?? '/login');
+  const password = String(formData.get('password') ?? '');
+
+  const back = (message: string) =>
+    redirect(
+      `/login?type=error&message=${encodeURIComponent(message)}&email=${encodeURIComponent(email)}`,
+    );
+
+  if (!email || !password) back('Vui lòng nhập email và mật khẩu.');
+  if (!isValidEmail(email)) back(INVALID_EMAIL_MESSAGE);
+
+  const supabase = await createClient();
+  const { data, error } = await tryAuth(() =>
+    supabase.auth.signInWithPassword({ email, password }),
+  );
+  if (error || !data?.user) back(error ?? 'Không thể đăng nhập. Vui lòng thử lại.');
+
+  const user = data!.user!;
+  const { data: profile, error: profileError } = await tryAuth<{ role: string; status: string }>(
+    () => supabase.from('users').select('role, status').eq('id', user.id).single(),
+  );
+  if (profileError || !profile) {
+    await supabase.auth.signOut();
+    back('Không thể tải thông tin tài khoản. Vui lòng thử lại.');
+  }
+
+  if (profile!.status === 'suspended') {
+    await supabase.auth.signOut();
+    back('Tài khoản của bạn đã bị tạm khóa. Vui lòng liên hệ hỗ trợ.');
+  }
+
+  // Đã xác minh OTP nhưng bỏ dở bước "Hoàn thiện hồ sơ" → đưa quay lại đúng
+  // bước đó (proxy sẽ chặn mọi route private cho tới khi status = 'active').
+  if (
+    profile!.status === 'pending' &&
+    (profile!.role === 'buyer' || profile!.role === 'supplier')
+  ) {
+    redirect(verifyUrl(email, 'register', { step: 'profile', role: profile!.role }));
+  }
+
+  redirect(homePathFor(profile!.role));
+}
+
+// ── 2b. Quên mật khẩu: gửi OTP, KHÔNG tạo user mới ──────────────────────
+// shouldCreateUser: false — email chưa đăng ký thì báo lỗi thay vì âm thầm
+// tạo tài khoản. Sau khi nhập đúng OTP, confirmOtp() chuyển tới
+// /reset-password để đặt mật khẩu mới.
+export async function sendResetOtp(formData: FormData) {
+  const email = String(formData.get('email') ?? '').trim();
 
   if (!email) {
-    redirect(`${errorPath}?type=error&message=${encodeURIComponent('Vui lòng nhập email.')}`);
+    redirect(`/forgot-password?type=error&message=${encodeURIComponent('Vui lòng nhập email.')}`);
   }
 
   if (!isValidEmail(email)) {
-    redirect(`${errorPath}?type=error&message=${encodeURIComponent(INVALID_EMAIL_MESSAGE)}`);
+    redirect(`/forgot-password?type=error&message=${encodeURIComponent(INVALID_EMAIL_MESSAGE)}`);
   }
 
   const supabase = await createClient();
@@ -146,30 +251,30 @@ export async function sendLoginOtp(formData: FormData) {
   );
 
   if (error) {
-    redirect(`${errorPath}?type=error&message=${encodeURIComponent(error)}`);
+    redirect(`/forgot-password?type=error&message=${encodeURIComponent(error)}`);
   }
 
-  redirect(verifyUrl(email, 'login'));
+  redirect(verifyUrl(email, 'reset'));
 }
 
 // ── 3. Gửi lại mã — dùng chung cho cả 2 mode ─────────────────────────────
-// Không dùng supabase.auth.resend() vì API đó chỉ hỗ trợ type 'signup' |
-// 'email_change' (dành cho signUp() truyền thống). Mã gửi qua
-// signInWithOtp() phải resend cũng bằng chính signInWithOtp().
+// Mã của signUp() gửi lại bằng auth.resend(); mã quên mật khẩu (gửi qua
+// signInWithOtp()) phải gửi lại cũng bằng signInWithOtp().
 export async function resendOtp(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
-  const mode = formData.get('mode') === 'login' ? 'login' : 'register';
+  const mode = formData.get('mode') === 'reset' ? 'reset' : 'register';
 
   if (!isValidEmail(email)) {
     redirect(verifyUrl(email, mode, { type: 'error', message: INVALID_EMAIL_MESSAGE }));
   }
 
+  // register: mã xác nhận của signUp() → gửi lại bằng auth.resend('signup').
+  // reset: mã của signInWithOtp() (user đã tồn tại).
   const supabase = await createClient();
   const { error } = await tryAuth(() =>
-    supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: mode === 'register' },
-    }),
+    mode === 'register'
+      ? supabase.auth.resend({ type: 'signup', email })
+      : supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } }),
   );
 
   if (error) {
@@ -183,7 +288,7 @@ export async function resendOtp(formData: FormData) {
 export async function confirmOtp(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
   const token = String(formData.get('token') ?? '').trim();
-  const mode = formData.get('mode') === 'login' ? 'login' : 'register';
+  const mode = formData.get('mode') === 'reset' ? 'reset' : 'register';
 
   if (!email || token.length !== 6) {
     redirect(
@@ -196,7 +301,7 @@ export async function confirmOtp(formData: FormData) {
 
   const supabase = await createClient();
   const { data: verifyData, error: verifyError } = await tryAuth(() =>
-    supabase.auth.verifyOtp({ email, token, type: 'email' }),
+    supabase.auth.verifyOtp({ email, token, type: mode === 'register' ? 'signup' : 'email' }),
   );
 
   if (verifyError || !verifyData?.user) {
@@ -263,10 +368,13 @@ export async function confirmOtp(formData: FormData) {
     redirect(verifyUrl(email, mode, { step: 'profile', role: profile!.role }));
   }
 
-  // Đăng nhập lại (status đã 'active' từ lần verify đầu tiên): quay lại
-  // trang này với verified=1 để hiện màn "🎉 Thành công" (đúng flow
-  // email_verification_page.html) thay vì nhảy thẳng đi — người dùng tự
-  // bấm "Vào Dashboard" ở màn thành công để điều hướng tiếp.
+  // Quên mật khẩu (tài khoản đã 'active'): OTP đúng → đặt mật khẩu mới.
+  if (mode === 'reset') {
+    redirect('/reset-password');
+  }
+
+  // Đăng ký lại với email đã active: quay lại trang này với verified=1 để
+  // hiện màn "🎉 Thành công" (đúng flow email_verification_page.html).
   redirect(verifyUrl(email, mode, { verified: '1' }));
 }
 
@@ -279,7 +387,7 @@ export async function confirmOtp(formData: FormData) {
 // 3.7 — hồ sơ & xác minh đầy đủ, /settings/profile).
 export async function completeProfile(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
-  const mode = formData.get('mode') === 'login' ? 'login' : 'register';
+  const mode = formData.get('mode') === 'reset' ? 'reset' : 'register';
 
   const supabase = await createClient();
   const {
@@ -304,6 +412,42 @@ export async function completeProfile(formData: FormData) {
       verifyUrl(email, mode, {
         type: 'error',
         message: profileError ?? 'Không thể tải thông tin tài khoản. Vui lòng thử lại.',
+      }),
+    );
+  }
+
+  // Mode 'register': mật khẩu đã đặt ở /register (signUp). Mode 'reset' đi qua
+  // bước hồ sơ này khi tài khoản còn 'pending' (bỏ dở đăng ký, quên mật khẩu)
+  // — cần đặt mật khẩu mới ở đây vì /reset-password bị bỏ qua.
+  const password = String(formData.get('password') ?? '');
+  const passwordError =
+    mode === 'reset'
+      ? validatePassword(password, String(formData.get('confirmPassword') ?? ''))
+      : null;
+  if (passwordError) {
+    redirect(
+      verifyUrl(email, mode, {
+        type: 'error',
+        message: passwordError,
+        step: 'profile',
+        role: profile!.role,
+      }),
+    );
+  }
+
+  const { error: passwordUpdateError } =
+    mode === 'reset'
+      ? await tryAuth(() => supabase.auth.updateUser({ password }))
+      : { error: null };
+  // Nhập lại đúng mật khẩu cũ khi thử lại sau một lần lỗi giữa chừng: không
+  // phải lỗi thật.
+  if (passwordUpdateError && passwordUpdateError !== SAME_PASSWORD_MESSAGE) {
+    redirect(
+      verifyUrl(email, mode, {
+        type: 'error',
+        message: passwordUpdateError,
+        step: 'profile',
+        role: profile!.role,
       }),
     );
   }
@@ -363,4 +507,36 @@ export async function completeProfile(formData: FormData) {
   }
 
   redirect(verifyUrl(email, mode, { verified: '1' }));
+}
+
+// ── 6. Đặt mật khẩu mới sau khi xác minh OTP quên mật khẩu ──────────────
+// Chỉ có ý nghĩa khi đã có session (confirmOtp() vừa tạo). Không có session
+// thì quay về bước đầu của luồng quên mật khẩu.
+export async function resetPassword(formData: FormData) {
+  const password = String(formData.get('password') ?? '');
+  const confirm = String(formData.get('confirmPassword') ?? '');
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect(
+      `/forgot-password?type=error&message=${encodeURIComponent('Phiên xác minh đã hết hạn. Vui lòng yêu cầu mã mới.')}`,
+    );
+  }
+
+  const fail = (message: string) =>
+    redirect(`/reset-password?type=error&message=${encodeURIComponent(message)}`);
+
+  const passwordError = validatePassword(password, confirm);
+  if (passwordError) fail(passwordError);
+
+  const { error } = await tryAuth(() => supabase.auth.updateUser({ password }));
+  if (error) fail(error);
+
+  const { data: profile } = await tryAuth<{ role: string }>(() =>
+    supabase.from('users').select('role').eq('id', user!.id).single(),
+  );
+  redirect(homePathFor(profile?.role ?? 'buyer'));
 }

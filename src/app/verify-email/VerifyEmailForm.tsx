@@ -53,7 +53,7 @@ export default function VerifyEmailForm({
   attempt,
 }: {
   email: string;
-  mode: 'register' | 'login';
+  mode: 'register' | 'reset';
   message?: string;
   isError: boolean;
   justResent: boolean;
@@ -185,7 +185,7 @@ export default function VerifyEmailForm({
       <div className="mb-6.5 text-[13px] font-bold">
         {email}{' '}
         <Link
-          href={mode === 'login' ? '/login' : '/register'}
+          href={mode === 'reset' ? '/forgot-password' : '/register'}
           className="ml-1.5 text-xs font-semibold text-[#E53333] underline"
         >
           Đổi email
@@ -267,7 +267,7 @@ function FormWithResend({
   seconds,
 }: {
   email: string;
-  mode: 'register' | 'login';
+  mode: 'register' | 'reset';
   seconds: number;
 }) {
   return (

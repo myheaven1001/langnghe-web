@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { completeProfile } from '@/app/auth/actions';
+import PasswordInput from '@/app/auth/_components/PasswordInput';
 import { BUYER_CITIES } from '@/lib/constants';
 
 const CRAFT_CATEGORIES = ['Gốm sứ', 'Mây tre đan', 'Đồ gỗ', 'Lụa & thêu', 'Sơn mài', 'Đúc đồng'];
@@ -31,7 +32,7 @@ export default function CompleteProfileForm({
   role,
 }: {
   email: string;
-  mode: 'register' | 'login';
+  mode: 'register' | 'reset';
   role: 'buyer' | 'supplier';
 }) {
   const defaultName = email.split('@')[0];
@@ -50,6 +51,26 @@ export default function CompleteProfileForm({
         <input type="hidden" name="email" value={email} />
         <input type="hidden" name="mode" value={mode} />
         <input type="hidden" name="role" value={role} />
+
+        {mode === 'reset' && (
+          <>
+            <PasswordInput
+              id="password"
+              name="password"
+              label="Mật khẩu mới *"
+              autoComplete="new-password"
+              minLength={8}
+              hint="Ít nhất 8 ký tự — tài khoản này chưa có mật khẩu đăng nhập."
+            />
+            <PasswordInput
+              id="confirmPassword"
+              name="confirmPassword"
+              label="Nhập lại mật khẩu *"
+              autoComplete="new-password"
+              minLength={8}
+            />
+          </>
+        )}
 
         {role === 'buyer' ? (
           <>
@@ -96,7 +117,9 @@ export default function CompleteProfileForm({
                 placeholder="0100000000 (nếu có)"
                 className="w-full rounded-md border-[1.5px] border-[#E0DDD8] px-3 py-2.5 text-[13px] outline-none focus:border-[#E53333]"
               />
-              <div className="mt-1.5 text-[11px] text-[#999]">Không bắt buộc — giúp tăng uy tín</div>
+              <div className="mt-1.5 text-[11px] text-[#999]">
+                Không bắt buộc — giúp tăng uy tín
+              </div>
             </div>
           </>
         ) : (

@@ -19,14 +19,10 @@ const playfair = Playfair_Display({
   variable: '--font-playfair',
 });
 
-// Ported from forgot_password_page.html — but this app has no passwords
-// (Supabase Auth via email OTP only, see src/app/auth/actions.ts), so
-// "quên mật khẩu" collapses to "xin mã đăng nhập mới": this page is a
-// themed entry point that calls the same sendLoginOtp() as /login and
-// hands off to the same /verify-email OTP screen. The prototype's steps
-// 2 (nhập OTP) and 3 (đặt mật khẩu mới) don't get their own views here —
-// step 2 is /verify-email (already built and tested) and step 3 doesn't
-// exist for this app.
+// Ported from forgot_password_page.html: 3 bước — nhập email (trang này) →
+// nhập OTP 6 số (/verify-email, mode=reset) → đặt mật khẩu mới
+// (/reset-password). Cũng là đường để tài khoản cũ (đăng ký khi còn dùng
+// OTP thuần, chưa có mật khẩu) đặt mật khẩu lần đầu.
 const HOW_IT_WORKS = [
   {
     icon: '1',
@@ -36,7 +32,12 @@ const HOW_IT_WORKS = [
   {
     icon: '2',
     title: 'Nhập mã OTP 6 số',
-    desc: 'Gửi đến email của bạn — đăng nhập lại ngay sau khi xác minh',
+    desc: 'Gửi đến email của bạn để xác nhận đúng chủ tài khoản',
+  },
+  {
+    icon: '3',
+    title: 'Đặt mật khẩu mới',
+    desc: 'Dùng mật khẩu mới để đăng nhập từ lần sau',
   },
 ];
 
@@ -74,8 +75,8 @@ export default async function ForgotPasswordPage({
               Lấy lại quyền truy cập tài khoản
             </div>
             <div className="mb-8 text-[13px] leading-[1.7] text-white/60">
-              Không cần nhớ mật khẩu — chỉ cần email đã đăng ký, chúng tôi gửi mã xác minh để bạn
-              đăng nhập lại ngay.
+              Chỉ cần email đã đăng ký — chúng tôi gửi mã xác minh, rồi bạn đặt mật khẩu mới để đăng
+              nhập lại.
             </div>
             <div className="flex flex-col gap-4">
               {HOW_IT_WORKS.map((step) => (
@@ -98,10 +99,9 @@ export default async function ForgotPasswordPage({
         {/* RIGHT */}
         <div className="flex flex-col justify-center bg-white px-9 py-10">
           <div className="mb-4 text-[44px]">🔐</div>
-          <div className="text-[22px] font-bold">Không đăng nhập được?</div>
+          <div className="text-[22px] font-bold">Quên mật khẩu?</div>
           <div className="mt-1 mb-7 text-[13px] leading-normal text-[#555]">
-            Nhập email tài khoản của bạn — chúng tôi sẽ gửi mã OTP 6 số để bạn vào lại ngay, không
-            cần mật khẩu.
+            Nhập email tài khoản của bạn — chúng tôi sẽ gửi mã OTP 6 số để bạn đặt mật khẩu mới.
           </div>
 
           <ForgotPasswordForm message={message} type={type} />
