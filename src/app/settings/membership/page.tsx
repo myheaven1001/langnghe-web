@@ -101,11 +101,17 @@ export default async function MembershipPage() {
       .order('started_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
-    supabase.from('membership_plans').select('id, name, price_vnd, billing_cycle').eq('is_active', true).order('price_vnd'),
+    supabase
+      .from('membership_plans')
+      .select('id, name, price_vnd, billing_cycle')
+      .eq('is_active', true)
+      .order('price_vnd'),
     supabase.from('membership_features').select('plan_id, feature_key, feature_value'),
     supabase
       .from('rfq_credit_ledger')
-      .select('id, change_amount, balance_after, reason, order_ref, created_at, rfq_requests(title)')
+      .select(
+        'id, change_amount, balance_after, reason, order_ref, created_at, rfq_requests(title)',
+      )
       .eq('buyer_id', buyer.id)
       .order('created_at', { ascending: false })
       .limit(20),
@@ -127,12 +133,27 @@ export default async function MembershipPage() {
   const ledger = (ledgerData ?? []) as unknown as LedgerRow[];
 
   const currentPlan =
-    (membership?.membership_plans as unknown as PlanRow | null) ?? plans.find((p) => p.name === 'free') ?? null;
-  const currentMonthlyQuotaRaw = currentPlan ? featureValue(features, currentPlan.id, 'rfq_monthly_quota') : null;
-  const currentMonthlyQuota = currentMonthlyQuotaRaw === 'unlimited' ? null : Number(currentMonthlyQuotaRaw ?? 0);
+    (membership?.membership_plans as unknown as PlanRow | null) ??
+    plans.find((p) => p.name === 'free') ??
+    null;
+  const currentMonthlyQuotaRaw = currentPlan
+    ? featureValue(features, currentPlan.id, 'rfq_monthly_quota')
+    : null;
+  const currentMonthlyQuota =
+    currentMonthlyQuotaRaw === 'unlimited' ? null : Number(currentMonthlyQuotaRaw ?? 0);
   const currentMultiAllowed = currentPlan
     ? featureValue(features, currentPlan.id, 'multi_rfq_allowed') === 'true'
     : false;
+
+  // create_rfq() chỉ reset quota_used_this_month lúc buyer gửi RFQ tiếp theo
+  // (lazy reset), nên nếu kỳ đã hết mà buyer chưa gửi gì thì cột vẫn giữ số cũ.
+  // Trang này chỉ đọc, nên tự tính lại cho khớp với những gì create_rfq() sẽ làm.
+  const quotaPeriodExpired =
+    buyer.quota_reset_at !== null && new Date(buyer.quota_reset_at) <= new Date();
+  const quotaUsed = quotaPeriodExpired ? 0 : buyer.quota_used_this_month;
+  const nextQuotaReset = quotaPeriodExpired
+    ? new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString()
+    : buyer.quota_reset_at;
 
   return (
     <AppShell
@@ -210,24 +231,30 @@ export default async function MembershipPage() {
                     <span className="font-semibold">
                       {currentMonthlyQuota === null
                         ? 'Không giới hạn'
-                        : `${buyer.quota_used_this_month} / ${currentMonthlyQuota} đã dùng`}
+                        : `${quotaUsed} / ${currentMonthlyQuota} đã dùng`}
                     </span>
                   </div>
                   <div className="flex max-w-[360px] justify-between py-1 text-xs">
                     <span className="text-brand-sub">Multi-RFQ</span>
-                    <span className={`font-semibold ${!currentMultiAllowed ? 'text-brand-light' : ''}`}>
+                    <span
+                      className={`font-semibold ${!currentMultiAllowed ? 'text-brand-light' : ''}`}
+                    >
                       {currentMultiAllowed ? 'Hỗ trợ' : 'Không hỗ trợ'}
                     </span>
                   </div>
                   <div className="flex max-w-[360px] justify-between py-1 text-xs">
                     <span className="text-brand-sub">Reset hạn mức</span>
                     <span className="font-semibold">
-                      {buyer.quota_reset_at ? formatVnDate(buyer.quota_reset_at) : '—'}
+                      {nextQuotaReset ? formatVnDate(nextQuotaReset) : '—'}
                     </span>
                   </div>
                   <div className="flex max-w-[360px] justify-between py-1 text-xs">
                     <span className="text-brand-sub">Ngày bắt đầu</span>
-                    <span className="font-semibold">{formatVnDate(buyer.created_at)} (đăng ký)</span>
+                    <span className="font-semibold">
+                      {membership?.started_at
+                        ? formatVnDate(membership.started_at)
+                        : `${formatVnDate(buyer.created_at)} (đăng ký)`}
+                    </span>
                   </div>
                 </div>
                 <a
@@ -248,10 +275,15 @@ export default async function MembershipPage() {
                 {plans.map((plan) => {
                   const isCurrent = plan.id === currentPlan?.id;
                   const monthlyQuotaRaw = featureValue(features, plan.id, 'rfq_monthly_quota');
-                  const monthlyQuota = monthlyQuotaRaw === 'unlimited' ? null : Number(monthlyQuotaRaw ?? 0);
-                  const multiAllowed = featureValue(features, plan.id, 'multi_rfq_allowed') === 'true';
-                  const maxSuppliers = Number(featureValue(features, plan.id, 'max_suppliers_per_rfq') ?? 1);
-                  const monthlyEquivalent = plan.price_vnd > 0 ? Math.round(plan.price_vnd / 12) : 0;
+                  const monthlyQuota =
+                    monthlyQuotaRaw === 'unlimited' ? null : Number(monthlyQuotaRaw ?? 0);
+                  const multiAllowed =
+                    featureValue(features, plan.id, 'multi_rfq_allowed') === 'true';
+                  const maxSuppliers = Number(
+                    featureValue(features, plan.id, 'max_suppliers_per_rfq') ?? 1,
+                  );
+                  const monthlyEquivalent =
+                    plan.price_vnd > 0 ? Math.round(plan.price_vnd / 12) : 0;
                   const isBasic = plan.name === 'basic';
 
                   return (
@@ -279,7 +311,9 @@ export default async function MembershipPage() {
                       </div>
                       <div className="font-tight text-[22px] font-bold">
                         {plan.price_vnd === 0 ? '0đ' : formatVnd(monthlyEquivalent)}
-                        {plan.price_vnd > 0 && <span className="text-brand-light text-[11px] font-normal">/tháng</span>}
+                        {plan.price_vnd > 0 && (
+                          <span className="text-brand-light text-[11px] font-normal">/tháng</span>
+                        )}
                       </div>
                       <div className="text-brand-light mb-4 text-[11px]">
                         {plan.price_vnd === 0
@@ -289,7 +323,11 @@ export default async function MembershipPage() {
 
                       <div className="text-brand-sub mb-2 flex items-start gap-1.5 text-xs leading-relaxed">
                         <span className="shrink-0">✓</span>
-                        <span>{monthlyQuota === null ? 'RFQ không giới hạn' : `${monthlyQuota} RFQ / tháng`}</span>
+                        <span>
+                          {monthlyQuota === null
+                            ? 'RFQ không giới hạn'
+                            : `${monthlyQuota} RFQ / tháng`}
+                        </span>
                       </div>
                       {multiAllowed ? (
                         <div className="text-brand-sub mb-2 flex items-start gap-1.5 text-xs leading-relaxed">
@@ -344,8 +382,8 @@ export default async function MembershipPage() {
                   <div className="text-brand-sub text-[11.5px]">credit còn lại</div>
                 </div>
                 <div className="text-brand-sub flex-1 text-[11.5px] leading-relaxed">
-                  Dùng credit để gửi thêm RFQ khi đã hết hạn mức tháng — mỗi credit tương ứng 1
-                  RFQ. Credit không hết hạn và có thể tích lũy.
+                  Dùng credit để gửi thêm RFQ khi đã hết hạn mức tháng — mỗi credit tương ứng 1 RFQ.
+                  Credit không hết hạn và có thể tích lũy.
                 </div>
               </div>
 
@@ -364,7 +402,9 @@ export default async function MembershipPage() {
                     )}
                     <div className="font-tight text-xl font-bold">{pack.credits}</div>
                     <div className="text-brand-light mb-2 text-[11px]">credit</div>
-                    <div className="text-brand-red text-sm font-bold">{formatVnd(pack.priceVnd)}</div>
+                    <div className="text-brand-red text-sm font-bold">
+                      {formatVnd(pack.priceVnd)}
+                    </div>
                     <div className="text-brand-light mt-0.5 text-[10.5px]">
                       {formatVnd(Math.round(pack.priceVnd / pack.credits))} / credit
                     </div>
@@ -393,11 +433,15 @@ export default async function MembershipPage() {
                       key={tx.id}
                       className="flex items-center gap-3 border-b border-[#F2F0EC] px-[18px] py-[11px] last:border-b-0"
                     >
-                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm ${meta.bg}`}>
+                      <div
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm ${meta.bg}`}
+                      >
                         {meta.icon}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-[12.5px] font-semibold">{reasonLabel(tx)}</div>
+                        <div className="truncate text-[12.5px] font-semibold">
+                          {reasonLabel(tx)}
+                        </div>
                         <div className="text-brand-light mt-0.5 text-[10.5px]">
                           {formatVnDate(tx.created_at)} —{' '}
                           {new Date(tx.created_at).toLocaleTimeString('vi-VN', {
@@ -407,11 +451,15 @@ export default async function MembershipPage() {
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
-                        <div className={`text-sm font-bold ${positive ? 'text-brand-green' : 'text-brand-red'}`}>
+                        <div
+                          className={`text-sm font-bold ${positive ? 'text-brand-green' : 'text-brand-red'}`}
+                        >
                           {positive ? '+' : ''}
                           {tx.change_amount}
                         </div>
-                        <div className="text-brand-light mt-0.5 text-[10.5px]">còn {tx.balance_after}</div>
+                        <div className="text-brand-light mt-0.5 text-[10.5px]">
+                          còn {tx.balance_after}
+                        </div>
                       </div>
                     </div>
                   );
