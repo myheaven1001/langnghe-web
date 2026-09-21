@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { completeProfile } from '@/app/auth/actions';
-import PasswordInput from '@/app/auth/_components/PasswordInput';
+import PasswordPair from '@/app/auth/_components/PasswordPair';
 import { BUYER_CITIES } from '@/lib/constants';
 
 const CRAFT_CATEGORIES = ['Gốm sứ', 'Mây tre đan', 'Đồ gỗ', 'Lụa & thêu', 'Sơn mài', 'Đúc đồng'];
@@ -54,20 +54,10 @@ export default function CompleteProfileForm({
 
         {mode === 'reset' && (
           <>
-            <PasswordInput
-              id="password"
-              name="password"
-              label="Mật khẩu mới *"
-              autoComplete="new-password"
-              minLength={8}
+            <PasswordPair
+              passwordLabel="Mật khẩu mới *"
+              confirmLabel="Nhập lại mật khẩu *"
               hint="Ít nhất 8 ký tự — tài khoản này chưa có mật khẩu đăng nhập."
-            />
-            <PasswordInput
-              id="confirmPassword"
-              name="confirmPassword"
-              label="Nhập lại mật khẩu *"
-              autoComplete="new-password"
-              minLength={8}
             />
           </>
         )}

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useFormStatus } from 'react-dom';
 import { registerAccount } from '@/app/auth/actions';
-import PasswordInput from '@/app/auth/_components/PasswordInput';
+import PasswordPair from '@/app/auth/_components/PasswordPair';
 
 type Role = 'buyer' | 'supplier';
 
@@ -215,20 +215,10 @@ export default function RegisterForm({
             </div>
           </div>
 
-          <PasswordInput
-            id="password"
-            name="password"
-            label="Mật khẩu *"
-            autoComplete="new-password"
-            minLength={8}
+          <PasswordPair
+            passwordLabel="Mật khẩu *"
+            confirmLabel="Nhập lại mật khẩu *"
             hint="Ít nhất 8 ký tự."
-          />
-          <PasswordInput
-            id="confirmPassword"
-            name="confirmPassword"
-            label="Nhập lại mật khẩu *"
-            autoComplete="new-password"
-            minLength={8}
           />
 
           <SubmitButton />

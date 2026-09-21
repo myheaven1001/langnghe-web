@@ -1,9 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-// Ô mật khẩu có nút Hiện/Ẩn, dùng chung cho đăng nhập, hoàn thiện hồ sơ và
-// đặt lại mật khẩu — cùng style với các ô input khác của luồng auth.
+// Ô mật khẩu có nút Hiện/Ẩn, dùng chung cho đăng nhập, đăng ký, hoàn thiện
+// hồ sơ và đặt lại mật khẩu — cùng style với các ô input khác của luồng auth.
+//
+// `customError`: nếu có, đặt làm setCustomValidity() của <input> để trình
+// duyệt chặn submit form (và hiện đúng câu này) cho tới khi hết lỗi — dùng
+// bởi PasswordPair để ép "nhập lại mật khẩu" phải khớp.
 export default function PasswordInput({
   id,
   name,
@@ -13,6 +17,10 @@ export default function PasswordInput({
   hint,
   minLength,
   labelRight,
+  value,
+  onChange,
+  customError,
+  showError,
 }: {
   id: string;
   name: string;
@@ -22,8 +30,18 @@ export default function PasswordInput({
   hint?: string;
   minLength?: number;
   labelRight?: React.ReactNode;
+  value?: string;
+  onChange?: (value: string) => void;
+  customError?: string;
+  /** Hiện `customError` ngay dưới ô (không đợi bấm gửi). */
+  showError?: boolean;
 }) {
   const [visible, setVisible] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.setCustomValidity(customError ?? '');
+  }, [customError]);
 
   return (
     <div>
@@ -35,6 +53,7 @@ export default function PasswordInput({
       </div>
       <div className="relative">
         <input
+          ref={inputRef}
           id={id}
           name={name}
           type={visible ? 'text' : 'password'}
@@ -42,7 +61,12 @@ export default function PasswordInput({
           minLength={minLength}
           autoComplete={autoComplete}
           placeholder={placeholder}
-          className="w-full rounded-lg border-[1.5px] border-[#E0DDD8] py-2.5 pr-14 pl-3.5 text-[13px] transition-colors outline-none focus:border-[#E53333]"
+          value={value}
+          onChange={onChange ? (e) => onChange(e.target.value) : undefined}
+          aria-invalid={showError && customError ? true : undefined}
+          className={`w-full rounded-lg border-[1.5px] py-2.5 pr-14 pl-3.5 text-[13px] transition-colors outline-none focus:border-[#E53333] ${
+            showError && customError ? 'border-[#E53333]' : 'border-[#E0DDD8]'
+          }`}
         />
         <button
           type="button"
@@ -53,7 +77,11 @@ export default function PasswordInput({
           {visible ? 'Ẩn' : 'Hiện'}
         </button>
       </div>
-      {hint && <div className="mt-1.5 text-[11px] text-[#999]">{hint}</div>}
+      {showError && customError ? (
+        <div className="mt-1.5 text-[11px] text-[#E53333]">{customError}</div>
+      ) : (
+        hint && <div className="mt-1.5 text-[11px] text-[#999]">{hint}</div>
+      )}
     </div>
   );
 }

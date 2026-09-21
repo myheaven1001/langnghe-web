@@ -2,7 +2,7 @@
 
 import { useFormStatus } from 'react-dom';
 import { resetPassword } from '@/app/auth/actions';
-import PasswordInput from '@/app/auth/_components/PasswordInput';
+import PasswordPair from '@/app/auth/_components/PasswordPair';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -36,20 +36,10 @@ export default function ResetPasswordForm({ message, type }: { message?: string;
         </div>
       )}
 
-      <PasswordInput
-        id="password"
-        name="password"
-        label="Mật khẩu mới"
-        autoComplete="new-password"
-        minLength={8}
+      <PasswordPair
+        passwordLabel="Mật khẩu mới"
+        confirmLabel="Nhập lại mật khẩu mới"
         hint="Ít nhất 8 ký tự."
-      />
-      <PasswordInput
-        id="confirmPassword"
-        name="confirmPassword"
-        label="Nhập lại mật khẩu mới"
-        autoComplete="new-password"
-        minLength={8}
       />
 
       <SubmitButton />
