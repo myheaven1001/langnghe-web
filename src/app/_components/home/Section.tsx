@@ -1,18 +1,21 @@
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 
 // Matches .product-row/.rec-section + .section-hdr from the prototype: a
 // bordered white block with a title (colored dot + label), an optional
-// countdown, and a "see all" link.
+// countdown, and a "see all" link. moreHref has no sensible universal
+// default (it depends what the section is "see all" *of*) — callers in
+// page.tsx now always pass one instead of relying on a "#" fallback.
 export function Section({
   title,
-  moreHref = '#',
+  moreHref,
   moreLabel = 'Xem tất cả →',
   countdown,
   children,
   className = '',
 }: {
   title: ReactNode;
-  moreHref?: string;
+  moreHref: string;
   moreLabel?: string;
   countdown?: string;
   children: ReactNode;
@@ -33,9 +36,9 @@ export function Section({
             </span>
           )}
         </div>
-        <a href={moreHref} className="text-xs text-[#3D6B94] hover:underline">
+        <Link href={moreHref} className="text-xs text-[#3D6B94] hover:underline">
           {moreLabel}
-        </a>
+        </Link>
       </div>
       {children}
     </div>

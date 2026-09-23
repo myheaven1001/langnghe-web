@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Product, ProductTag } from './data';
 
 // Matches .prod-card / .rec-card from langnghe_1688_style.html, but uses a
@@ -13,8 +14,12 @@ const TAG_CLASSNAMES: Record<ProductTag['tone'], string> = {
 
 export function ProductCard({ product, compact = false }: { product: Product; compact?: boolean }) {
   return (
-    <a
-      href="#"
+    // /products/[id] still ignores its id param and renders one sample
+    // product (see src/app/products/[id]/page.tsx) — same "hardcoded
+    // pending real data" stage as this card, so every card lands on that
+    // one page for now instead of a dead "#".
+    <Link
+      href={`/products/${product.id}`}
       className="block overflow-hidden rounded-[6px] border border-[#E5DDD1] bg-white transition-shadow hover:shadow-[0_2px_12px_rgba(0,0,0,0.1)]"
     >
       <div
@@ -58,6 +63,6 @@ export function ProductCard({ product, compact = false }: { product: Product; co
           </div>
         )}
       </div>
-    </a>
+    </Link>
   );
 }

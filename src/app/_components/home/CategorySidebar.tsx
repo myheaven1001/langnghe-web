@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import type { CategoryGroup } from './data';
 
 // Matches .sidebar/.sb-cat accordion from the prototype: a single category
@@ -27,13 +28,16 @@ export function CategorySidebar({ groups }: { groups: CategoryGroup[] }) {
         {open && (
           <div className="pb-2 pl-9">
             {group.subcategories.map((sub) => (
-              <a
+              // No dedicated subcategory page/slug exists — route to
+              // /search prefilled with the subcategory name, same as
+              // typing it into the header search box.
+              <Link
                 key={sub}
-                href="#"
+                href={`/search?q=${encodeURIComponent(sub)}`}
                 className="block py-[3px] text-xs text-[#6B6058] hover:text-[#B5482E]"
               >
                 {sub}
-              </a>
+              </Link>
             ))}
           </div>
         )}

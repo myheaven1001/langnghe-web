@@ -1,12 +1,15 @@
+import Link from 'next/link';
 import { UserMenu } from '@/components/ui';
 
 // Matches .topbar + header + .search-box from the prototype. The search box
-// submits to /search (which logs the query to search_logs); "trở thành nhà
-// cung cấp", "Mua sỉ ngay" stay placeholders until those flows exist.
-// Login/register vs. logged-in state is handled by <UserMenu> (self-fetches
-// the session client-side) — this header never knew about auth before, so a
-// logged-in user always saw "Đăng nhập/Đăng ký" here even right after
-// registering.
+// submits to /search (which logs the query to search_logs). Login/register
+// vs. logged-in state is handled by <UserMenu> (self-fetches the session
+// client-side) — this header never knew about auth before, so a logged-in
+// user always saw "Đăng nhập/Đăng ký" here even right after registering.
+// "Hỗ trợ" points at /about (closest existing page with FAQ content) — no
+// dedicated support page exists yet (Giai đoạn 11). "Tiếng Việt" isn't a
+// link: the site has exactly one language, a "#" there would just be a
+// fake control.
 const SEARCH_CATEGORIES = [
   'Tất cả',
   'Gốm sứ',
@@ -28,15 +31,13 @@ export function SiteHeader() {
         <div className="mx-auto flex max-w-[1200px] flex-col items-start gap-1 px-4 py-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0 sm:py-0">
           <span>Chào mừng đến LàngNghề.vn — Chợ sỉ thủ công mỹ nghệ Việt Nam</span>
           <div>
-            <a href="#" className="ml-3 first:ml-0 hover:text-white">
+            <Link href="/register" className="ml-3 first:ml-0 hover:text-white">
               Trở thành nhà cung cấp
-            </a>
-            <a href="#" className="ml-3 hover:text-white">
+            </Link>
+            <Link href="/about" className="ml-3 hover:text-white">
               Hỗ trợ
-            </a>
-            <a href="#" className="ml-3 hover:text-white">
-              Tiếng Việt
-            </a>
+            </Link>
+            <span className="ml-3">Tiếng Việt</span>
           </div>
         </div>
       </div>
@@ -80,12 +81,12 @@ export function SiteHeader() {
 
           <div className="order-2 ml-auto flex shrink-0 items-center gap-3 sm:order-3 sm:ml-0">
             <UserMenu variant="muted" />
-            <button
-              type="button"
+            <Link
+              href="/register"
               className="rounded bg-white px-3 py-[5px] text-xs font-semibold whitespace-nowrap text-[#B5482E]"
             >
               Mua sỉ ngay
-            </button>
+            </Link>
           </div>
         </div>
       </header>

@@ -44,7 +44,11 @@ export default function HomePage() {
 
           <QuickCategories items={QUICK_CATEGORIES} />
 
-          <Section title={<>⚡ Ưu đãi lô hàng tuần này</>} countdown="3 ngày">
+          <Section
+            title={<>⚡ Ưu đãi lô hàng tuần này</>}
+            countdown="3 ngày"
+            moreHref="/search"
+          >
             <div className={PRODUCT_GRID}>
               {FLASH_SALE_PRODUCTS.map((product) => (
                 <ProductCard key={product.id} product={product} />
@@ -52,7 +56,7 @@ export default function HomePage() {
             </div>
           </Section>
 
-          <Section title={<>🎯 Sản phẩm nổi bật</>}>
+          <Section title={<>🎯 Sản phẩm nổi bật</>} moreHref="/search">
             <div className={PRODUCT_GRID}>
               {FEATURED_PRODUCTS.map((product) => (
                 <ProductCard key={product.id} product={product} />
@@ -63,6 +67,7 @@ export default function HomePage() {
           <Section
             title={<>🏺 Gốm sứ — Đặc sản Bát Tràng & Phù Lãng</>}
             moreLabel="Xem toàn bộ gốm sứ →"
+            moreHref="/categories/gom-su"
           >
             <div className={PRODUCT_GRID}>
               {CERAMIC_PRODUCTS.map((product) => (
