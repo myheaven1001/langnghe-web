@@ -1,10 +1,12 @@
-import Link from 'next/link';
+import { UserMenu } from '@/components/ui';
 
-// Matches .topbar + header + .search-box from the prototype. "Đăng nhập" /
-// "Đăng ký" link to the real /login and /register routes already built in
-// this app; the search box submits to /search (which logs the query to
-// search_logs); "trở thành nhà cung cấp", "Mua sỉ ngay" stay placeholders
-// until those flows exist.
+// Matches .topbar + header + .search-box from the prototype. The search box
+// submits to /search (which logs the query to search_logs); "trở thành nhà
+// cung cấp", "Mua sỉ ngay" stay placeholders until those flows exist.
+// Login/register vs. logged-in state is handled by <UserMenu> (self-fetches
+// the session client-side) — this header never knew about auth before, so a
+// logged-in user always saw "Đăng nhập/Đăng ký" here even right after
+// registering.
 const SEARCH_CATEGORIES = [
   'Tất cả',
   'Gốm sứ',
@@ -77,18 +79,7 @@ export function SiteHeader() {
           </form>
 
           <div className="order-2 ml-auto flex shrink-0 items-center gap-3 sm:order-3 sm:ml-0">
-            <Link
-              href="/login"
-              className="rounded border border-white/40 px-3 py-[5px] text-xs text-white"
-            >
-              Đăng nhập
-            </Link>
-            <Link
-              href="/register"
-              className="rounded border border-white/40 px-3 py-[5px] text-xs text-white"
-            >
-              Đăng ký
-            </Link>
+            <UserMenu variant="muted" />
             <button
               type="button"
               className="rounded bg-white px-3 py-[5px] text-xs font-semibold whitespace-nowrap text-[#B5482E]"

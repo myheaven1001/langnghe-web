@@ -10,3 +10,4 @@ export * from './Breadcrumb';
 export * from './ProductListingCard';
 export * from './Pagination';
 export * from './ListToolbar';
+export * from './UserMenu';

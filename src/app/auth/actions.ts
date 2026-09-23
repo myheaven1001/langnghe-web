@@ -514,7 +514,9 @@ export async function completeProfile(formData: FormData) {
     );
   }
 
-  redirect(verifyUrl(email, mode, { verified: '1' }));
+  // Hồ sơ xong, tài khoản đã 'active' → vào thẳng dashboard theo vai trò (thay vì
+  // màn "email đã được xác minh" cũ với nút dẫn về trang chủ).
+  redirect(homePathFor(profile!.role));
 }
 
 // ── 6. Đặt mật khẩu mới sau khi xác minh OTP quên mật khẩu ──────────────

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { UserMenu } from './UserMenu';
 
 // Matches the .topbar + header + .search-box pattern shared by the public
 // marketplace prototypes (search_results, category_listing, product_detail,
@@ -133,12 +134,7 @@ export function PublicHeader({
         )}
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          <Link
-            href="/login"
-            className="rounded border border-white/40 px-2.5 py-[5px] text-xs text-white"
-          >
-            Đăng nhập
-          </Link>
+          <UserMenu variant="solid" />
           <Link
             href={primaryButtonHref ?? '#'}
             className="text-brand-red rounded bg-white px-2.5 py-[5px] text-xs font-semibold whitespace-nowrap"
