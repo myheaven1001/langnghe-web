@@ -68,9 +68,11 @@ export async function updateSession(request: NextRequest) {
 
   if (isPrivatePath) {
     if (!user) {
-      // No session at all: straight to login.
+      // No session at all: straight to login, remembering where they were
+      // headed so auth/actions.ts can send them back afterwards.
       const url = request.nextUrl.clone();
       url.pathname = '/login';
+      url.search = new URLSearchParams({ next: pathname + request.nextUrl.search }).toString();
       return NextResponse.redirect(url);
     }
 

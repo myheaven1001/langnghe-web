@@ -30,10 +30,12 @@ export default function CompleteProfileForm({
   email,
   mode,
   role,
+  next,
 }: {
   email: string;
   mode: 'register' | 'reset';
   role: 'buyer' | 'supplier';
+  next?: string | null;
 }) {
   const defaultName = email.split('@')[0];
   const [craftCategory, setCraftCategory] = useState(CRAFT_CATEGORIES[0]);
@@ -51,6 +53,7 @@ export default function CompleteProfileForm({
         <input type="hidden" name="email" value={email} />
         <input type="hidden" name="mode" value={mode} />
         <input type="hidden" name="role" value={role} />
+        {next && <input type="hidden" name="next" value={next} />}
 
         {mode === 'reset' && (
           <>

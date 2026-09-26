@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { safeNextPath } from '@/lib/safe-next';
 
 type Role = 'buyer' | 'supplier';
 
@@ -128,10 +129,21 @@ async function tryAuth<T>(
 // phải pure" của React — client dùng nó để biết đây là một lượt điều
 // hướng MỚI (kể cả khi 2 lần nhập sai liên tiếp cho cùng message lỗi) và
 // tự xoá 6 ô OTP, xem VerifyEmailForm.tsx.
+//
+// `next` (trong `extra`): trang người dùng định vào trước khi bị đưa tới
+// /login (xem safeNextPath); đi theo suốt luồng đăng ký để sau bước hồ sơ
+// quay lại đúng đó. Giá trị null/undefined bị bỏ qua.
 type OtpMode = 'register' | 'reset';
 
-function verifyUrl(email: string, mode: OtpMode, extra?: Record<string, string>) {
-  const params = new URLSearchParams({ email, mode, r: crypto.randomUUID().slice(0, 8), ...extra });
+function verifyUrl(
+  email: string,
+  mode: OtpMode,
+  extra?: Record<string, string | null | undefined>,
+) {
+  const params = new URLSearchParams({ email, mode, r: crypto.randomUUID().slice(0, 8) });
+  for (const [key, value] of Object.entries(extra ?? {})) {
+    if (value) params.set(key, value);
+  }
   return `/verify-email?${params.toString()}`;
 }
 
@@ -147,12 +159,13 @@ export async function registerAccount(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
   const role = formData.get('role');
   const password = String(formData.get('password') ?? '');
+  const next = safeNextPath(formData.get('next'));
 
   // Giữ lại email + role khi báo lỗi để người dùng khỏi nhập lại (KHÔNG giữ
   // mật khẩu — không bao giờ đưa mật khẩu lên URL).
   const back = (message: string) =>
     redirect(
-      `/register?${new URLSearchParams({ type: 'error', message, email, role: isRole(role) ? role : '' })}`,
+      `/register?${new URLSearchParams({ type: 'error', message, email, role: isRole(role) ? role : '', ...(next && { next }) })}`,
     );
 
   if (!email || !isRole(role)) back('Vui lòng nhập email và chọn loại tài khoản.');
@@ -181,7 +194,7 @@ export async function registerAccount(formData: FormData) {
     back('Email này đã có tài khoản. Vui lòng đăng nhập (hoặc chọn "Quên mật khẩu").');
   }
 
-  redirect(verifyUrl(email, 'register'));
+  redirect(verifyUrl(email, 'register', { next }));
 }
 
 // ── 2. Đăng nhập bằng email + mật khẩu ──────────────────────────────────
@@ -194,10 +207,11 @@ export async function registerAccount(formData: FormData) {
 export async function loginWithPassword(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
+  const next = safeNextPath(formData.get('next'));
 
   const back = (message: string) =>
     redirect(
-      `/login?type=error&message=${encodeURIComponent(message)}&email=${encodeURIComponent(email)}`,
+      `/login?${new URLSearchParams({ type: 'error', message, email, ...(next && { next }) })}`,
     );
 
   if (!email || !password) back('Vui lòng nhập email và mật khẩu.');
@@ -229,10 +243,10 @@ export async function loginWithPassword(formData: FormData) {
     profile!.status === 'pending' &&
     (profile!.role === 'buyer' || profile!.role === 'supplier')
   ) {
-    redirect(verifyUrl(email, 'register', { step: 'profile', role: profile!.role }));
+    redirect(verifyUrl(email, 'register', { step: 'profile', role: profile!.role, next }));
   }
 
-  redirect(homePathFor(profile!.role));
+  redirect(next ?? homePathFor(profile!.role));
 }
 
 // ── 2b. Quên mật khẩu: gửi OTP, KHÔNG tạo user mới ──────────────────────
@@ -271,9 +285,10 @@ export async function sendResetOtp(formData: FormData) {
 export async function resendOtp(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
   const mode = formData.get('mode') === 'reset' ? 'reset' : 'register';
+  const next = safeNextPath(formData.get('next'));
 
   if (!isValidEmail(email)) {
-    redirect(verifyUrl(email, mode, { type: 'error', message: INVALID_EMAIL_MESSAGE }));
+    redirect(verifyUrl(email, mode, { type: 'error', message: INVALID_EMAIL_MESSAGE, next }));
   }
 
   // register: mã xác nhận của signUp() → gửi lại bằng auth.resend('signup').
@@ -286,10 +301,10 @@ export async function resendOtp(formData: FormData) {
   );
 
   if (error) {
-    redirect(verifyUrl(email, mode, { type: 'error', message: error }));
+    redirect(verifyUrl(email, mode, { type: 'error', message: error, next }));
   }
 
-  redirect(verifyUrl(email, mode, { resent: '1' }));
+  redirect(verifyUrl(email, mode, { resent: '1', next }));
 }
 
 // ── 4. Xác nhận OTP + tạo profile nếu đây là lần verify đầu tiên ────────
@@ -297,12 +312,14 @@ export async function confirmOtp(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
   const token = String(formData.get('token') ?? '').trim();
   const mode = formData.get('mode') === 'reset' ? 'reset' : 'register';
+  const next = safeNextPath(formData.get('next'));
 
   if (!email || token.length !== 6) {
     redirect(
       verifyUrl(email, mode, {
         type: 'error',
         message: 'Mã xác minh phải gồm 6 chữ số.',
+        next,
       }),
     );
   }
@@ -317,6 +334,7 @@ export async function confirmOtp(formData: FormData) {
       verifyUrl(email, mode, {
         type: 'error',
         message: verifyError ?? 'Mã xác minh không đúng. Vui lòng thử lại.',
+        next,
       }),
     );
   }
@@ -341,6 +359,7 @@ export async function confirmOtp(formData: FormData) {
       verifyUrl(email, mode, {
         type: 'error',
         message: profileError ?? 'Không thể tải thông tin tài khoản. Vui lòng thử lại.',
+        next,
       }),
     );
   }
@@ -369,11 +388,12 @@ export async function confirmOtp(formData: FormData) {
         verifyUrl(email, mode, {
           type: 'error',
           message: 'Không thể khởi tạo hồ sơ. Vui lòng thử lại hoặc liên hệ hỗ trợ.',
+          next,
         }),
       );
     }
 
-    redirect(verifyUrl(email, mode, { step: 'profile', role: profile!.role }));
+    redirect(verifyUrl(email, mode, { step: 'profile', role: profile!.role, next }));
   }
 
   // Quên mật khẩu (tài khoản đã 'active'): OTP đúng → đặt mật khẩu mới.
@@ -383,7 +403,7 @@ export async function confirmOtp(formData: FormData) {
 
   // Đăng ký lại với email đã active: quay lại trang này với verified=1 để
   // hiện màn "🎉 Thành công" (đúng flow email_verification_page.html).
-  redirect(verifyUrl(email, mode, { verified: '1' }));
+  redirect(verifyUrl(email, mode, { verified: '1', next }));
 }
 
 // ── 5. Hoàn thiện hồ sơ sau khi verify OTP lần đầu (register) ───────────
@@ -396,6 +416,7 @@ export async function confirmOtp(formData: FormData) {
 export async function completeProfile(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
   const mode = formData.get('mode') === 'reset' ? 'reset' : 'register';
+  const next = safeNextPath(formData.get('next'));
 
   const supabase = await createClient();
   const {
@@ -420,6 +441,7 @@ export async function completeProfile(formData: FormData) {
       verifyUrl(email, mode, {
         type: 'error',
         message: profileError ?? 'Không thể tải thông tin tài khoản. Vui lòng thử lại.',
+        next,
       }),
     );
   }
@@ -439,6 +461,7 @@ export async function completeProfile(formData: FormData) {
         message: passwordError,
         step: 'profile',
         role: profile!.role,
+        next,
       }),
     );
   }
@@ -456,6 +479,7 @@ export async function completeProfile(formData: FormData) {
         message: passwordUpdateError,
         step: 'profile',
         role: profile!.role,
+        next,
       }),
     );
   }
@@ -495,6 +519,7 @@ export async function completeProfile(formData: FormData) {
         message: 'Không thể lưu hồ sơ. Vui lòng thử lại.',
         step: 'profile',
         role: profile!.role,
+        next,
       }),
     );
   }
@@ -510,13 +535,14 @@ export async function completeProfile(formData: FormData) {
         message: 'Đã lưu hồ sơ nhưng không thể kích hoạt tài khoản. Vui lòng thử lại.',
         step: 'profile',
         role: profile!.role,
+        next,
       }),
     );
   }
 
   // Hồ sơ xong, tài khoản đã 'active' → vào thẳng dashboard theo vai trò (thay vì
   // màn "email đã được xác minh" cũ với nút dẫn về trang chủ).
-  redirect(homePathFor(profile!.role));
+  redirect(next ?? homePathFor(profile!.role));
 }
 
 // ── 6. Đặt mật khẩu mới sau khi xác minh OTP quên mật khẩu ──────────────

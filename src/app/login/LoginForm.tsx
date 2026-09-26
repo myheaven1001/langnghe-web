@@ -27,15 +27,19 @@ export default function LoginForm({
   message,
   type,
   email,
+  next,
 }: {
   message?: string;
   type?: string;
   email?: string;
+  // Trang cần quay lại sau đăng nhập (đã qua safeNextPath ở page.tsx).
+  next?: string | null;
 }) {
   const isError = type !== 'success' && !!message;
 
   return (
     <form action={loginWithPassword} className="flex flex-col">
+      {next && <input type="hidden" name="next" value={next} />}
       {message && (
         <div
           className={`mb-4 flex items-center gap-2 rounded-lg border px-3.5 py-2.5 text-xs ${

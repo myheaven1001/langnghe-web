@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { withNext } from '@/lib/safe-next';
 import { useFormStatus } from 'react-dom';
 import { registerAccount } from '@/app/auth/actions';
 import PasswordPair from '@/app/auth/_components/PasswordPair';
@@ -107,10 +108,12 @@ function SubmitButton() {
 export default function RegisterForm({
   message,
   email,
+  next,
   initialRole,
 }: {
   message?: string;
   email?: string;
+  next?: string | null;
   initialRole?: Role;
 }) {
   const [role, setRole] = useState<Role>(initialRole ?? 'buyer');
@@ -193,6 +196,7 @@ export default function RegisterForm({
               đúng buyer_profiles/supplier_profiles sau khi verify (xem
               src/app/auth/actions.ts + supabase/migrations). */}
           <input type="hidden" name="role" value={role} />
+          {next && <input type="hidden" name="next" value={next} />}
 
           <div>
             <label htmlFor="email" className="mb-1.5 block text-xs font-semibold">
@@ -226,7 +230,10 @@ export default function RegisterForm({
 
         <div className="mt-4 text-center text-xs text-[#555]">
           Đã có tài khoản?{' '}
-          <Link href="/login" className="font-semibold text-[#E53333] hover:underline">
+          <Link
+            href={withNext('/login', next)}
+            className="font-semibold text-[#E53333] hover:underline"
+          >
             Đăng nhập
           </Link>
         </div>

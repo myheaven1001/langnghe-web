@@ -1,6 +1,7 @@
 import { Inter, Inter_Tight, Playfair_Display } from 'next/font/google';
 import { redirect } from 'next/navigation';
 import VerifyEmailForm from './VerifyEmailForm';
+import { safeNextPath } from '@/lib/safe-next';
 
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
@@ -37,6 +38,7 @@ export default async function VerifyEmailPage({
     step?: string;
     role?: string;
     r?: string;
+    next?: string;
   }>;
 }) {
   const {
@@ -49,7 +51,9 @@ export default async function VerifyEmailPage({
     step,
     role,
     r,
+    next: rawNext,
   } = await searchParams;
+  const next = safeNextPath(rawNext);
   const mode = rawMode === 'reset' ? 'reset' : 'register';
   const showProfileStep = step === 'profile' && (role === 'buyer' || role === 'supplier');
 
@@ -164,6 +168,7 @@ export default async function VerifyEmailPage({
             verified={verified === '1'}
             profileRole={showProfileStep ? (role as 'buyer' | 'supplier') : undefined}
             attempt={r ?? ''}
+            next={next}
           />
         </div>
       </div>

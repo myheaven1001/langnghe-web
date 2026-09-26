@@ -51,6 +51,7 @@ export default function VerifyEmailForm({
   verified,
   profileRole,
   attempt,
+  next,
 }: {
   email: string;
   mode: 'register' | 'reset';
@@ -65,6 +66,8 @@ export default function VerifyEmailForm({
   // verifyUrl() trong auth/actions.ts) — đổi giá trị ngay cả khi 2 lần
   // liên tiếp trả về CÙNG một message lỗi (ví dụ nhập sai OTP 2 lần).
   attempt: string;
+  // Trang cần quay lại sau khi xong đăng ký (đã qua safeNextPath ở page.tsx).
+  next?: string | null;
 }) {
   const [digits, setDigits] = useState<string[]>(Array(6).fill(''));
   const [seconds, setSeconds] = useState(RESEND_SECONDS);
@@ -138,7 +141,7 @@ export default function VerifyEmailForm({
   const complete = digits.every((d) => d.length === 1);
 
   if (profileRole) {
-    return <CompleteProfileForm email={email} mode={mode} role={profileRole} />;
+    return <CompleteProfileForm email={email} mode={mode} role={profileRole} next={next} />;
   }
 
   if (verified) {
@@ -196,6 +199,7 @@ export default function VerifyEmailForm({
         <input type="hidden" name="email" value={email} />
         <input type="hidden" name="mode" value={mode} />
         <input type="hidden" name="token" value={token} />
+        {next && <input type="hidden" name="next" value={next} />}
 
         <div className="mb-2.5 flex justify-center gap-2.5">
           {digits.map((d, i) => (
@@ -241,7 +245,8 @@ export default function VerifyEmailForm({
       {/* Form riêng, KHÔNG lồng trong <form> xác nhận ở trên (HTML không
           cho phép form lồng form) — submit độc lập tới resendOtp. */}
       <div className="mb-6 text-xs text-[#555]">
-        Chưa nhận được mã? <FormWithResend email={email} mode={mode} seconds={seconds} />{' '}
+        Chưa nhận được mã?{' '}
+        <FormWithResend email={email} mode={mode} seconds={seconds} next={next} />{' '}
         {seconds > 0 && (
           <span className="text-[#999]">(00:{String(seconds).padStart(2, '0')})</span>
         )}
@@ -265,15 +270,18 @@ function FormWithResend({
   email,
   mode,
   seconds,
+  next,
 }: {
   email: string;
   mode: 'register' | 'reset';
   seconds: number;
+  next?: string | null;
 }) {
   return (
     <form action={resendOtp} className="inline">
       <input type="hidden" name="email" value={email} />
       <input type="hidden" name="mode" value={mode} />
+      {next && <input type="hidden" name="next" value={next} />}
       <ResendButton seconds={seconds} />
     </form>
   );

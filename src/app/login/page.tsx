@@ -1,6 +1,12 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Inter, Inter_Tight, Playfair_Display } from 'next/font/google';
 import LoginForm from './LoginForm';
+import { safeNextPath, withNext } from '@/lib/safe-next';
+
+export const metadata: Metadata = {
+  title: 'Đăng nhập — LàngNghề.vn',
+};
 
 // Fonts scoped to /login to match the login_page.html mockup's identity
 // (Inter / Inter Tight / Playfair Display) without changing the rest of
@@ -48,9 +54,10 @@ const STATS = [
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ message?: string; type?: string; email?: string }>;
+  searchParams: Promise<{ message?: string; type?: string; email?: string; next?: string }>;
 }) {
-  const { message, type, email } = await searchParams;
+  const { message, type, email, next: rawNext } = await searchParams;
+  const next = safeNextPath(rawNext);
 
   return (
     <div
@@ -115,11 +122,14 @@ export default async function LoginPage({
             Chào mừng trở lại — tiếp tục mua bán sỉ dễ dàng hơn.
           </div>
 
-          <LoginForm message={message} type={type} email={email} />
+          <LoginForm message={message} type={type} email={email} next={next} />
 
           <div className="mt-5 text-center text-xs text-[#555]">
             Chưa có tài khoản?{' '}
-            <Link href="/register" className="font-semibold text-[#E53333] hover:underline">
+            <Link
+              href={withNext('/register', next)}
+              className="font-semibold text-[#E53333] hover:underline"
+            >
               Đăng ký miễn phí ngay
             </Link>
           </div>
