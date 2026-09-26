@@ -10,7 +10,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "check:migrations": "node scripts/check-migration-order.mjs"
+    "check:migrations": "node scripts/check-migration-order.mjs",
+    "seed:staging": "node --env-file=.env.staging.local scripts/seed-staging.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",

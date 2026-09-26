@@ -30,7 +30,10 @@ Nhờ vậy Vercel Instant Rollback luôn an toàn: code cũ vẫn chạy đư�
 
 ## Test trên staging
 
-- 5 tài khoản test (buyer A, buyer B, xưởng A, xưởng B, admin) tạo bằng script service role, không qua email. Không tạo tài khoản test trên production.
+- 5 tài khoản test (buyer A, buyer B, xưởng A, xưởng B, admin) tạo bằng `npm run seed:staging`, không qua email. Không tạo tài khoản test trên production; script tự dừng nếu URL hoặc key là của production.
+  - Tạo file `.env.staging.local` (không commit) với `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (của staging) và `SEED_TEST_PASSWORD` (≥ 12 ký tự, dùng chung cho 5 tài khoản).
+  - Email: `buyer.a@langnghe.test`, `buyer.b@…`, `xuong.a@…`, `xuong.b@…`, `admin@…`. Buyer A và xưởng A đã xác minh; buyer B và xưởng B chưa.
+  - Dữ liệu mẫu: 5 sản phẩm có bảng giá (1 bản nháp), 1 RFQ từ buyer A gửi xưởng A. Chạy lại được nhiều lần, không tạo trùng.
 - Mỗi bản vá bảo mật có file SQL test giả lập từng vai trò (`set local role authenticated` + `request.jwt.claims`) trong `supabase/tests/`.
 - Kiểm tra giao diện ở 375px và 1280px.
 
