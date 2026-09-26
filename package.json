@@ -14,6 +14,7 @@
     "seed:staging": "node --env-file=.env.staging.local scripts/seed-staging.mjs"
   },
   "dependencies": {
+    "@sentry/nextjs": "^11.0.0",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.112.4",
     "next": "16.3.2",
