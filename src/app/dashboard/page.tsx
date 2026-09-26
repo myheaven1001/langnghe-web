@@ -197,8 +197,8 @@ export default async function DashboardPage() {
         {
           label: 'Tài khoản',
           items: [
-            { icon: '🏢', label: 'Hồ sơ & xác minh', href: '/profile' },
-            { icon: '💳', label: 'Membership & credit', href: '/membership' },
+            { icon: '🏢', label: 'Hồ sơ & xác minh', href: '/settings/profile' },
+            { icon: '💳', label: 'Membership & credit', href: '/settings/membership' },
             { icon: '⚙️', label: 'Cài đặt thông báo', href: '/settings/notifications' },
           ],
         },
@@ -375,7 +375,7 @@ export default async function DashboardPage() {
               <div className="text-xl">🎟️</div>
             </div>
             <Link
-              href="/membership"
+              href="/settings/membership"
               className="bg-brand-forest hover:bg-brand-forest-dark block w-full rounded-md py-2.5 text-center text-xs font-semibold text-white"
             >
               Nâng cấp gói →
