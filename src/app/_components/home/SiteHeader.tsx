@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Form from 'next/form';
 import { UserMenu } from '@/components/ui';
 
 // Matches .topbar + header + .search-box from the prototype. The search box
@@ -48,9 +49,8 @@ export function SiteHeader() {
             LàngNghề<span className="ml-1 text-sm font-normal opacity-70">.vn</span>
           </div>
 
-          <form
+          <Form
             action="/search"
-            method="get"
             className="order-3 flex min-w-0 flex-1 basis-full sm:order-2 sm:max-w-[680px] sm:basis-auto"
           >
             <select
@@ -77,7 +77,7 @@ export function SiteHeader() {
               <span aria-hidden="true">🔍</span>
               <span className="hidden sm:inline"> Tìm kiếm</span>
             </button>
-          </form>
+          </Form>
 
           <div className="order-2 ml-auto flex shrink-0 items-center gap-3 sm:order-3 sm:ml-0">
             <UserMenu variant="muted" />

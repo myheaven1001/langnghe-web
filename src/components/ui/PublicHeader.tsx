@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Form from 'next/form';
 import { UserMenu } from './UserMenu';
 
 // Matches the .topbar + header + .search-box pattern shared by the public
@@ -34,6 +35,8 @@ export interface PublicHeaderProps {
    * let the input manage its own value. */
   searchValue?: string;
   onSearchValueChange?: (value: string) => void;
+  /** Chỉ trang /search cần: tự chạy tìm kiếm tại chỗ thay vì điều hướng.
+   * Không truyền thì ô tìm kiếm gửi tới /search?q=... (next/form). */
   onSearch?: (query: string) => void;
   primaryButtonLabel?: string;
   primaryButtonHref?: string;
@@ -96,12 +99,16 @@ export function PublicHeader({
             ))}
           </nav>
         ) : (
-          <form
+          <Form
+            action="/search"
             className="flex min-w-0 flex-1 basis-full sm:order-none sm:max-w-[680px] sm:basis-auto"
-            onSubmit={(e) => {
-              e.preventDefault();
-              onSearch?.(value);
-            }}
+            onSubmit={
+              onSearch &&
+              ((e) => {
+                e.preventDefault();
+                onSearch(value);
+              })
+            }
           >
             {searchCategories && (
               <select
@@ -117,6 +124,7 @@ export function PublicHeader({
             )}
             <input
               type="text"
+              name="q"
               value={value}
               onChange={(e) => setValue(e.target.value)}
               placeholder={searchPlaceholder}
@@ -130,7 +138,7 @@ export function PublicHeader({
             >
               🔍 Tìm kiếm
             </button>
-          </form>
+          </Form>
         )}
 
         <div className="ml-auto flex shrink-0 items-center gap-2">

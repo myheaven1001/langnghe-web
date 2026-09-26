@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { inter, interTight } from '@/lib/fonts';
-import { NotFoundSearchHeader } from './_components/not-found/NotFoundSearchHeader';
+import { PublicHeader } from '@/components/ui';
 
 // Ported from error_404_page.html (only the "404" tab of that prototype —
 // the file also sketches a 500 page and an empty-search-results state as
@@ -24,7 +24,7 @@ export default function NotFound() {
     <div
       className={`${inter.variable} ${interTight.variable} min-h-screen bg-[#F5F5F5] font-[family-name:var(--font-inter)] text-[13px] text-[#1F1F1F]`}
     >
-      <NotFoundSearchHeader />
+      <PublicHeader showTopbar={false} searchPlaceholder="Tìm sản phẩm, nhà cung cấp..." />
 
       <div className="flex flex-col items-center px-5 py-16 text-center">
         <div className="mb-4 text-[56px]">🔍</div>
