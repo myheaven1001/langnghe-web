@@ -45,7 +45,23 @@ Chạy `scripts/backup-db.sh` trước mỗi lần push migration lên productio
 3. Merge vào `main`.
 4. `npx supabase db push` lên production theo thứ tự ở mục "Mở rộng trước, thu hẹp sau".
 5. **Tuyệt đối không dùng `npx supabase config push`**: nó ghi đè cấu hình Auth của production bằng `supabase/config.toml`.
-6. Với migration phân quyền, theo dõi Sentry và log Postgres trong 48 giờ. Lọc log theo `permission denied` và `FORBIDDEN_`.
+6. Với migration phân quyền, theo dõi Sentry và log Postgres trong 48 giờ. Lọc log theo `permission denied` và `FORBIDDEN_` (xem mục Giám sát).
+
+## Giám sát
+
+- **Sentry (Next.js):** lỗi trình duyệt, Server Component, Server Action, route handler và proxy. Bật bằng biến `NEXT_PUBLIC_SENTRY_DSN` trên Vercel; không có biến thì tắt. Lỗi được gắn môi trường `production` / `preview`, lọc theo ô Environment trên Sentry. Source map tải lên khi có `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`.
+- **UptimeRobot:** kiểm tra trang chủ production mỗi 5 phút, báo qua email khi trang không phản hồi.
+- **Log Postgres sau migration phân quyền:** Supabase Dashboard → Logs → Postgres, chạy truy vấn:
+
+  ```sql
+  select timestamp, event_message
+  from postgres_logs
+  where regexp_contains(event_message, 'permission denied|FORBIDDEN_|violates row-level security')
+  order by timestamp desc
+  limit 100
+  ```
+
+  Có dòng mới sau khi deploy nghĩa là quy tắc mới đang chặn một luồng thật: đối chiếu với Sentry, sửa hoặc quay lui (`supabase/rollback/`).
 
 ## Cờ bật/tắt tính năng
 
