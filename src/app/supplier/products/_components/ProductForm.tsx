@@ -17,6 +17,8 @@ interface VariantInput {
   size: string;
   material: string;
   stockQty: string;
+  // Cộng/trừ vào đơn giá theo bậc (VND), có thể âm; trống = 0.
+  priceAdjustment: string;
   sku: string;
 }
 
@@ -42,7 +44,14 @@ interface ProductFormInitial {
 }
 
 const EMPTY_TIER: PriceTierInput = { minQty: '', maxQty: '', unitPrice: '' };
-const EMPTY_VARIANT: VariantInput = { color: '', size: '', material: '', stockQty: '', sku: '' };
+const EMPTY_VARIANT: VariantInput = {
+  color: '',
+  size: '',
+  material: '',
+  stockQty: '',
+  priceAdjustment: '',
+  sku: '',
+};
 
 function safeFileName(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -233,6 +242,7 @@ export function ProductForm({
             size: v.size.trim() || null,
             material: v.material.trim() || null,
             stock_qty: v.stockQty ? Number(v.stockQty) : 0,
+            price_adjustment: v.priceAdjustment ? Number(v.priceAdjustment) : 0,
             sku: v.sku.trim() || null,
           })),
         );
@@ -473,17 +483,18 @@ export function ProductForm({
           />
           <CardBody padded>
             {variants.length > 0 && (
-              <div className="mb-1.5 grid grid-cols-[1fr_1fr_1fr_80px_100px_30px] gap-2 text-[10px] font-bold tracking-[.04em] text-brand-light uppercase">
+              <div className="mb-1.5 grid grid-cols-[1fr_1fr_1fr_80px_100px_100px_30px] gap-2 text-[10px] font-bold tracking-[.04em] text-brand-light uppercase">
                 <span>Màu sắc</span>
                 <span>Kích thước</span>
                 <span>Chất liệu</span>
                 <span>Tồn kho</span>
+                <span title="Cộng/trừ vào đơn giá theo bậc, có thể âm">± Giá (₫)</span>
                 <span>SKU</span>
                 <span />
               </div>
             )}
             {variants.map((v, i) => (
-              <div key={i} className="mb-2 grid grid-cols-[1fr_1fr_1fr_80px_100px_30px] gap-2">
+              <div key={i} className="mb-2 grid grid-cols-[1fr_1fr_1fr_80px_100px_100px_30px] gap-2">
                 <input
                   value={v.color}
                   onChange={(e) => updateVariant(i, { color: e.target.value })}
@@ -503,6 +514,15 @@ export function ProductForm({
                   type="number"
                   value={v.stockQty}
                   onChange={(e) => updateVariant(i, { stockQty: e.target.value })}
+                  className="border-brand-border focus:border-brand-red rounded-md border-[1.5px] px-2 py-2 text-xs outline-none"
+                />
+                <input
+                  type="number"
+                  step="1000"
+                  placeholder="0"
+                  aria-label="Chênh lệch giá so với bảng giá (₫)"
+                  value={v.priceAdjustment}
+                  onChange={(e) => updateVariant(i, { priceAdjustment: e.target.value })}
                   className="border-brand-border focus:border-brand-red rounded-md border-[1.5px] px-2 py-2 text-xs outline-none"
                 />
                 <input
