@@ -39,7 +39,7 @@ Nhờ vậy Vercel Instant Rollback luôn an toàn: code cũ vẫn chạy đư�
 
 ## Sao lưu
 
-Chạy `scripts/backup-db.sh` trước mỗi lần push migration lên production. File dump lưu ngoài repo, không commit.
+Production dùng gói Free: Supabase **không** tự sao lưu. Trước mỗi lần push migration lên production chạy `npm run backup:prod` (Windows, cần `pg_dump` 17; hỏi mật khẩu database, lưu vào `%USERPROFILE%\langnghe-backups\` và tự kiểm tra file). Trên macOS/Linux dùng `scripts/backup-db.sh`. File dump lưu ngoài repo, không commit, không gửi cho ai.
 
 ## Deploy production
 
