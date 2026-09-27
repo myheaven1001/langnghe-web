@@ -39,7 +39,7 @@ Nhờ vậy Vercel Instant Rollback luôn an toàn: code cũ vẫn chạy đư�
 
 ## Sao lưu
 
-Mật khẩu database staging/production: các lệnh `db:push:*` và `backup:prod` hỏi một lần rồi lưu **mã hoá bằng Windows DPAPI** ở `%USERPROFILE%.langnghe` (chỉ user Windows này trên máy này đọc được, ngoài repo). Đổi mật khẩu trên Supabase xong thì chạy `npm run db:forget-passwords`; nhập sai thì script tự xoá bản đã lưu.
+Mật khẩu database staging/production: các lệnh `db:push:*` và `backup:prod` hỏi một lần rồi lưu **mã hoá bằng Windows DPAPI** ở `%USERPROFILE%\.langnghe\` (chỉ user Windows này trên máy này đọc được, ngoài repo). Đổi mật khẩu trên Supabase xong thì chạy `npm run db:forget-passwords`; nhập sai thì script tự xoá bản đã lưu.
 
 Production dùng gói Free: Supabase **không** tự sao lưu. Trước mỗi lần push migration lên production chạy `npm run backup:prod` (Windows, cần `pg_dump` 17; hỏi mật khẩu database, lưu vào `%USERPROFILE%\langnghe-backups\` và tự kiểm tra file). Trên macOS/Linux dùng `scripts/backup-db.sh`. File dump lưu ngoài repo, không commit, không gửi cho ai.
 
