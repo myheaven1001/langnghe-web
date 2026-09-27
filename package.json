@@ -12,7 +12,10 @@
     "typecheck": "tsc --noEmit",
     "check:migrations": "node scripts/check-migration-order.mjs",
     "seed:staging": "node --env-file=.env.staging.local scripts/seed-staging.mjs",
-    "backup:prod": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/backup-db.ps1"
+    "backup:prod": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/backup-db.ps1",
+    "db:push:staging": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-push.ps1 -Target staging",
+    "db:push:prod": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-push.ps1 -Target production",
+    "db:forget-passwords": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-forget-passwords.ps1"
   },
   "dependencies": {
     "@sentry/nextjs": "^11.0.0",

@@ -31,22 +31,28 @@ New-Item -ItemType Directory -Force $BackupDir | Out-Null
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $out = Join-Path $BackupDir "langnghe-prod-$stamp.dump"
 
-$secure = Read-Host "Mật khẩu database production ($ProjectRef)" -AsSecureString
-$bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
+# Mật khẩu: hỏi lần đầu rồi lưu mã hoá (scripts/db-password.ps1).
+. (Join-Path $PSScriptRoot 'db-password.ps1')
 try {
   # Mật khẩu đi qua biến môi trường của riêng tiến trình này, không nằm trong
   # lệnh hay URL (nên không cần mã hoá ký tự đặc biệt).
-  $env:PGPASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
+  $env:PGPASSWORD = Get-DbPassword 'production'
   $url = "postgresql://postgres.$ProjectRef@${PoolerHost}:5432/postgres"
 
   Write-Host "Đang sao lưu production vào $out ..."
-  & $pgDump $url --format=custom --no-owner --no-privileges `
-    --schema=public --schema=auth --schema=storage --file=$out
-  if ($LASTEXITCODE -ne 0) { Write-Error "pg_dump lỗi (mã $LASTEXITCODE). File sao lưu không dùng được." }
+  $log = & $pgDump $url --format=custom --no-owner --no-privileges `
+    --schema=public --schema=auth --schema=storage --file=$out 2>&1 | Out-String
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host $log
+    if ($log -match 'password authentication failed') {
+      Remove-DbPassword 'production'
+      Write-Error 'Sai mật khẩu production. Đã xoá mật khẩu đã lưu — chạy lại để nhập mật khẩu đúng.'
+    }
+    Write-Error "pg_dump lỗi (mã $LASTEXITCODE). File sao lưu không dùng được."
+  }
 }
 finally {
   Remove-Item Env:PGPASSWORD -ErrorAction SilentlyContinue
-  [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
 }
 
 # Kiểm tra: file đọc được và có dữ liệu các bảng chính.

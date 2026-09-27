@@ -39,6 +39,8 @@ Nhờ vậy Vercel Instant Rollback luôn an toàn: code cũ vẫn chạy đư�
 
 ## Sao lưu
 
+Mật khẩu database staging/production: các lệnh `db:push:*` và `backup:prod` hỏi một lần rồi lưu **mã hoá bằng Windows DPAPI** ở `%USERPROFILE%.langnghe` (chỉ user Windows này trên máy này đọc được, ngoài repo). Đổi mật khẩu trên Supabase xong thì chạy `npm run db:forget-passwords`; nhập sai thì script tự xoá bản đã lưu.
+
 Production dùng gói Free: Supabase **không** tự sao lưu. Trước mỗi lần push migration lên production chạy `npm run backup:prod` (Windows, cần `pg_dump` 17; hỏi mật khẩu database, lưu vào `%USERPROFILE%\langnghe-backups\` và tự kiểm tra file). Trên macOS/Linux dùng `scripts/backup-db.sh`. File dump lưu ngoài repo, không commit, không gửi cho ai.
 
 ## Deploy production
@@ -46,7 +48,7 @@ Production dùng gói Free: Supabase **không** tự sao lưu. Trước mỗi l�
 1. PR → CI đạt (`check:migrations`, `lint`, `typecheck`, `build`) → Preview deployment chạy với staging.
 2. Sao lưu production.
 3. Merge vào `main`.
-4. `npx supabase db push` lên production theo thứ tự ở mục "Mở rộng trước, thu hẹp sau".
+4. `npm run db:push:prod` (chạy thử, liệt kê migration, hỏi xác nhận rồi mới chạy thật) theo thứ tự ở mục "Mở rộng trước, thu hẹp sau". Trên staging: `npm run db:push:staging`.
 5. **Tuyệt đối không dùng `npx supabase config push`**: nó ghi đè cấu hình Auth của production bằng `supabase/config.toml`.
 6. Với migration phân quyền, theo dõi Sentry và log Postgres trong 48 giờ. Lọc log theo `permission denied` và `FORBIDDEN_` (xem mục Giám sát).
 
