@@ -9,8 +9,8 @@ Supabase CLI không chạy thư mục này. Chạy tay khi cần:
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/rollback/<tên-migration>.sql
 ```
 
-Sau khi quay lui, xoá dòng của migration đó khỏi `supabase_migrations.schema_migrations`.
-Nếu không, `npx supabase db push` sẽ coi nó là đã chạy:
+Script quay lui tự xoá dòng của migration đó khỏi `supabase_migrations.schema_migrations`.
+Nếu không, `npx supabase db push` sẽ coi nó là đã chạy. Mỗi script kết thúc bằng:
 
 ```sql
 delete from supabase_migrations.schema_migrations where version = '<timestamp>';
