@@ -16,14 +16,19 @@ $url = Get-DbUrl $Target (Get-DbPassword $Target)
 $label = $script:DbTargets[$Target].Label
 
 Write-Host "`n== Chạy thử trên $label ==" -ForegroundColor Cyan
-$dry = & npx supabase db push --db-url $url --dry-run 2>&1 | Out-String
+# Supabase CLI in cả thông báo thường ra stderr; PowerShell 5.1 sẽ coi đó là
+# lỗi và dừng script nếu ErrorActionPreference = Stop — tạm đổi để tự đọc mã thoát.
+$ErrorActionPreference = 'Continue'
+$dry = & npx supabase db push --db-url $url --dry-run 2>&1 | ForEach-Object { "$_" } | Out-String
+$code = $LASTEXITCODE
+$ErrorActionPreference = 'Stop'
 Write-Host $dry
-if ($LASTEXITCODE -ne 0) {
+if ($code -ne 0) {
   if ($dry -match 'password authentication failed') {
     Remove-DbPassword $Target
     Write-Error "Sai mật khẩu $label. Đã xoá mật khẩu đã lưu — chạy lại lệnh để nhập mật khẩu đúng."
   }
-  Write-Error "Chạy thử lỗi (mã $LASTEXITCODE). Chưa có gì thay đổi."
+  Write-Error "Chạy thử lỗi (mã $code). Chưa có gì thay đổi."
 }
 if ($dry -match 'up to date') {
   Write-Host "$label đã có đủ migration, không có gì để chạy." -ForegroundColor Green

@@ -40,15 +40,20 @@ try {
   $url = "postgresql://postgres.$ProjectRef@${PoolerHost}:5432/postgres"
 
   Write-Host "Đang sao lưu production vào $out ..."
+  # PowerShell 5.1 coi mọi dòng stderr của lệnh ngoài là lỗi và dừng script
+  # khi ErrorActionPreference = Stop — tạm đổi để tự đọc mã thoát.
+  $ErrorActionPreference = 'Continue'
   $log = & $pgDump $url --format=custom --no-owner --no-privileges `
-    --schema=public --schema=auth --schema=storage --file=$out 2>&1 | Out-String
-  if ($LASTEXITCODE -ne 0) {
+    --schema=public --schema=auth --schema=storage --file=$out 2>&1 | ForEach-Object { "$_" } | Out-String
+  $code = $LASTEXITCODE
+  $ErrorActionPreference = 'Stop'
+  if ($code -ne 0) {
     Write-Host $log
     if ($log -match 'password authentication failed') {
       Remove-DbPassword 'production'
       Write-Error 'Sai mật khẩu production. Đã xoá mật khẩu đã lưu — chạy lại để nhập mật khẩu đúng.'
     }
-    Write-Error "pg_dump lỗi (mã $LASTEXITCODE). File sao lưu không dùng được."
+    Write-Error "pg_dump lỗi (mã $code). File sao lưu không dùng được."
   }
 }
 finally {
