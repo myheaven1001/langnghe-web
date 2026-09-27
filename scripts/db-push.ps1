@@ -38,7 +38,7 @@ if ($dry -match 'up to date') {
 if ($Target -eq 'production') {
   Write-Host 'PRODUCTION: đã chạy "npm run backup:prod" cho lần này chưa?' -ForegroundColor Yellow
 }
-$answer = Read-Host "Chạy thật các migration trên lên $label? Gõ 'co' để tiếp tục"
+$answer = Read-Host "Chạy thật các migration trên lên ${label}? Gõ 'co' để tiếp tục"
 if ($answer -ne 'co') {
   Write-Host 'Đã huỷ. Chưa có gì thay đổi.'
   exit 0
