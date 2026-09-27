@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Modal, ModalActions, ModalTitle } from '@/components/ui';
 
-// Insert trực tiếp vào rfq_quotes — RLS rfq_quotes_supplier_own (FOR ALL)
+// Insert trực tiếp vào rfq_quotes — supplier_id do trigger guard_rfq_quote_write
+// (20261005090400) tự điền theo tài khoản đang đăng nhập. RLS rfq_quotes_supplier_own (FOR ALL)
 // đã cho phép supplier tự thêm báo giá của mình, không cần RPC (không có
 // tác dụng phụ cross-table cần atomic; trigger trg_log_quote_received —
 // xem 20260924090000_quote_received.sql — tự chuyển rfq_requests.status
@@ -54,7 +55,9 @@ export function QuoteModal({
       setError(
         insertError.message.includes('duplicate')
           ? 'Bạn đã gửi báo giá cho RFQ này rồi.'
-          : 'Không thể gửi báo giá. Vui lòng thử lại.',
+          : insertError.message.includes('RFQ_NOT_OPEN')
+            ? 'RFQ này đã đóng, không nhận báo giá nữa.'
+            : 'Không thể gửi báo giá. Vui lòng thử lại.',
       );
       return;
     }
