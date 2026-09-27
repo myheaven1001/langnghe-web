@@ -5,10 +5,22 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Modal, ModalActions, ModalTitle } from '@/components/ui';
 
-const LOGISTICS_PROVIDERS = ['GHTK', 'GHN', 'Viettel Post', 'Tự vận chuyển'];
+const SELF_DELIVERY = 'Tự vận chuyển';
+const LOGISTICS_PROVIDERS = ['GHTK', 'GHN', 'Viettel Post', SELF_DELIVERY];
 
-// Update trực tiếp orders.status — RLS orders_update đã cho phép supplier
-// sở hữu đơn tự đổi status. Trigger trg_handle_order_status_change (xem
+// Mã lỗi từ trigger guard_order_update (20261005090300) → câu tiếng Việt.
+function orderErrorMessage(message: string, fallback: string): string {
+  if (message.includes('ORDER_TRACKING_REQUIRED')) {
+    return 'Vui lòng nhập mã vận đơn (không bắt buộc khi chọn Tự vận chuyển).';
+  }
+  if (message.includes('FORBIDDEN_ORDER_STATUS_CHANGE')) {
+    return 'Đơn hàng đã đổi trạng thái. Vui lòng tải lại trang.';
+  }
+  return fallback;
+}
+
+// Update trực tiếp orders.status — RLS orders_update cho supplier sở hữu đơn
+// UPDATE; trigger guard_order_update chỉ cho confirmed → producing → shipped. Trigger trg_handle_order_status_change (xem
 // 20260925090000_order_status_change.sql) tự ghi order_events + stamp
 // shipped_at, nên ở đây chỉ cần update đúng các cột cần thiết.
 export function OrderActions({ orderId, status }: { orderId: string; status: string }) {
@@ -22,12 +34,21 @@ export function OrderActions({ orderId, status }: { orderId: string; status: str
 
   async function startProducing() {
     setBusy(true);
+    setError(null);
     const { error } = await supabase.from('orders').update({ status: 'producing' }).eq('id', orderId);
     setBusy(false);
-    if (!error) router.refresh();
+    if (error) {
+      setError(orderErrorMessage(error.message, 'Không thể cập nhật trạng thái. Vui lòng thử lại.'));
+      return;
+    }
+    router.refresh();
   }
 
   async function confirmShip() {
+    if (provider !== SELF_DELIVERY && !tracking.trim()) {
+      setError('Vui lòng nhập mã vận đơn (không bắt buộc khi chọn Tự vận chuyển).');
+      return;
+    }
     setBusy(true);
     setError(null);
     const { error } = await supabase
@@ -40,7 +61,7 @@ export function OrderActions({ orderId, status }: { orderId: string; status: str
       .eq('id', orderId);
     setBusy(false);
     if (error) {
-      setError('Không thể cập nhật thông tin giao hàng. Vui lòng thử lại.');
+      setError(orderErrorMessage(error.message, 'Không thể cập nhật thông tin giao hàng. Vui lòng thử lại.'));
       return;
     }
     setShipModalOpen(false);
@@ -49,14 +70,17 @@ export function OrderActions({ orderId, status }: { orderId: string; status: str
 
   if (status === 'confirmed') {
     return (
-      <button
-        type="button"
-        disabled={busy}
-        onClick={startProducing}
-        className="bg-brand-red hover:bg-brand-red-dark rounded-md px-3.5 py-2 text-xs font-semibold whitespace-nowrap text-white disabled:opacity-60"
-      >
-        🏭 Bắt đầu sản xuất
-      </button>
+      <div>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={startProducing}
+          className="bg-brand-red hover:bg-brand-red-dark rounded-md px-3.5 py-2 text-xs font-semibold whitespace-nowrap text-white disabled:opacity-60"
+        >
+          🏭 Bắt đầu sản xuất
+        </button>
+        {error && <div className="text-brand-red mt-1 text-[11px]">{error}</div>}
+      </div>
     );
   }
 
@@ -87,7 +111,9 @@ export function OrderActions({ orderId, status }: { orderId: string; status: str
             </select>
           </div>
           <div className="mb-1">
-            <div className="mb-1.5 text-xs font-semibold">Mã vận đơn</div>
+            <div className="mb-1.5 text-xs font-semibold">
+              Mã vận đơn{provider !== SELF_DELIVERY && <span className="text-brand-red"> *</span>}
+            </div>
             <input
               value={tracking}
               onChange={(e) => setTracking(e.target.value)}
