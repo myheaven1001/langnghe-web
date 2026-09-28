@@ -96,8 +96,10 @@ export default function RfqCreateForm({
       }
 
       setSearching(true);
+      // View công khai (1.4): chỉ cột công khai, bỏ xưởng ẩn gian hàng/bị khoá.
+      // Bảng gốc supplier_profiles chỉ buyer đã có quan hệ với xưởng mới đọc được.
       let q = supabase
-        .from('supplier_profiles')
+        .from('public_supplier_profiles')
         .select('id, shop_name, village_origin, craft_category')
         .order('rating_avg', { ascending: false })
         .limit(20);
