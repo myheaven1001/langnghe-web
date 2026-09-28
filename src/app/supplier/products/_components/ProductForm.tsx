@@ -13,6 +13,8 @@ interface PriceTierInput {
 }
 
 interface VariantInput {
+  // id biến thể đã lưu — save_product() sửa tại chỗ thay vì tạo mới.
+  id?: string;
   color: string;
   size: string;
   material: string;
@@ -57,11 +59,21 @@ function safeFileName(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, '_');
 }
 
-// Không có RPC atomic ở đây (khác accept-quote/create-rfq) — tạo/sửa sản
-// phẩm là việc riêng của 1 supplier trên chính hàng của họ, không có tác
-// dụng phụ sang buyer/supplier khác cần bảo vệ atomic; lỗi giữa chừng chỉ
-// để lại 1 dòng products nháp mà chính họ sửa/xóa lại được, không phải rủi
-// ro như order/quote 2 bên.
+// Mã lỗi từ save_product() (20261005091400) → câu tiếng Việt.
+function saveErrorMessage(message: string): string {
+  if (message.includes('PRICE_TIERS_OVERLAP')) {
+    return 'Không thể lưu bảng giá. Kiểm tra lại các bậc giá có bị trùng khoảng số lượng không.';
+  }
+  if (message.includes('SKU_TAKEN')) return 'SKU đã được dùng cho sản phẩm khác. Vui lòng đổi SKU.';
+  if (message.includes('INVALID_INPUT')) return 'Vui lòng kiểm tra lại thông tin sản phẩm.';
+  if (message.includes('PRODUCT_NOT_FOUND')) return 'Không tìm thấy sản phẩm hoặc bạn không có quyền sửa.';
+  return 'Không thể lưu sản phẩm. Vui lòng thử lại.';
+}
+
+// Lưu qua RPC save_product(): sản phẩm, bậc giá, biến thể, ảnh trong MỘT
+// transaction — lỗi giữa chừng thì không mất bảng giá/biến thể; biến thể giữ
+// id qua các lần sửa. Ảnh tải lên kho trước (cần id sản phẩm cho đường dẫn,
+// nên sản phẩm mới tự sinh id ở client); lưu thất bại thì xoá ảnh vừa tải.
 export function ProductForm({
   mode,
   productId,
@@ -142,36 +154,25 @@ export function ProductForm({
     return Object.keys(next).length === 0;
   }
 
+  // Tải ảnh mới lên kho; lỗi giữa chừng thì xoá những ảnh đã tải.
   async function uploadPendingMedia(targetProductId: string, startSortOrder: number) {
-    const uploaded: { r2_key: string; cdn_url: string; is_primary: boolean; sort_order: number }[] = [];
+    const uploaded: { r2_key: string; cdn_url: string; sort_order: number }[] = [];
     for (let i = 0; i < pendingFiles.length; i++) {
       const file = pendingFiles[i];
       const path = `${supplierId}/${targetProductId}/${Date.now()}-${i}-${safeFileName(file.name)}`;
       const { error: uploadError } = await supabase.storage.from('product-media').upload(path, file);
-      if (uploadError) throw new Error('Không thể tải ảnh lên. Vui lòng thử lại.');
+      if (uploadError) {
+        await removeFromStorage(uploaded.map((u) => u.r2_key));
+        throw new Error('Không thể tải ảnh lên. Vui lòng thử lại.');
+      }
       const { data: pub } = supabase.storage.from('product-media').getPublicUrl(path);
-      uploaded.push({
-        r2_key: path,
-        cdn_url: pub.publicUrl,
-        is_primary: existingMedia.length === 0 && uploaded.length === 0,
-        sort_order: startSortOrder + i,
-      });
+      uploaded.push({ r2_key: path, cdn_url: pub.publicUrl, sort_order: startSortOrder + i });
     }
-    if (uploaded.length > 0) {
-      const { error } = await supabase.from('product_media').insert(
-        uploaded.map((u) => ({
-          product_id: targetProductId,
-          media_type: 'image' as const,
-          status: 'ready' as const,
-          r2_key: u.r2_key,
-          cdn_url: u.cdn_url,
-          thumbnail_url: u.cdn_url,
-          is_primary: u.is_primary,
-          sort_order: u.sort_order,
-        })),
-      );
-      if (error) throw new Error('Đã tải ảnh lên nhưng không lưu được vào sản phẩm.');
-    }
+    return uploaded;
+  }
+
+  async function removeFromStorage(paths: string[]) {
+    if (paths.length > 0) await supabase.storage.from('product-media').remove(paths);
   }
 
   async function handleSubmit(targetStatus: 'draft' | 'active') {
@@ -180,73 +181,55 @@ export function ProductForm({
     setSubmitError(null);
 
     try {
-      const productPayload = {
-        name: name.trim(),
-        category_id: categoryId,
-        description: description.trim(),
-        accept_oem: acceptOem,
-        accept_custom: acceptCustom,
-        min_order_qty: Number(minOrderQty),
-        lead_time_days: Number(leadTimeDays),
-        status: targetStatus,
-      };
+      // Sản phẩm mới: sinh id trước để làm đường dẫn ảnh trong kho.
+      const targetProductId = productId ?? crypto.randomUUID();
+      const uploaded = await uploadPendingMedia(targetProductId, existingMedia.length);
 
-      let targetProductId = productId;
-
-      if (mode === 'create') {
-        const { data, error } = await supabase
-          .from('products')
-          .insert({ ...productPayload, supplier_id: supplierId })
-          .select('id')
-          .single();
-        if (error || !data) throw new Error('Không thể tạo sản phẩm. Vui lòng thử lại.');
-        targetProductId = data.id;
-      } else {
-        const { error } = await supabase.from('products').update(productPayload).eq('id', targetProductId!);
-        if (error) throw new Error('Không thể lưu thay đổi sản phẩm.');
-      }
-
-      if (removedMediaIds.length > 0) {
-        await supabase.storage
-          .from('product-media')
-          .remove(initial!.media.filter((m) => removedMediaIds.includes(m.id)).map((m) => m.path));
-        await supabase.from('product_media').delete().in('id', removedMediaIds);
-      }
-
-      await uploadPendingMedia(targetProductId!, existingMedia.length);
-
-      // Đơn giản hơn diff từng dòng: xóa hết bậc giá/biến thể cũ rồi insert
-      // lại toàn bộ set hiện tại — chấp nhận được vì số dòng nhỏ (vài bậc
-      // giá/biến thể mỗi sản phẩm).
-      await supabase.from('price_tiers').delete().eq('product_id', targetProductId!);
-      const validTiers = tiers.filter((t) => t.minQty && t.unitPrice);
-      if (validTiers.length > 0) {
-        const { error } = await supabase.from('price_tiers').insert(
-          validTiers.map((t) => ({
-            product_id: targetProductId,
+      const { error } = await supabase.rpc('save_product', {
+        p_product_id: targetProductId,
+        p_product: {
+          name: name.trim(),
+          category_id: categoryId,
+          description: description.trim(),
+          accept_oem: acceptOem,
+          accept_custom: acceptCustom,
+          min_order_qty: Number(minOrderQty),
+          lead_time_days: Number(leadTimeDays),
+          status: targetStatus,
+        },
+        p_tiers: tiers
+          .filter((t) => t.minQty && t.unitPrice)
+          .map((t) => ({
             min_qty: Number(t.minQty),
             max_qty: t.maxQty ? Number(t.maxQty) : null,
             unit_price: Number(t.unitPrice),
           })),
-        );
-        if (error) throw new Error('Không thể lưu bảng giá. Kiểm tra lại các bậc giá có bị trùng khoảng số lượng không.');
-      }
-
-      await supabase.from('product_variants').delete().eq('product_id', targetProductId!);
-      const validVariants = variants.filter((v) => v.color || v.size || v.material || v.sku);
-      if (validVariants.length > 0) {
-        const { error } = await supabase.from('product_variants').insert(
-          validVariants.map((v) => ({
-            product_id: targetProductId,
-            color: v.color.trim() || null,
-            size: v.size.trim() || null,
-            material: v.material.trim() || null,
+        p_variants: variants
+          .filter((v) => v.color || v.size || v.material || v.sku)
+          .map((v) => ({
+            id: v.id ?? null,
+            color: v.color.trim(),
+            size: v.size.trim(),
+            material: v.material.trim(),
             stock_qty: v.stockQty ? Number(v.stockQty) : 0,
             price_adjustment: v.priceAdjustment ? Number(v.priceAdjustment) : 0,
-            sku: v.sku.trim() || null,
+            sku: v.sku.trim(),
           })),
+        p_media_add: uploaded,
+        p_media_remove: removedMediaIds,
+      });
+
+      if (error) {
+        await removeFromStorage(uploaded.map((u) => u.r2_key));
+        throw new Error(saveErrorMessage(error.message));
+      }
+
+      // Đã lưu xong mới xoá file ảnh bị bỏ khỏi kho (lỗi ở đây không ảnh
+      // hưởng dữ liệu sản phẩm).
+      if (removedMediaIds.length > 0 && initial) {
+        await removeFromStorage(
+          initial.media.filter((m) => removedMediaIds.includes(m.id)).map((m) => m.path),
         );
-        if (error) throw new Error('Không thể lưu biến thể — SKU có thể đã được dùng cho sản phẩm khác.');
       }
 
       router.push('/supplier/products');

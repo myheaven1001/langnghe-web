@@ -31,7 +31,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const { data: product } = await supabase
     .from('products')
     .select(
-      'id, name, category_id, description, accept_oem, accept_custom, min_order_qty, lead_time_days, status, price_tiers(min_qty, max_qty, unit_price), product_variants(id, color, size, material, stock_qty, price_adjustment, sku), product_media(id, r2_key, cdn_url, thumbnail_url, is_primary, sort_order)',
+      'id, name, category_id, description, accept_oem, accept_custom, min_order_qty, lead_time_days, status, price_tiers(min_qty, max_qty, unit_price), product_variants(id, color, size, material, stock_qty, price_adjustment, sku, is_active), product_media(id, r2_key, cdn_url, thumbnail_url, is_primary, sort_order)',
     )
     .eq('id', id)
     .eq('supplier_id', supplier.id)
@@ -107,14 +107,19 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
             maxQty: t.max_qty != null ? String(t.max_qty) : '',
             unitPrice: String(t.unit_price),
           })),
-          variants: (product.product_variants ?? []).map((v) => ({
-            color: v.color ?? '',
-            size: v.size ?? '',
-            material: v.material ?? '',
-            stockQty: String(v.stock_qty),
-            priceAdjustment: Number(v.price_adjustment) ? String(v.price_adjustment) : '',
-            sku: v.sku ?? '',
-          })),
+          // Chỉ biến thể đang bán; biến thể đã bỏ (is_active = false) giữ lại
+          // trong database cho đơn hàng cũ.
+          variants: (product.product_variants ?? [])
+            .filter((v) => v.is_active)
+            .map((v) => ({
+              id: v.id,
+              color: v.color ?? '',
+              size: v.size ?? '',
+              material: v.material ?? '',
+              stockQty: String(v.stock_qty),
+              priceAdjustment: Number(v.price_adjustment) ? String(v.price_adjustment) : '',
+              sku: v.sku ?? '',
+            })),
           media,
         }}
       />
