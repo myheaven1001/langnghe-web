@@ -19,6 +19,7 @@ const CORS_HEADERS = {
 };
 
 const ERROR_MESSAGES: Record<string, { status: number; message: string }> = {
+  ACCOUNT_SUSPENDED: { status: 403, message: 'Tài khoản của bạn đang bị tạm khóa. Vui lòng liên hệ hỗ trợ.' },
   NOT_AUTHENTICATED: { status: 401, message: 'Vui lòng đăng nhập lại.' },
   NOT_A_BUYER: { status: 403, message: 'Chỉ tài khoản buyer mới có thể chấp nhận báo giá.' },
   QUOTE_NOT_FOUND: { status: 404, message: 'Không tìm thấy báo giá này.' },

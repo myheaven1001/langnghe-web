@@ -22,6 +22,7 @@ const CORS_HEADERS = {
 };
 
 const ERROR_MESSAGES: Record<string, { status: number; message: string }> = {
+  ACCOUNT_SUSPENDED: { status: 403, message: 'Tài khoản của bạn đang bị tạm khóa. Vui lòng liên hệ hỗ trợ.' },
   NOT_AUTHENTICATED: { status: 401, message: 'Vui lòng đăng nhập lại.' },
   NOT_A_BUYER: { status: 403, message: 'Chỉ tài khoản buyer mới có thể gửi RFQ.' },
   INVALID_RFQ_TYPE: { status: 400, message: 'Loại RFQ không hợp lệ.' },
