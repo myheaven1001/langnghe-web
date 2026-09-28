@@ -42,6 +42,8 @@ const ERROR_MESSAGES: Record<string, { status: number; message: string }> = {
     message:
       'Bạn đã dùng hết hạn mức RFQ tháng này và không còn credit. Vui lòng mua thêm credit hoặc nâng cấp gói.',
   },
+  PRODUCT_NOT_AVAILABLE: { status: 404, message: 'Sản phẩm này không còn được bán.' },
+  PRODUCT_SUPPLIER_MISMATCH: { status: 400, message: 'Sản phẩm không thuộc xưởng được chọn.' },
   QUOTA_CONFIG_MISSING: { status: 500, message: 'Lỗi cấu hình hạn mức. Vui lòng liên hệ hỗ trợ.' },
 };
 
@@ -83,6 +85,7 @@ Deno.serve(async (req) => {
     rfqType,
     categoryId,
     supplierIds,
+    productId,
   } = body;
 
   // Validate thô ở đây — không phải để thay thế create_rfq() (vẫn tự kiểm
@@ -98,7 +101,8 @@ Deno.serve(async (req) => {
     categoryId.length === 0 ||
     !Array.isArray(supplierIds) ||
     supplierIds.length === 0 ||
-    !supplierIds.every((s) => typeof s === 'string')
+    !supplierIds.every((s) => typeof s === 'string') ||
+    (productId !== undefined && productId !== null && typeof productId !== 'string')
   ) {
     return jsonResponse({ error: ERROR_MESSAGES.INVALID_INPUT.message }, 400);
   }
@@ -120,6 +124,9 @@ Deno.serve(async (req) => {
     p_rfq_type: rfqType,
     p_category_id: categoryId,
     p_supplier_ids: supplierIds,
+    // Có khi gửi RFQ từ trang sản phẩm (2.3); create_rfq kiểm tra sản phẩm
+    // đang bán và thuộc xưởng được chọn.
+    p_product_id: typeof productId === 'string' && productId ? productId : null,
   });
 
   if (error) {
