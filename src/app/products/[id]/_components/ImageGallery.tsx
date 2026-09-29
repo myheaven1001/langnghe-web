@@ -1,52 +1,82 @@
 'use client';
 
 import { useState } from 'react';
-import type { ImageThumb } from './data';
+import type { MediaView, ProductView, SupplierView } from './types';
 
-// Matches .img-panel from the prototype: a big preview + thumbnail strip
-// that swaps the preview emoji, plus the trust/feature tag row underneath.
-export function ImageGallery({ thumbs, tags }: { thumbs: ImageThumb[]; tags: readonly string[] }) {
+// Ảnh sản phẩm (product_media, ảnh chính đứng đầu) + dải ảnh nhỏ để đổi ảnh
+// lớn; chưa có ảnh thì hiện khung trống. Nhãn bên dưới lấy từ dữ liệu thật
+// (xưởng đã xác minh, nhận OEM, đặt theo mẫu).
+//
+// Dùng <img> thường thay cho next/image: ảnh nằm ở Supabase Storage (domain
+// ngoài), không cần cấu hình images.remotePatterns cho từng project.
+/* eslint-disable @next/next/no-img-element */
+export function ImageGallery({
+  media,
+  product,
+  supplier,
+}: {
+  media: MediaView[];
+  product: ProductView;
+  supplier: SupplierView;
+}) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const active = thumbs[activeIndex];
+  const active = media[activeIndex];
+
+  const tags = [
+    supplier.verified && { label: '✓ Xưởng đã xác minh', tone: 'blue' },
+    product.acceptOem && { label: 'Nhận OEM / in logo', tone: 'orange' },
+    product.acceptCustom && { label: 'Đặt hàng theo mẫu', tone: 'green' },
+  ].filter(Boolean) as { label: string; tone: 'blue' | 'orange' | 'green' }[];
 
   return (
-    <div className="border-brand-border border-r p-4">
-      <div className="border-brand-border relative mb-2.5 flex h-[340px] w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-md border bg-[#f8f5f0] text-[90px]">
-        {active.emoji}
-        <div className="absolute right-2 bottom-2 rounded-[3px] bg-black/50 px-1.5 py-1 text-[10px] text-white">
-          🔍 Rê chuột để phóng to
+    <div className="border-brand-border p-4 lg:border-r">
+      <div className="border-brand-border relative mb-2.5 flex aspect-square w-full items-center justify-center overflow-hidden rounded-md border bg-[#f8f5f0] sm:aspect-[4/3] lg:aspect-square">
+        {active ? (
+          <img src={active.url} alt={product.name} className="h-full w-full object-contain" />
+        ) : (
+          <div className="text-brand-light flex flex-col items-center gap-2 text-xs">
+            <span className="text-5xl">🖼️</span>
+            Xưởng chưa đăng ảnh
+          </div>
+        )}
+      </div>
+
+      {media.length > 1 && (
+        <div className="flex gap-1.5 overflow-x-auto pb-1">
+          {media.map((m, i) => (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => setActiveIndex(i)}
+              aria-label={`Ảnh ${i + 1}`}
+              className={`h-[60px] w-[60px] shrink-0 overflow-hidden rounded border-2 bg-[#f0ede5] transition-colors ${
+                i === activeIndex ? 'border-brand-red' : 'hover:border-brand-red border-transparent'
+              }`}
+            >
+              <img src={m.url} alt="" loading="lazy" className="h-full w-full object-cover" />
+            </button>
+          ))}
         </div>
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {thumbs.map((thumb, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => setActiveIndex(i)}
-            className={`flex h-[60px] w-[60px] items-center justify-center rounded border-2 text-[22px] transition-colors ${
-              i === activeIndex ? 'border-brand-red' : 'hover:border-brand-red border-transparent'
-            } ${thumb.isVideo ? 'bg-[#1a1a1a] text-white' : 'bg-[#f0ede5]'}`}
-          >
-            {thumb.isVideo ? '▶' : thumb.emoji}
-          </button>
-        ))}
-      </div>
-      <div className="mt-2.5 flex flex-wrap gap-1.5">
-        {tags.map((tag, i) => (
-          <span
-            key={tag}
-            className={`rounded-[3px] border px-2.5 py-[3px] text-[11px] font-medium ${
-              i === 0
-                ? 'border-[#BBDEFB] bg-[#E3F2FD] text-brand-blue'
-                : i === 1
-                  ? 'border-[#FFE0B2] bg-[#FFF3E0] text-brand-orange'
-                  : 'border-[#C8E6C9] bg-[#E8F5EE] text-brand-green'
-            }`}
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
+      )}
+
+      {tags.length > 0 && (
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {tags.map((tag) => (
+            <span
+              key={tag.label}
+              className={`rounded-[3px] border px-2.5 py-[3px] text-[11px] font-medium ${
+                tag.tone === 'blue'
+                  ? 'text-brand-blue border-[#BBDEFB] bg-[#E3F2FD]'
+                  : tag.tone === 'orange'
+                    ? 'text-brand-orange border-[#FFE0B2] bg-[#FFF3E0]'
+                    : 'text-brand-green border-[#C8E6C9] bg-[#E8F5EE]'
+              }`}
+            >
+              {tag.label}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
