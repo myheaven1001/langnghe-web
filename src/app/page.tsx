@@ -7,7 +7,7 @@ import { CategorySidebar } from './_components/home/CategorySidebar';
 import { HeroBanners } from './_components/home/HeroBanners';
 import { QuickCategories } from './_components/home/QuickCategories';
 import { Section } from './_components/home/Section';
-import { ProductCard } from './_components/home/ProductCard';
+import { ProductCard } from '@/components/catalog/ProductCard';
 import { TrustFooter } from './_components/home/TrustFooter';
 import { getHomeData } from './_components/home/queries';
 

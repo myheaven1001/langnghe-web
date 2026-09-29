@@ -1,4 +1,5 @@
 import { createPublicClient } from '@/lib/supabase/public';
+import type { CatalogProduct } from '@/lib/catalog';
 
 // Dữ liệu trang chủ (kế hoạch 2.4) — đọc bằng quyền khách, trang được tạo
 // sẵn và làm mới 5 phút/lần (revalidate trong src/app/page.tsx).
@@ -10,19 +11,8 @@ export interface HomeCategory {
   icon: string;
 }
 
-export interface HomeProduct {
-  id: string;
-  slug: string;
-  name: string;
-  imageUrl: string | null;
-  minPrice: number | null;
-  moq: number;
-  shopName: string;
-  villageOrigin: string | null;
-  supplierVerified: boolean;
-  acceptOem: boolean;
-  categoryId: string | null;
-}
+// Cùng kiểu với thẻ sản phẩm dùng chung (src/components/catalog/ProductCard).
+export type HomeProduct = CatalogProduct;
 
 export interface HomeStats {
   suppliers: number;

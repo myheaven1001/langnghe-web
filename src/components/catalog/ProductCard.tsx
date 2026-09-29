@@ -1,15 +1,16 @@
 import Link from 'next/link';
 import { formatVnd } from '@/lib/format';
-import type { HomeProduct } from './queries';
+import type { CatalogProduct } from '@/lib/catalog';
 
-// Thẻ sản phẩm trang chủ — dữ liệu từ product_cards (2.1c): ảnh chính, giá
+// Thẻ sản phẩm dùng chung (trang chủ, tìm kiếm, danh mục, gian hàng) —
+// dữ liệu từ product_cards (2.1c): ảnh chính, giá
 // thấp nhất, MOQ, xưởng/làng nghề, nhãn đã xác minh / OEM.
 /* eslint-disable @next/next/no-img-element */
 export function ProductCard({
   product,
   compact = false,
 }: {
-  product: HomeProduct;
+  product: CatalogProduct;
   compact?: boolean;
 }) {
   return (
