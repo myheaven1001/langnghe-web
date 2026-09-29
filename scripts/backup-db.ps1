@@ -43,8 +43,10 @@ try {
   # PowerShell 5.1 coi mọi dòng stderr của lệnh ngoài là lỗi và dừng script
   # khi ErrorActionPreference = Stop — tạm đổi để tự đọc mã thoát.
   $ErrorActionPreference = 'Continue'
-  $log = & $pgDump $url --format=custom --no-owner --no-privileges `
-    --schema=public --schema=auth --schema=storage --file=$out 2>&1 | ForEach-Object { "$_" } | Out-String
+  # Tham số gom vào mảng (không dùng dấu nối dòng `, dễ hỏng khi đổi kiểu xuống dòng).
+  $dumpArgs = @($url, '--format=custom', '--no-owner', '--no-privileges',
+    '--schema=public', '--schema=auth', '--schema=storage', "--file=$out")
+  $log = & $pgDump @dumpArgs 2>&1 | ForEach-Object { "$_" } | Out-String
   $code = $LASTEXITCODE
   $ErrorActionPreference = 'Stop'
   if ($code -ne 0) {
