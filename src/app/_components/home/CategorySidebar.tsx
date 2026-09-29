@@ -2,48 +2,23 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import type { CategoryGroup } from './data';
+import type { HomeCategory } from './queries';
 
-// Matches .sidebar/.sb-cat accordion from the prototype: a single category
-// can be open at a time, first one open by default. The prototype hid this
-// entirely below `lg`; here it instead collapses into a toggleable panel so
-// mobile/tablet users keep a way to browse categories from the homepage.
-export function CategorySidebar({ groups }: { groups: CategoryGroup[] }) {
-  const [openLabel, setOpenLabel] = useState<string | null>(groups[0]?.label ?? null);
+// Danh mục thật (bảng categories, is_active) → trang /categories/[slug].
+// Màn hình lớn: cột bên trái; nhỏ hơn: khối gập/mở.
+export function CategorySidebar({ categories }: { categories: HomeCategory[] }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const groupList = groups.map((group) => {
-    const open = group.label === openLabel;
-    return (
-      <div key={group.label} className="border-b border-[#E5DDD1] last:border-b-0">
-        <button
-          type="button"
-          aria-expanded={open}
-          onClick={() => setOpenLabel(open ? null : group.label)}
-          className="flex w-full items-center gap-2 px-3.5 py-[9px] text-left text-[13px] font-semibold text-[#2A2420] transition-colors hover:bg-[#FBF3EC] hover:text-[#B5482E]"
-        >
-          <span className="text-[15px]">{group.icon}</span>
-          {group.label}
-        </button>
-        {open && (
-          <div className="pb-2 pl-9">
-            {group.subcategories.map((sub) => (
-              // No dedicated subcategory page/slug exists — route to
-              // /search prefilled with the subcategory name, same as
-              // typing it into the header search box.
-              <Link
-                key={sub}
-                href={`/search?q=${encodeURIComponent(sub)}`}
-                className="block py-[3px] text-xs text-[#6B6058] hover:text-[#B5482E]"
-              >
-                {sub}
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  });
+  const list = categories.map((c) => (
+    <Link
+      key={c.id}
+      href={`/categories/${c.slug}`}
+      className="flex items-center gap-2 border-b border-[#E5DDD1] px-3.5 py-[9px] text-[13px] font-semibold text-[#2A2420] transition-colors last:border-b-0 hover:bg-[#FBF3EC] hover:text-[#B5482E]"
+    >
+      <span className="text-[15px]">{c.icon}</span>
+      {c.name}
+    </Link>
+  ));
 
   return (
     <>
@@ -51,7 +26,7 @@ export function CategorySidebar({ groups }: { groups: CategoryGroup[] }) {
         <div className="bg-[#B5482E] px-3.5 py-2.5 text-[13px] font-semibold text-white">
           📋 Danh mục sản phẩm
         </div>
-        {groupList}
+        {list}
       </aside>
 
       <div className="overflow-hidden rounded border border-[#E5DDD1] bg-white lg:hidden">
@@ -64,7 +39,7 @@ export function CategorySidebar({ groups }: { groups: CategoryGroup[] }) {
           <span>📋 Danh mục sản phẩm</span>
           <span className={`transition-transform ${mobileOpen ? 'rotate-180' : ''}`}>▾</span>
         </button>
-        {mobileOpen && groupList}
+        {mobileOpen && list}
       </div>
     </>
   );
