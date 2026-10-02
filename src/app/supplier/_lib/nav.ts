@@ -37,6 +37,8 @@ export function buildSupplierNavGroups({
     {
       label: 'Gian hàng',
       items: [
+        // /supplier/shop chuyển tới /shops/<slug> của chính xưởng.
+        { icon: '🏪', label: 'Xem gian hàng', href: '/supplier/shop' },
         { icon: '🏢', label: 'Hồ sơ & xác minh', href: '/supplier/settings/profile' },
         { icon: '📊', label: 'Analytics', href: '/supplier/analytics' },
         { icon: '⚙️', label: 'Cài đặt gian hàng', href: '/supplier/settings/shop' },

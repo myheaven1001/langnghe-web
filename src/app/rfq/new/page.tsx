@@ -14,7 +14,14 @@ const PLAN_LABEL: Record<string, string> = {
   premium: '⭐ Gói Premium',
 };
 
-export default async function RfqNewPage() {
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export default async function RfqNewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ supplier?: string }>;
+}) {
+  const { supplier: supplierParam } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -63,6 +70,18 @@ export default async function RfqNewPage() {
     .eq('plan_name', planName)
     .maybeSingle();
 
+  // Vào từ nút "Gửi RFQ cho xưởng này" ở trang gian hàng (?supplier=<id>):
+  // chọn sẵn xưởng đó. Đọc qua view công khai nên xưởng ẩn/bị khoá không
+  // chọn sẵn được.
+  const { data: initialSupplier } =
+    supplierParam && UUID_RE.test(supplierParam)
+      ? await supabase
+          .from('public_supplier_profiles')
+          .select('id, shop_name, village_origin, craft_category')
+          .eq('id', supplierParam)
+          .maybeSingle()
+      : { data: null };
+
   return (
     <AppShell
       header={{
@@ -108,6 +127,7 @@ export default async function RfqNewPage() {
         monthlyQuota={quota?.monthly_quota ?? null}
         multiRfqAllowed={quota?.multi_rfq_allowed ?? false}
         maxSuppliersPerRfq={quota?.max_suppliers_per_rfq ?? 1}
+        initialSupplier={initialSupplier ?? null}
       />
     </AppShell>
   );

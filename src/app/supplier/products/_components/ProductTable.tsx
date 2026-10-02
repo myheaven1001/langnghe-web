@@ -183,10 +183,11 @@ export function ProductTable({ products }: { products: ProductListRow[] }) {
                     >
                       ✏️
                     </Link>
-                    {p.status === 'active' && (
+                    {/* Trang sản phẩm cho chủ xưởng xem cả hàng nháp/tạm dừng (2.3). */}
+                    {p.status !== 'deleted' && (
                       <Link
                         href={`/products/${p.id}`}
-                        title="Xem"
+                        title={p.status === 'active' ? 'Xem trang sản phẩm' : 'Xem trước (chỉ bạn thấy)'}
                         className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink flex h-7 w-7 items-center justify-center rounded-md border-[1.5px] text-xs"
                       >
                         👁

@@ -47,7 +47,10 @@ export default function RfqCreateForm({
   monthlyQuota,
   multiRfqAllowed,
   maxSuppliersPerRfq,
+  initialSupplier,
 }: {
+  // Xưởng chọn sẵn khi vào từ trang gian hàng (/rfq/new?supplier=<id>).
+  initialSupplier: SupplierResult | null;
   categories: CategoryOption[];
   quotaUsed: number;
   quotaResetAt: string | null;
@@ -64,7 +67,9 @@ export default function RfqCreateForm({
 
   const [supplierQuery, setSupplierQuery] = useState('');
   const [supplierResults, setSupplierResults] = useState<SupplierResult[]>([]);
-  const [selectedSuppliers, setSelectedSuppliers] = useState<SupplierResult[]>([]);
+  const [selectedSuppliers, setSelectedSuppliers] = useState<SupplierResult[]>(
+    initialSupplier ? [initialSupplier] : [],
+  );
   const [searching, setSearching] = useState(false);
 
   const [title, setTitle] = useState('');
