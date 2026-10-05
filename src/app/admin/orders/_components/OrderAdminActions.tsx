@@ -1,11 +1,17 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Modal, ModalActions, ModalTitle } from '@/components/ui';
+import { adminErrorMessage } from '../../_lib/errors';
 
-const PAYMENT_METHODS = ['Chuyển khoản ngân hàng', 'Ví điện tử', 'Khác'];
+const REPORTERS = [
+  { key: 'buyer', label: 'Buyer báo' },
+  { key: 'supplier', label: 'Xưởng báo' },
+] as const;
+type Reporter = (typeof REPORTERS)[number]['key'];
 
 const RESOLUTIONS = [
   { key: 'release_supplier', label: 'Trả tiền cho supplier — buyer khiếu nại không có căn cứ' },
@@ -14,33 +20,34 @@ const RESOLUTIONS = [
 ] as const;
 
 type Resolution = (typeof RESOLUTIONS)[number]['key'];
-type ModalKind = 'none' | 'confirm' | 'create-dispute' | 'resolve-dispute';
+type ModalKind = 'none' | 'create-dispute' | 'resolve-dispute';
 
 interface ActiveDispute {
   id: string;
   reason: string;
 }
 
-// 3 mutation trực tiếp lên orders/disputes — RLS (orders update do app logic
-// khác quản lý, ở đây chỉ cột thanh toán mà is_admin() luôn được phép; và
-// disputes_insert_admin/disputes_update_admin) đã cho phép admin làm cả 3
-// việc này. Trigger trg_handle_dispute_insert/update (xem
-// supabase/migrations/20260930090200_disputes.sql) tự gửi notification cho
-// buyer + supplier, nên ở đây chỉ cần update/insert đúng cột.
+// Thao tác admin trên 1 đơn (kế hoạch 3.6):
+//   - Xác nhận thanh toán: làm ở trang chi tiết /admin/orders/[id], nơi có
+//     biên lai của buyer cạnh form (hàm admin_confirm_payment).
+//   - Ghi tranh chấp: RPC admin_open_dispute() — ghi đúng bên báo (buyer hoặc
+//     xưởng) + admin nhập, có nhật ký.
+//   - Xử lý tranh chấp: update disputes (RLS disputes_update_admin). Trigger
+//     trg_handle_dispute_insert/update tự gửi notification cho 2 bên.
 export function OrderAdminActions({
   orderId,
   status,
   adminUserId,
-  buyerUserId,
   activeDispute,
   canFlagDispute,
+  showDetailLink = true,
 }: {
   orderId: string;
   status: string;
   adminUserId: string;
-  buyerUserId: string | null;
   activeDispute: ActiveDispute | null;
   canFlagDispute: boolean;
+  showDetailLink?: boolean;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
@@ -49,10 +56,7 @@ export function OrderAdminActions({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [method, setMethod] = useState(PAYMENT_METHODS[0]);
-  const [reference, setReference] = useState('');
-  const [paymentNote, setPaymentNote] = useState('');
-
+  const [reporter, setReporter] = useState<Reporter>('buyer');
   const [disputeReason, setDisputeReason] = useState('');
 
   const [resolution, setResolution] = useState<Resolution | null>(null);
@@ -65,30 +69,6 @@ export function OrderAdminActions({
     setBusy(false);
   }
 
-  async function confirmPayment() {
-    setBusy(true);
-    setError(null);
-    const note = [`Phương thức: ${method}`, reference && `Mã GD: ${reference}`, paymentNote]
-      .filter(Boolean)
-      .join(' · ');
-    const { error } = await supabase
-      .from('orders')
-      .update({
-        status: 'confirmed',
-        payment_confirmed_by: adminUserId,
-        confirmed_at: new Date().toISOString(),
-        payment_note: note,
-      })
-      .eq('id', orderId);
-    setBusy(false);
-    if (error) {
-      setError('Không thể xác nhận thanh toán. Vui lòng thử lại.');
-      return;
-    }
-    closeAndReset();
-    router.refresh();
-  }
-
   async function createDispute() {
     if (!disputeReason.trim()) {
       setError('Vui lòng nhập lý do tranh chấp.');
@@ -96,14 +76,14 @@ export function OrderAdminActions({
     }
     setBusy(true);
     setError(null);
-    const { error } = await supabase.from('disputes').insert({
-      order_id: orderId,
-      raised_by: buyerUserId,
-      reason: disputeReason.trim(),
+    const { error } = await supabase.rpc('admin_open_dispute', {
+      p_order_id: orderId,
+      p_reason: disputeReason,
+      p_reporter: reporter,
     });
     setBusy(false);
     if (error) {
-      setError('Không thể ghi nhận tranh chấp. Vui lòng thử lại.');
+      setError(adminErrorMessage(error.message, 'Không thể ghi nhận tranh chấp. Vui lòng thử lại.'));
       return;
     }
     closeAndReset();
@@ -141,14 +121,17 @@ export function OrderAdminActions({
   return (
     <>
       <div className="flex items-center justify-end gap-1.5">
-        {status === 'pending_payment' && (
-          <button
-            type="button"
-            onClick={() => setModal('confirm')}
-            className="border-brand-green text-brand-green rounded-md border-[1.5px] bg-white px-3 py-1.5 text-[11.5px] font-semibold hover:bg-[#F0FBF5]"
+        {showDetailLink && (
+          <Link
+            href={`/admin/orders/${orderId}`}
+            className={
+              status === 'pending_payment'
+                ? 'border-brand-green text-brand-green rounded-md border-[1.5px] bg-white px-3 py-1.5 text-[11.5px] font-semibold whitespace-nowrap hover:bg-[#F0FBF5]'
+                : 'border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] bg-white px-3 py-1.5 text-[11.5px] font-semibold whitespace-nowrap'
+            }
           >
-            ✓ Xác nhận TT
-          </button>
+            {status === 'pending_payment' ? '💳 Xem & xác nhận TT' : 'Chi tiết'}
+          </Link>
         )}
         {activeDispute && (
           <button
@@ -170,67 +153,6 @@ export function OrderAdminActions({
         )}
       </div>
 
-      {/* CONFIRM PAYMENT */}
-      <Modal open={modal === 'confirm'} onClose={busy ? undefined : closeAndReset} maxWidth="420px">
-        <ModalTitle>Xác nhận thanh toán thủ công</ModalTitle>
-        <div className="text-brand-sub mb-4 text-[11.5px]">
-          Đơn hàng #{orderId.slice(0, 8).toUpperCase()}
-        </div>
-
-        <div className="mb-3.5">
-          <div className="mb-1.5 text-xs font-semibold">Phương thức</div>
-          <select
-            value={method}
-            onChange={(e) => setMethod(e.target.value)}
-            className="border-brand-border focus:border-brand-forest w-full rounded-lg border-[1.5px] bg-white px-3 py-2.5 text-[12.5px] outline-none"
-          >
-            {PAYMENT_METHODS.map((m) => (
-              <option key={m}>{m}</option>
-            ))}
-          </select>
-        </div>
-        <div className="mb-3.5">
-          <div className="mb-1.5 text-xs font-semibold">Mã giao dịch / tham chiếu</div>
-          <input
-            value={reference}
-            onChange={(e) => setReference(e.target.value)}
-            placeholder="VD: FT2608120001"
-            className="border-brand-border focus:border-brand-forest w-full rounded-lg border-[1.5px] px-3 py-2.5 text-[12.5px] outline-none"
-          />
-        </div>
-        <div className="mb-1">
-          <div className="mb-1.5 text-xs font-semibold">Ghi chú nội bộ</div>
-          <textarea
-            value={paymentNote}
-            onChange={(e) => setPaymentNote(e.target.value)}
-            rows={2}
-            placeholder="Không bắt buộc"
-            className="border-brand-border focus:border-brand-forest w-full resize-none rounded-lg border-[1.5px] px-3 py-2.5 text-[12.5px] outline-none"
-          />
-        </div>
-
-        {error && <div className="text-brand-red mt-2 text-[11.5px]">{error}</div>}
-
-        <ModalActions>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={closeAndReset}
-            className="border-brand-border flex-1 rounded-lg border-[1.5px] py-2.5 text-[13px] font-semibold disabled:opacity-50"
-          >
-            Hủy
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={confirmPayment}
-            className="bg-brand-forest flex-1 rounded-lg py-2.5 text-[13px] font-semibold text-white disabled:opacity-60"
-          >
-            {busy ? 'Đang lưu...' : '✓ Xác nhận đã nhận tiền'}
-          </button>
-        </ModalActions>
-      </Modal>
-
       {/* CREATE DISPUTE */}
       <Modal
         open={modal === 'create-dispute'}
@@ -239,12 +161,35 @@ export function OrderAdminActions({
       >
         <ModalTitle>Báo tranh chấp</ModalTitle>
         <div className="text-brand-sub mb-4 text-[11.5px]">
-          Đơn hàng #{orderId.slice(0, 8).toUpperCase()} — ghi lại khiếu nại buyer báo qua điện
+          Đơn hàng #{orderId.slice(0, 8).toUpperCase()} — ghi lại khiếu nại nhận qua điện
           thoại/email
         </div>
 
+        <div className="mb-3.5">
+          <div className="mb-1.5 text-xs font-semibold">Bên báo tranh chấp</div>
+          <div className="flex gap-2">
+            {REPORTERS.map((r) => (
+              <label
+                key={r.key}
+                className={`flex flex-1 items-center gap-2 rounded-lg border-[1.5px] px-3 py-2 text-[12.5px] font-semibold ${
+                  reporter === r.key ? 'border-brand-forest bg-[#F0FBF5]' : 'border-brand-border'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name={`reporter-${orderId}`}
+                  checked={reporter === r.key}
+                  onChange={() => setReporter(r.key)}
+                  className="accent-brand-forest"
+                />
+                {r.label}
+              </label>
+            ))}
+          </div>
+        </div>
+
         <div className="mb-1">
-          <div className="mb-1.5 text-xs font-semibold">Lý do buyer báo cáo</div>
+          <div className="mb-1.5 text-xs font-semibold">Nội dung khiếu nại</div>
           <textarea
             value={disputeReason}
             onChange={(e) => setDisputeReason(e.target.value)}
@@ -289,7 +234,7 @@ export function OrderAdminActions({
 
         {activeDispute && (
           <div className="mb-4 rounded-lg border border-[#FFD0D0] bg-[#FFF0F0] p-3 text-[12px] text-[#7A2020]">
-            <strong className="mb-0.5 block text-[#C62828]">Lý do buyer báo cáo:</strong>
+            <strong className="mb-0.5 block text-[#C62828]">Nội dung khiếu nại:</strong>
             {activeDispute.reason}
           </div>
         )}

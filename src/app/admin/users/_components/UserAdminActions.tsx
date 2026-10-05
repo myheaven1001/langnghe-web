@@ -4,12 +4,11 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Modal, ModalActions, ModalTitle } from '@/components/ui';
+import { adminErrorMessage } from '../../_lib/errors';
 
-// Update trực tiếp users.status — RLS users_update_own đã cho phép admin
-// (is_admin()) sửa mọi dòng. Khóa còn insert kèm 1 notification
-// 'account_suspended' (type đã có sẵn từ enum gốc, chưa nơi nào emit) để
-// user biết lý do — mở khóa thì không có type notification tương ứng
-// trong enum nên không gửi gì thêm, chỉ đổi status.
+// Khoá / mở khoá qua RPC admin_set_user_status() (kế hoạch 3.6): hàm kiểm tra
+// quyền, bắt buộc lý do khi khoá, gửi thông báo account_suspended và ghi
+// admin_audit_log.
 export function UserAdminActions({
   userId,
   status,
@@ -28,27 +27,22 @@ export function UserAdminActions({
   const [error, setError] = useState<string | null>(null);
 
   async function confirmSuspend() {
-    setBusy(true);
-    setError(null);
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ status: 'suspended' })
-      .eq('id', userId);
-    if (updateError) {
-      setBusy(false);
-      setError('Không thể khóa tài khoản. Vui lòng thử lại.');
+    if (!reason.trim()) {
+      setError('Vui lòng ghi lý do khóa.');
       return;
     }
-    await supabase.from('notifications').insert({
-      user_id: userId,
-      type: 'account_suspended',
-      title: 'Tài khoản của bạn đã bị tạm khóa',
-      body: reason.trim() || 'Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.',
-      channel: 'in_app',
-      status: 'sent',
-      sent_at: new Date().toISOString(),
+    setBusy(true);
+    setError(null);
+    const { error: rpcError } = await supabase.rpc('admin_set_user_status', {
+      p_user_id: userId,
+      p_status: 'suspended',
+      p_reason: reason,
     });
     setBusy(false);
+    if (rpcError) {
+      setError(adminErrorMessage(rpcError.message, 'Không thể khóa tài khoản. Vui lòng thử lại.'));
+      return;
+    }
     setSuspendOpen(false);
     setReason('');
     router.refresh();
@@ -56,9 +50,17 @@ export function UserAdminActions({
 
   async function unsuspend() {
     setBusy(true);
-    const { error } = await supabase.from('users').update({ status: 'active' }).eq('id', userId);
+    setError(null);
+    const { error } = await supabase.rpc('admin_set_user_status', {
+      p_user_id: userId,
+      p_status: 'active',
+    });
     setBusy(false);
-    if (!error) router.refresh();
+    if (error) {
+      setError(adminErrorMessage(error.message, 'Không thể mở khóa. Vui lòng thử lại.'));
+      return;
+    }
+    router.refresh();
   }
 
   if (status === 'suspended') {

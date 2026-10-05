@@ -300,7 +300,15 @@ export default async function SupplierOrdersPage({
 
                 <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-[#F2F0EC] pt-2.5">
                   {note && <div className="text-brand-sub text-[11.5px]">{note}</div>}
-                  <OrderActions orderId={order.id} status={order.status} />
+                  <div className="ml-auto flex items-center gap-3">
+                    <Link
+                      href={`/supplier/orders/${order.id}`}
+                      className="text-brand-blue text-[11.5px] font-semibold whitespace-nowrap"
+                    >
+                      Xem chi tiết →
+                    </Link>
+                    <OrderActions orderId={order.id} status={order.status} />
+                  </div>
                 </div>
               </div>
             );

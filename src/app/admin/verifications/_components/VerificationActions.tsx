@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { adminErrorMessage } from '../../_lib/errors';
 
 const REJECT_REASONS = [
   'Ảnh mờ, không đọc rõ',
@@ -11,20 +12,18 @@ const REJECT_REASONS = [
   'Thiếu tài liệu',
 ];
 
-// Update trực tiếp verifications.status — RLS verifications_update_admin đã
-// cho phép admin làm việc này. Trigger trg_handle_verification_status_change
-// (xem supabase/migrations/20260930090000_verification_status_change.sql) tự
-// stamp buyer_profiles.verified_at + gửi notification cho user, nên ở đây chỉ
-// cần update đúng các cột của verifications.
+// Duyệt / từ chối qua RPC admin_review_verification() (kế hoạch 3.6): hàm
+// kiểm tra quyền, chỉ xử lý hồ sơ đang chờ, ghi admin_audit_log. Trigger
+// trg_handle_verification_status_change vẫn tự stamp buyer_profiles.verified_at
+// + gửi notification cho user.
 export function VerificationActions({
   verificationId,
   displayName,
-  adminUserId,
   redirectTo,
 }: {
   verificationId: string;
   displayName: string;
-  adminUserId: string;
+  adminUserId?: string;
   redirectTo: string;
 }) {
   const supabase = useMemo(() => createClient(), []);
@@ -38,17 +37,13 @@ export function VerificationActions({
   async function approve() {
     setBusy(true);
     setError(null);
-    const { error } = await supabase
-      .from('verifications')
-      .update({
-        status: 'approved',
-        verified_by: adminUserId,
-        verified_at: new Date().toISOString(),
-      })
-      .eq('id', verificationId);
+    const { error } = await supabase.rpc('admin_review_verification', {
+      p_verification_id: verificationId,
+      p_approve: true,
+    });
     setBusy(false);
     if (error) {
-      setError('Không thể duyệt hồ sơ. Vui lòng thử lại.');
+      setError(adminErrorMessage(error.message, 'Không thể duyệt hồ sơ. Vui lòng thử lại.'));
       return;
     }
     router.push(redirectTo);
@@ -61,18 +56,14 @@ export function VerificationActions({
     }
     setBusy(true);
     setError(null);
-    const { error } = await supabase
-      .from('verifications')
-      .update({
-        status: 'rejected',
-        verified_by: adminUserId,
-        verified_at: new Date().toISOString(),
-        rejection_reason: reason.trim(),
-      })
-      .eq('id', verificationId);
+    const { error } = await supabase.rpc('admin_review_verification', {
+      p_verification_id: verificationId,
+      p_approve: false,
+      p_reason: reason,
+    });
     setBusy(false);
     if (error) {
-      setError('Không thể từ chối hồ sơ. Vui lòng thử lại.');
+      setError(adminErrorMessage(error.message, 'Không thể từ chối hồ sơ. Vui lòng thử lại.'));
       return;
     }
     router.push(redirectTo);

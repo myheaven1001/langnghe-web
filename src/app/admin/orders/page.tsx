@@ -300,7 +300,9 @@ export default async function AdminOrdersPage({
                     className="border-b border-[#F2F0EC] last:border-b-0 hover:bg-[#FAFAF8]"
                   >
                     <td className="px-3.5 py-3 text-[12.5px] font-bold">
-                      #{order.id.slice(0, 8).toUpperCase()}
+                      <Link href={`/admin/orders/${order.id}`} className="hover:text-brand-red">
+                        #{order.id.slice(0, 8).toUpperCase()}
+                      </Link>
                     </td>
                     <td className="px-3.5 py-3">
                       <div className="flex flex-col gap-0.5 text-[12px]">
@@ -325,7 +327,6 @@ export default async function AdminOrdersPage({
                         orderId={order.id}
                         status={order.status}
                         adminUserId={user.id}
-                        buyerUserId={order.buyer_profiles?.user_id ?? null}
                         activeDispute={dispute}
                         canFlagDispute={canFlagDispute}
                       />
