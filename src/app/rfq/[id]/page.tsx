@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AppShell, Card, CardBody, CardHeader, StatusPill } from '@/components/ui';
 import { daysUntil, effectiveDeadline, formatVnDate, formatVnd } from '@/lib/rfq';
+import type { BuyerAddress } from '@/lib/addresses';
 import { AcceptQuoteButton } from './_components/AcceptQuoteButton';
 import { CancelRfqButton } from './_components/CancelRfqButton';
 
@@ -144,11 +145,19 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
   const rfq = rfqData as unknown as RfqDetail;
 
   const [
+    { data: addressesData },
     { data: quotesData },
     { data: targetsData },
     { data: unreadCount },
     { count: activeRfqCount },
   ] = await Promise.all([
+    supabase
+      .from('buyer_addresses')
+      .select('id, label, recipient_name, phone, address_line, ward, district, province, is_default')
+      .eq('buyer_id', buyer.id)
+      .order('is_default', { ascending: false })
+      .order('created_at', { ascending: false })
+      .then((r) => ({ data: (r.data ?? []) as BuyerAddress[] })),
     supabase
       .from('rfq_quotes')
       .select(
@@ -258,6 +267,7 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
           label: 'Tài khoản',
           items: [
             { icon: '🏢', label: 'Hồ sơ & xác minh', href: '/settings/profile' },
+            { icon: '📍', label: 'Sổ địa chỉ', href: '/settings/addresses' },
             { icon: '💳', label: 'Membership & credit', href: '/settings/membership' },
             { icon: '⚙️', label: 'Cài đặt thông báo', href: '/settings/notifications' },
           ],
@@ -506,6 +516,8 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                         <AcceptQuoteButton
                           quoteId={quote.id}
                           supplierName={quote.supplier_profiles?.shop_name ?? 'xưởng này'}
+                          addresses={addressesData}
+                          rfqId={rfq.id}
                         />
                         <Link
                           href={`/messages/${rfq.id}?quote=${quote.id}`}

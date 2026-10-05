@@ -235,6 +235,7 @@ export default async function OrdersPage({
           label: 'Tài khoản',
           items: [
             { icon: '🏢', label: 'Hồ sơ & xác minh', href: '/settings/profile' },
+            { icon: '📍', label: 'Sổ địa chỉ', href: '/settings/addresses' },
             { icon: '💳', label: 'Membership & credit', href: '/settings/membership' },
             { icon: '⚙️', label: 'Cài đặt thông báo', href: '/settings/notifications' },
           ],

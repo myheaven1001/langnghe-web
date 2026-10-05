@@ -40,6 +40,9 @@ BEGIN
         INSERT INTO rfq_targets (rfq_id, supplier_id) VALUES (v_rfq, v_xa);
         PERFORM set_config('test.rfq' || i, v_rfq::TEXT, TRUE);
     END LOOP;
+    -- Từ 3.2 accept_quote bắt buộc có địa chỉ giao hàng.
+    INSERT INTO buyer_addresses (buyer_id, recipient_name, phone, address_line, province)
+    VALUES (v_buyer, 'Người nhận test', '0900000000', '1 Phố Test', 'Hà Nội');
     PERFORM set_config('test.xuong_a', v_xa::TEXT, TRUE),
             set_config('test.xuong_b', v_xb::TEXT, TRUE);
 END $$;

@@ -2,14 +2,14 @@
 //
 // Nhận request từ /rfq/[id] (AcceptQuoteButton.tsx), forward JWT của buyer
 // đang đăng nhập tới Postgres RPC accept_quote() (xem migration
-// 20260919090100_accept_quote.sql) — toàn bộ logic accept 1 quote + đóng
+// 20261005091800_buyer_addresses_and_accept_quote.sql) — toàn bộ logic accept 1 quote + đóng
 // các quote còn lại + tạo orders + chuyển rfq_requests.status chạy atomic
 // trong 1 transaction Postgres duy nhất bên trong function đó. Function này
 // chỉ làm 2 việc: validate input thô + dịch mã lỗi ngắn từ Postgres sang
 // message tiếng Việt cho UI — cùng pattern với create-rfq.
 //
 // Deploy: supabase functions deploy accept-quote
-// Invoke từ client: supabase.functions.invoke('accept-quote', { body: { quoteId } })
+// Invoke từ client: supabase.functions.invoke('accept-quote', { body: { quoteId, addressId } })
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
@@ -31,6 +31,14 @@ const ERROR_MESSAGES: Record<string, { status: number; message: string }> = {
   QUOTE_NOT_ACCEPTABLE: {
     status: 409,
     message: 'Báo giá này không còn ở trạng thái có thể chấp nhận (đã được xử lý).',
+  },
+  ADDRESS_REQUIRED: {
+    status: 400,
+    message: 'Bạn chưa có địa chỉ giao hàng. Thêm địa chỉ trong Sổ địa chỉ rồi thử lại.',
+  },
+  ADDRESS_NOT_FOUND: {
+    status: 400,
+    message: 'Không tìm thấy địa chỉ giao hàng đã chọn. Tải lại trang và chọn lại.',
   },
 };
 
@@ -61,9 +69,14 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Dữ liệu gửi lên không đúng định dạng JSON.' }, 400);
   }
 
-  const { quoteId } = body;
+  // addressId: địa chỉ trong sổ địa chỉ của buyer (3.2). Bỏ trống → hàm
+  // accept_quote() dùng địa chỉ mặc định.
+  const { quoteId, addressId } = body;
   if (typeof quoteId !== 'string' || quoteId.length === 0) {
     return jsonResponse({ error: 'Thiếu mã báo giá.' }, 400);
+  }
+  if (addressId != null && addressId !== '' && typeof addressId !== 'string') {
+    return jsonResponse({ error: 'Địa chỉ giao hàng không hợp lệ.' }, 400);
   }
 
   const supabase = createClient(
@@ -72,7 +85,10 @@ Deno.serve(async (req) => {
     { global: { headers: { Authorization: authHeader } } },
   );
 
-  const { data, error } = await supabase.rpc('accept_quote', { p_quote_id: quoteId });
+  const { data, error } = await supabase.rpc('accept_quote', {
+    p_quote_id: quoteId,
+    p_address_id: addressId || null,
+  });
 
   if (error) {
     const known = ERROR_MESSAGES[error.message];

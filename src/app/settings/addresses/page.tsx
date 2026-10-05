@@ -3,19 +3,26 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AppShell } from '@/components/ui';
-import { NotificationPreferencesGrid } from './_components/NotificationPreferencesGrid';
+import type { BuyerAddress } from '@/lib/addresses';
+import { safeNextPath } from '@/lib/safe-next';
+import { AddressBook } from './_components/AddressBook';
 
 export const metadata: Metadata = {
-  title: 'Cài đặt thông báo — LàngNghề.vn',
+  title: 'Sổ địa chỉ — LàngNghề.vn',
 };
 
-interface PreferenceRow {
-  notification_type: string;
-  channel: string;
-  enabled: boolean;
-}
+// Sổ địa chỉ giao hàng (kế hoạch 3.2). Buyer đọc/ghi thẳng bảng
+// buyer_addresses qua RLS; địa chỉ được chọn khi chấp nhận báo giá sẽ được
+// chép vào đơn hàng. `?next=` (từ hộp thoại chấp nhận báo giá ở /rfq/[id])
+// hiện nút quay lại sau khi đã có địa chỉ.
+export default async function AddressBookPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const sp = await searchParams;
+  const next = safeNextPath(sp.next);
 
-export default async function NotificationSettingsPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -30,28 +37,28 @@ export default async function NotificationSettingsPage() {
 
   if (!buyer) redirect('/');
 
-  const [{ data: unreadCount }, { count: activeRfqCount }, { data: prefsData }] = await Promise.all([
-    supabase
-      .from('notifications')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('is_read', false)
-      .then((r) => ({ data: r.count ?? 0 })),
-    supabase
-      .from('rfq_requests')
-      .select('id', { count: 'exact', head: true })
-      .eq('buyer_id', buyer.id)
-      .in('status', ['published', 'quoted', 'negotiating']),
-    supabase
-      .from('notification_preferences')
-      .select('notification_type, channel, enabled')
-      .eq('user_id', user.id),
-  ]);
-
-  const initialPrefs: Record<string, boolean> = {};
-  for (const row of (prefsData ?? []) as PreferenceRow[]) {
-    initialPrefs[`${row.notification_type}:${row.channel}`] = row.enabled;
-  }
+  const [{ data: unreadCount }, { count: activeRfqCount }, { data: addressesData }] =
+    await Promise.all([
+      supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false)
+        .then((r) => ({ data: r.count ?? 0 })),
+      supabase
+        .from('rfq_requests')
+        .select('id', { count: 'exact', head: true })
+        .eq('buyer_id', buyer.id)
+        .in('status', ['published', 'quoted', 'negotiating']),
+      supabase
+        .from('buyer_addresses')
+        .select(
+          'id, label, recipient_name, phone, address_line, ward, district, province, is_default',
+        )
+        .eq('buyer_id', buyer.id)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false }),
+    ]);
 
   return (
     <AppShell
@@ -101,21 +108,20 @@ export default async function NotificationSettingsPage() {
           Dashboard
         </Link>
         <span>/</span>
-        <span>Cài đặt thông báo</span>
+        <span>Sổ địa chỉ</span>
       </div>
 
       <div className="mb-[18px]">
-        <div className="text-xl font-bold">Cài đặt thông báo</div>
+        <div className="text-xl font-bold">Sổ địa chỉ giao hàng</div>
         <div className="text-brand-sub mt-1 text-[12.5px]">
-          Chọn cách bạn muốn nhận thông báo cho từng loại sự kiện — trong ứng dụng hoặc qua email.
+          Địa chỉ bạn chọn khi chấp nhận báo giá sẽ được ghi vào đơn hàng để xưởng giao hàng.
         </div>
       </div>
 
-      <NotificationPreferencesGrid
-        userId={user.id}
-        initialPrefs={initialPrefs}
-        email={user.email ?? ''}
-        phone={user.phone ?? null}
+      <AddressBook
+        buyerId={buyer.id}
+        addresses={(addressesData ?? []) as BuyerAddress[]}
+        nextHref={next}
       />
     </AppShell>
   );

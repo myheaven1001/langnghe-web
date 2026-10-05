@@ -34,6 +34,9 @@ BEGIN
     INSERT INTO rfq_quotes (rfq_id, supplier_id, unit_price, min_qty, lead_time_days, status)
     VALUES (v_rfq, v_supplier, 99000, 200, 20, 'pending')
     RETURNING id INTO v_quote;
+    -- Từ 3.2 accept_quote bắt buộc có địa chỉ giao hàng.
+    INSERT INTO buyer_addresses (buyer_id, recipient_name, phone, address_line, province)
+    VALUES (v_buyer, 'Người nhận test', '0900000000', '1 Phố Test', 'Hà Nội');
 
     PERFORM set_config('test.buyer_a', v_buyer::TEXT, TRUE),
             set_config('test.xuong_a', v_supplier::TEXT, TRUE),
