@@ -22,5 +22,9 @@ export function buildAdminNavGroups({
         { icon: '👥', label: 'Quản lý user', href: '/admin/users' },
       ],
     },
+    {
+      label: 'Hệ thống',
+      items: [{ icon: '⚙️', label: 'Cài đặt sàn', href: '/admin/settings' }],
+    },
   ];
 }
