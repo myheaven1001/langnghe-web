@@ -41,7 +41,12 @@ Nhờ vậy Vercel Instant Rollback luôn an toàn: code cũ vẫn chạy đư�
 
 Mật khẩu database staging/production: các lệnh `db:push:*` và `backup:prod` hỏi một lần rồi lưu **mã hoá bằng Windows DPAPI** ở `%USERPROFILE%\.langnghe\` (chỉ user Windows này trên máy này đọc được, ngoài repo). Đổi mật khẩu trên Supabase xong thì chạy `npm run db:forget-passwords`; nhập sai thì script tự xoá bản đã lưu.
 
-Production dùng gói Free: Supabase **không** tự sao lưu. Trước mỗi lần push migration lên production chạy `npm run backup:prod` (Windows, cần `pg_dump` 17; hỏi mật khẩu database, lưu vào `%USERPROFILE%\langnghe-backups\` và tự kiểm tra file). Trên macOS/Linux dùng `scripts/backup-db.sh`. File dump lưu ngoài repo, không commit, không gửi cho ai.
+Production dùng gói Free: Supabase **không** tự sao lưu. Trước mỗi lần push migration lên production chạy `npm run backup:prod` (thử script trên dữ liệu test: `npm run backup:staging`). Các lệnh `npm run …` trong tài liệu này chạy được từ `C:\dev\b2b` hoặc `langnghe-web`.
+
+- Script xuất **dữ liệu** mọi bảng của schema `public`, `auth`, `storage` ra CSV (mỗi bảng một file `<schema>.<bảng>.csv`, kèm `manifest.json` ghi số dòng) vào `%USERPROFILE%\langnghe-backups\langnghe-prod-<ngày giờ>\`, đọc trong một transaction nên các bảng khớp nhau tại cùng thời điểm.
+- Chạy bằng Node (`scripts/backup-db.mjs`), **không dùng `pg_dump`**: Windows Smart App Control chặn `pg_dump.exe` (thư viện `libpq.dll` không có chữ ký số, mã lỗi `0xC0E90002`). Không tắt Smart App Control để chạy `pg_dump` — tắt rồi không bật lại được.
+- Chỉ có dữ liệu, không có cấu trúc bảng. Khôi phục: dựng cấu trúc từ `supabase/migrations/` (`npm run db:push:*` vào project mới), rồi nạp từng file CSV bằng `COPY … FROM` (SQL Editor không nạp được file; dùng Table Editor → Import data, hoặc một máy có `psql`). File ảnh trong Supabase Storage không nằm trong bản sao lưu.
+- Thư mục sao lưu lưu ngoài repo, không commit, không gửi cho ai (có email và dữ liệu khách hàng). Trên macOS/Linux có thể dùng `scripts/backup-db.sh` (`pg_dump`).
 
 ## Deploy production
 

@@ -15,7 +15,8 @@
     "backup:prod": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/backup-db.ps1",
     "db:push:staging": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-push.ps1 -Target staging",
     "db:push:prod": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-push.ps1 -Target production",
-    "db:forget-passwords": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-forget-passwords.ps1"
+    "db:forget-passwords": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-forget-passwords.ps1",
+    "backup:staging": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/backup-db.ps1 -Target staging"
   },
   "dependencies": {
     "@sentry/nextjs": "^11.0.0",
@@ -33,6 +34,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.2",
     "eslint-config-prettier": "^10.1.8",
+    "pg": "^8.23.1",
+    "pg-copy-streams": "^7.0.0",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "supabase": "^2.118.0",
