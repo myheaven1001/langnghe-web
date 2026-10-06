@@ -2,10 +2,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { AppShell, Card, CardBody, CardHeader, StatCard, StatusPill } from '@/components/ui';
-import { daysUntil, formatVnDate, formatVnd, hoursUntil, monthStartIso } from '@/lib/format';
+import { AppShell, ButtonLink, Card, CardBody, CardHeader, StatusPill } from '@/components/ui';
+import { daysUntil, formatVnDate, formatVnd, hoursUntil } from '@/lib/format';
 import { effectiveDeadline } from '@/lib/rfq';
 import { PLAN_LABEL } from '@/lib/constants';
+import { orderCode } from '@/lib/orders';
 import { buildSupplierNavGroups } from '../_lib/nav';
 import { getQuotedRfqIds, getUnreadNotificationCount } from '../_lib/counts';
 
@@ -13,7 +14,43 @@ export const metadata: Metadata = {
   title: 'Dashboard — LàngNghề.vn',
 };
 
-const PROCESSING_ORDER_STATUSES = ['confirmed', 'producing', 'shipped'];
+// Kết quả của RPC supplier_dashboard_stats() (20261005092300).
+interface DashboardStats {
+  new_rfq_count: number;
+  urgent_rfq_count: number;
+  orders: Record<
+    | 'pending_payment'
+    | 'confirmed'
+    | 'producing'
+    | 'shipped'
+    | 'delivered'
+    | 'completed'
+    | 'cancelled',
+    number
+  >;
+  revenue_month: number;
+  targeted_count: number;
+  quotes_count: number;
+  accepted_count: number;
+}
+
+const EMPTY_STATS: DashboardStats = {
+  new_rfq_count: 0,
+  urgent_rfq_count: 0,
+  orders: {
+    pending_payment: 0,
+    confirmed: 0,
+    producing: 0,
+    shipped: 0,
+    delivered: 0,
+    completed: 0,
+    cancelled: 0,
+  },
+  revenue_month: 0,
+  targeted_count: 0,
+  quotes_count: 0,
+  accepted_count: 0,
+};
 
 interface NewRfqRow {
   id: string;
@@ -55,6 +92,62 @@ function formatRelativeTime(iso: string) {
   return formatVnDate(iso);
 }
 
+function formatCompactVnd(n: number) {
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1).replace('.0', '')} tỷ`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace('.0', '')} tr`;
+  return formatVnd(n);
+}
+
+// Một ô "việc cần làm": số lớn + việc + nơi bấm. Có việc thì nổi màu đỏ.
+function TodoTile({
+  href,
+  icon,
+  count,
+  label,
+  hint,
+}: {
+  href: string;
+  icon: string;
+  count: number;
+  label: string;
+  hint?: string;
+}) {
+  const active = count > 0;
+  return (
+    <Link
+      href={href}
+      className={`flex min-h-[72px] items-center gap-3 rounded-[10px] border bg-white px-4 py-3 ${
+        active ? 'border-brand-red' : 'border-brand-border'
+      }`}
+    >
+      <span className="text-2xl">{icon}</span>
+      <span className="min-w-0 flex-1">
+        <span className="text-brand-ink block text-sm font-semibold">{label}</span>
+        {hint && <span className="text-brand-red block text-xs font-semibold">{hint}</span>}
+      </span>
+      <span
+        className={`font-tight text-2xl font-bold ${active ? 'text-brand-red' : 'text-brand-light'}`}
+      >
+        {count}
+      </span>
+      <span className="text-brand-light text-sm">›</span>
+    </Link>
+  );
+}
+
+function StatTile({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="border-brand-border rounded-[10px] border bg-white px-4 py-3">
+      <div className="font-tight text-xl font-bold">{value}</div>
+      <div className="text-brand-sub mt-0.5 text-xs">{label}</div>
+    </div>
+  );
+}
+
+// Dashboard nhà bán (kế hoạch 4.4). Mobile trước: đầu trang là "việc cần làm
+// hôm nay" (báo giá, bắt đầu sản xuất, giao hàng) — đúng thứ xưởng mở điện
+// thoại ra để xem — rồi mới tới số liệu và danh sách. Số liệu lấy bằng 1 RPC
+// supplier_dashboard_stats() thay cho ~12 câu đếm riêng lẻ trước đây.
 export default async function SupplierDashboardPage() {
   const supabase = await createClient();
   const {
@@ -64,25 +157,22 @@ export default async function SupplierDashboardPage() {
 
   const { data: supplier } = await supabase
     .from('supplier_profiles')
-    .select('id, shop_name, village_origin, craft_category, trust_score, created_at')
+    .select('id, shop_name, village_origin, trust_score')
     .eq('user_id', user.id)
     .single();
 
-  // Dashboard này chỉ dành cho supplier — tài khoản buyer thuần không có
-  // gì để hiển thị ở đây (mirrors dashboard buyer's guard).
   if (!supplier) redirect('/');
 
   const [
+    { data: statsData },
     quotedRfqIds,
     unreadCount,
     { data: membership },
-    { count: targetedCount },
-    { count: totalQuotesCount },
-    { count: acceptedQuotesCount },
-    { count: totalOrdersCount },
     { data: verifiedRow },
+    { data: recentOrdersData },
     { data: recentNotificationsData },
   ] = await Promise.all([
+    supabase.rpc('supplier_dashboard_stats'),
     getQuotedRfqIds(supabase, supplier.id),
     getUnreadNotificationCount(supabase, user.id),
     supabase
@@ -94,29 +184,21 @@ export default async function SupplierDashboardPage() {
       .limit(1)
       .maybeSingle(),
     supabase
-      .from('rfq_targets')
-      .select('id', { count: 'exact', head: true })
-      .eq('supplier_id', supplier.id),
-    supabase
-      .from('rfq_quotes')
-      .select('id', { count: 'exact', head: true })
-      .eq('supplier_id', supplier.id),
-    supabase
-      .from('rfq_quotes')
-      .select('id', { count: 'exact', head: true })
-      .eq('supplier_id', supplier.id)
-      .eq('status', 'accepted'),
-    supabase
-      .from('orders')
-      .select('id', { count: 'exact', head: true })
-      .eq('supplier_id', supplier.id),
-    supabase
       .from('verifications')
       .select('id')
       .eq('entity_type', 'supplier')
       .eq('entity_id', supplier.id)
       .eq('status', 'approved')
+      .limit(1)
       .maybeSingle(),
+    supabase
+      .from('orders')
+      .select(
+        'id, total_amount, status, tracking_number, created_at, buyer_profiles(company_name), rfq_quotes(rfq_requests(title, quantity))',
+      )
+      .eq('supplier_id', supplier.id)
+      .order('created_at', { ascending: false })
+      .limit(4),
     supabase
       .from('notifications')
       .select('id, title, body, is_read, created_at')
@@ -125,60 +207,32 @@ export default async function SupplierDashboardPage() {
       .limit(4),
   ]);
 
-  // RLS (rfq_requests_supplier_view) đã tự lọc chỉ những RFQ supplier này
-  // được mời (rfq_targets) hoặc multi-RFQ đúng ngành hàng — chỉ cần loại
-  // những RFQ đã báo giá rồi ra khỏi "cần báo giá".
+  // RLS (rfq_requests_supplier_view) đã tự lọc chỉ những RFQ xưởng này được
+  // thấy — chỉ cần loại những RFQ đã báo giá rồi.
   let newRfqQuery = supabase
     .from('rfq_requests')
     .select(
       'id, title, quantity, unit, created_at, expires_at, deadline_days, buyer_profiles(company_name)',
     )
     .eq('status', 'published')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(5);
   if (quotedRfqIds.length > 0) {
     newRfqQuery = newRfqQuery.not('id', 'in', `(${quotedRfqIds.join(',')})`);
   }
   const { data: newRfqsData } = await newRfqQuery;
+
+  const stats = { ...EMPTY_STATS, ...((statsData ?? {}) as Partial<DashboardStats>) };
   const newRfqs = (newRfqsData ?? []) as unknown as NewRfqRow[];
-  const urgentCount = newRfqs.filter((r) => {
-    const d = effectiveDeadline(r);
-    return d && hoursUntil(d) <= 24;
-  }).length;
-
-  const [{ count: processingCount }, { count: shippedCount }, { data: monthOrdersData }, { data: recentOrdersData }] =
-    await Promise.all([
-      supabase
-        .from('orders')
-        .select('id', { count: 'exact', head: true })
-        .eq('supplier_id', supplier.id)
-        .in('status', PROCESSING_ORDER_STATUSES),
-      supabase
-        .from('orders')
-        .select('id', { count: 'exact', head: true })
-        .eq('supplier_id', supplier.id)
-        .eq('status', 'shipped'),
-      supabase
-        .from('orders')
-        .select('total_amount')
-        .eq('supplier_id', supplier.id)
-        .neq('status', 'cancelled')
-        .gte('created_at', monthStartIso()),
-      supabase
-        .from('orders')
-        .select(
-          'id, total_amount, status, tracking_number, created_at, buyer_profiles(company_name), rfq_quotes(rfq_requests(title, quantity))',
-        )
-        .eq('supplier_id', supplier.id)
-        .order('created_at', { ascending: false })
-        .limit(4),
-    ]);
-
-  const revenueThisMonth = (monthOrdersData ?? []).reduce((sum, o) => sum + (o.total_amount ?? 0), 0);
   const recentOrders = (recentOrdersData ?? []) as unknown as SupplierOrderRow[];
   const recentNotifications = (recentNotificationsData ?? []) as NotificationRow[];
 
-  const responseRate = targetedCount ? Math.round(((totalQuotesCount ?? 0) / targetedCount) * 100) : null;
-  const winRate = totalQuotesCount ? Math.round(((acceptedQuotesCount ?? 0) / totalQuotesCount) * 100) : null;
+  const responseRate = stats.targeted_count
+    ? Math.min(100, Math.round((stats.quotes_count / stats.targeted_count) * 100))
+    : null;
+  const winRate = stats.quotes_count
+    ? Math.round((stats.accepted_count / stats.quotes_count) * 100)
+    : null;
   const isVerified = !!verifiedRow;
   const planName =
     (membership?.membership_plans as unknown as { name: string } | null)?.name ?? 'free';
@@ -196,128 +250,116 @@ export default async function SupplierDashboardPage() {
         userName: supplier.shop_name,
         userRole: `Supplier${supplier.village_origin ? ` · ${supplier.village_origin}` : ''}`,
       }}
-      navGroups={buildSupplierNavGroups({ newRfqCount: newRfqs.length, unreadCount })}
+      navGroups={buildSupplierNavGroups({ newRfqCount: stats.new_rfq_count, unreadCount })}
     >
-      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2 text-xl font-bold">
-            Chào {supplier.shop_name} 👋
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="flex flex-wrap items-center gap-2 text-xl font-bold">
+            <span className="break-words">Chào {supplier.shop_name} 👋</span>
             {isVerified && (
-              <span className="bg-status-green-soft text-status-green inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold">
+              <span className="bg-status-green-soft text-status-green inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold">
                 ✓ Đã xác minh
               </span>
             )}
-          </div>
-          <div className="text-brand-sub mt-1 text-[12.5px]">
-            Tổng quan hoạt động gian hàng của bạn.
+          </h1>
+          <div className="text-brand-sub mt-1 text-[13px]">
+            Việc cần làm và tình hình gian hàng.
           </div>
         </div>
-        <Link
-          href="/supplier/products/new"
-          className="bg-brand-red hover:bg-brand-red-dark rounded-md px-[18px] py-2.5 text-sm font-semibold whitespace-nowrap text-white"
-        >
-          + Thêm sản phẩm
-        </Link>
+        <ButtonLink href="/supplier/products/new">+ Thêm sản phẩm</ButtonLink>
       </div>
 
-      <div className="mb-[18px] grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard
+      {/* VIỆC CẦN LÀM */}
+      <div className="mb-4 grid grid-cols-1 gap-2.5 md:grid-cols-3">
+        <TodoTile
+          href="/supplier/rfq"
           icon="📥"
-          iconTone="red"
-          value={newRfqs.length}
-          label="RFQ mới cần báo giá"
-          delta={urgentCount > 0 ? `${urgentCount} gấp` : undefined}
-          deltaTone="new"
+          count={stats.new_rfq_count}
+          label="RFQ cần báo giá"
+          hint={stats.urgent_rfq_count > 0 ? `${stats.urgent_rfq_count} sắp hết hạn` : undefined}
         />
-        <StatCard
-          icon="📦"
-          iconTone="purple"
-          value={processingCount ?? 0}
-          label="Đơn hàng đang xử lý"
-          delta={shippedCount ? `${shippedCount} sắp giao` : undefined}
+        <TodoTile
+          href="/supplier/orders?status=confirmed&range=all"
+          icon="🧵"
+          count={stats.orders.confirmed}
+          label="Đơn chờ bắt đầu sản xuất"
         />
-        <StatCard
-          icon="💰"
-          iconTone="green"
-          value={
-            revenueThisMonth >= 1_000_000
-              ? `${(revenueThisMonth / 1_000_000).toFixed(0)}tr`
-              : formatVnd(revenueThisMonth)
-          }
-          label="Doanh thu tháng này"
+        <TodoTile
+          href="/supplier/orders?status=producing&range=all"
+          icon="🚚"
+          count={stats.orders.producing}
+          label="Đơn đang làm, chờ giao"
         />
-        <StatCard
-          icon="⚡"
-          iconTone="amber"
+      </div>
+
+      {/* SỐ LIỆU */}
+      <div className="mb-4 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+        <StatTile value={formatCompactVnd(stats.revenue_month)} label="Đã thanh toán tháng này" />
+        <StatTile
+          value={String(stats.orders.shipped + stats.orders.delivered)}
+          label="Đơn đang giao / chờ hoàn tất"
+        />
+        <StatTile
           value={responseRate === null ? '—' : `${responseRate}%`}
           label="Tỷ lệ phản hồi RFQ"
-          delta={responseRate !== null ? (responseRate >= 80 ? 'Tốt' : undefined) : undefined}
         />
+        <StatTile value={winRate === null ? '—' : `${winRate}%`} label="Tỷ lệ chốt báo giá" />
       </div>
 
-      <div className="grid grid-cols-[1fr_300px] items-start gap-4">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
         {/* LEFT */}
-        <div>
+        <div className="min-w-0">
           <Card>
             <CardHeader
               title={<>📥 RFQ mới cần báo giá</>}
               action={
-                <Link href="/supplier/rfq" className="text-brand-red text-xs font-semibold hover:underline">
+                <Link
+                  href="/supplier/rfq"
+                  className="text-brand-red text-xs font-semibold hover:underline"
+                >
                   Xem tất cả →
                 </Link>
               }
             />
             <CardBody>
               {newRfqs.length === 0 ? (
-                <div className="text-brand-light px-[18px] py-8 text-center text-xs">
+                <div className="text-brand-light px-[18px] py-8 text-center text-[13px]">
                   Chưa có RFQ nào cần báo giá.
                 </div>
               ) : (
-                newRfqs.slice(0, 5).map((rfq) => {
+                newRfqs.map((rfq) => {
                   const deadline = effectiveDeadline(rfq);
                   const hrs = deadline ? hoursUntil(deadline) : null;
-                  const urgent = hrs !== null && hrs <= 24;
+                  const urgent = hrs !== null && hrs > 0 && hrs <= 24;
                   return (
                     <Link
                       key={rfq.id}
                       href={`/supplier/rfq?rfq=${rfq.id}`}
-                      className="flex items-center gap-3 border-b border-[#F2F0EC] px-[18px] py-[11px] last:border-b-0 hover:bg-[#FAFAF8]"
+                      className="flex min-h-[60px] items-center gap-3 border-b border-[#F2F0EC] px-4 py-3 last:border-b-0 hover:bg-[#FAFAF8]"
                     >
-                      <div className="bg-brand-bg flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[7px] text-base">
-                        📥
-                      </div>
                       <div className="min-w-0 flex-1">
-                        <div className="text-brand-ink truncate text-[12.5px] font-semibold">
-                          {rfq.buyer_profiles?.company_name ?? 'Buyer'} — {rfq.title},{' '}
-                          {rfq.quantity.toLocaleString('vi-VN')} {rfq.unit ?? ''}
+                        <div className="text-brand-ink line-clamp-2 text-[13px] font-semibold">
+                          {rfq.title} — {rfq.quantity.toLocaleString('vi-VN')} {rfq.unit ?? ''}
                         </div>
-                        <div className="text-brand-light mt-0.5 text-[11px]">
+                        <div className="text-brand-sub mt-0.5 text-xs">
+                          {rfq.buyer_profiles?.company_name ?? 'Buyer'} ·{' '}
                           {hrs === null ? (
-                            'Chưa rõ hạn'
+                            'chưa rõ hạn'
                           ) : hrs <= 0 ? (
-                            'Đã hết hạn báo giá'
+                            'đã hết hạn báo giá'
                           ) : (
                             <>
-                              Còn{' '}
+                              còn{' '}
                               <b className={urgent ? 'text-brand-red' : undefined}>
                                 {hrs <= 24 ? `${hrs} giờ` : `${daysUntil(deadline!)} ngày`}
-                              </b>{' '}
-                              để báo giá
+                              </b>
                             </>
-                          )}{' '}
-                          · gửi {formatVnDate(rfq.created_at)}
+                          )}
                         </div>
                       </div>
-                      <div className="shrink-0">
-                        {urgent && (
-                          <span className="bg-status-red-soft text-status-red mr-2 rounded-full px-2 py-0.5 text-[10.5px] font-semibold">
-                            Gấp
-                          </span>
-                        )}
-                        <span className="bg-brand-red rounded-md px-3 py-1.5 text-[11.5px] font-semibold whitespace-nowrap text-white">
-                          Báo giá ngay
-                        </span>
-                      </div>
+                      <span className="bg-brand-red shrink-0 rounded-md px-3 py-2 text-xs font-semibold whitespace-nowrap text-white">
+                        Báo giá
+                      </span>
                     </Link>
                   );
                 })
@@ -339,31 +381,27 @@ export default async function SupplierDashboardPage() {
             />
             <CardBody>
               {recentOrders.length === 0 ? (
-                <div className="text-brand-light px-[18px] py-8 text-center text-xs">
+                <div className="text-brand-light px-[18px] py-8 text-center text-[13px]">
                   Chưa có đơn hàng nào.
                 </div>
               ) : (
                 recentOrders.map((order) => (
                   <Link
                     key={order.id}
-                    href={`/supplier/orders?order=${order.id}`}
-                    className="flex items-center gap-3 border-b border-[#F2F0EC] px-[18px] py-[11px] last:border-b-0 hover:bg-[#FAFAF8]"
+                    href={`/supplier/orders/${order.id}`}
+                    className="flex min-h-[60px] items-center gap-3 border-b border-[#F2F0EC] px-4 py-3 last:border-b-0 hover:bg-[#FAFAF8]"
                   >
-                    <div className="bg-brand-bg flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[7px] text-base">
-                      📦
-                    </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-brand-ink truncate text-[12.5px] font-semibold">
-                        {order.buyer_profiles?.company_name ?? 'Buyer'} — #
-                        {order.id.slice(0, 8).toUpperCase()} —{' '}
+                      <div className="text-brand-ink line-clamp-2 text-[13px] font-semibold">
                         {order.rfq_quotes?.rfq_requests?.title ?? 'Đơn hàng'}
                       </div>
-                      <div className="text-brand-light mt-0.5 text-[11px]">
-                        {order.tracking_number ? `Mã vận đơn ${order.tracking_number}` : formatVnDate(order.created_at)}
+                      <div className="text-brand-sub mt-0.5 truncate text-xs">
+                        {orderCode(order.id)} · {order.buyer_profiles?.company_name ?? 'Buyer'} ·{' '}
+                        {formatVnDate(order.created_at)}
                       </div>
                     </div>
                     <div className="shrink-0 text-right">
-                      <div className="text-brand-ink text-[12.5px] font-bold">
+                      <div className="text-brand-ink mb-1 text-[13px] font-bold">
                         {formatVnd(order.total_amount)}
                       </div>
                       <StatusPill domain="order" status={order.status} />
@@ -375,58 +413,13 @@ export default async function SupplierDashboardPage() {
           </Card>
         </div>
 
-        {/* RIGHT RAIL */}
-        <div>
+        {/* RIGHT RAIL (xuống dưới trên điện thoại) */}
+        <div className="min-w-0">
           <div className="border-brand-border mb-4 rounded-[10px] border bg-white p-4">
             <div className="text-brand-sub mb-3 text-xs font-bold tracking-[.04em] uppercase">
               Gian hàng của bạn
             </div>
-            <div className="mb-3.5 flex items-center gap-3">
-              <div className="bg-brand-bg flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[9px] text-xl">
-                🏭
-              </div>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-1.5 text-[13.5px] font-bold">
-                  {supplier.shop_name}
-                  {isVerified && (
-                    <span className="bg-status-green-soft text-status-green rounded-full px-1.5 py-px text-[9px] font-bold">
-                      ✓ Đã xác minh
-                    </span>
-                  )}
-                </div>
-                <div className="text-brand-light mt-0.5 text-[11.5px]">
-                  {supplier.village_origin ?? 'Chưa rõ làng nghề'}
-                </div>
-              </div>
-            </div>
-            <div className="mb-3.5 grid grid-cols-2 gap-2.5">
-              <div className="bg-brand-bg rounded-lg px-2.5 py-2">
-                <div className="font-tight text-[15px] font-bold">
-                  {responseRate === null ? '—' : `${responseRate}%`}
-                </div>
-                <div className="text-brand-sub mt-0.5 text-[10px]">Tỷ lệ phản hồi</div>
-              </div>
-              <div className="bg-brand-bg rounded-lg px-2.5 py-2">
-                <div className="font-tight text-[15px] font-bold">
-                  {winRate === null ? '—' : `${winRate}%`}
-                </div>
-                <div className="text-brand-sub mt-0.5 text-[10px]">Tỷ lệ chốt báo giá</div>
-              </div>
-              <div className="bg-brand-bg col-span-2 rounded-lg px-2.5 py-2">
-                <div className="font-tight text-[15px] font-bold">{totalOrdersCount ?? 0}</div>
-                <div className="text-brand-sub mt-0.5 text-[10px]">Tổng đơn hàng</div>
-              </div>
-            </div>
-            <span className="bg-brand-bg inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-bold">
-              {PLAN_LABEL[planName] ?? planName}
-            </span>
-          </div>
-
-          <div className="border-brand-border mb-4 rounded-[10px] border bg-white p-4">
-            <div className="text-brand-sub mb-3 text-xs font-bold tracking-[.04em] uppercase">
-              Điểm uy tín
-            </div>
-            <div className="flex items-center gap-3.5">
+            <div className="mb-3 flex items-center gap-3">
               <div className="relative h-14 w-14 shrink-0">
                 <svg width="56" height="56" viewBox="0 0 56 56" className="-rotate-90">
                   <circle cx="28" cy="28" r="23" fill="none" stroke="#F0EFEC" strokeWidth="6" />
@@ -446,36 +439,67 @@ export default async function SupplierDashboardPage() {
                   {supplier.trust_score}
                 </div>
               </div>
-              <div className="text-brand-sub text-[11.5px] leading-relaxed">
-                <strong className="text-brand-ink">
-                  {supplier.trust_score >= 80 ? 'Rất tốt' : supplier.trust_score >= 50 ? 'Tốt' : 'Cần cải thiện'}
-                </strong>{' '}
-                — phản hồi nhanh và giao đúng hạn giúp gian hàng được ưu tiên hiển thị.
+              <div className="min-w-0">
+                <div className="text-sm font-bold break-words">{supplier.shop_name}</div>
+                <div className="text-brand-sub mt-0.5 text-xs">
+                  Điểm uy tín:{' '}
+                  <strong className="text-brand-ink">
+                    {supplier.trust_score >= 80
+                      ? 'Rất tốt'
+                      : supplier.trust_score >= 50
+                        ? 'Tốt'
+                        : 'Cần cải thiện'}
+                  </strong>
+                </div>
               </div>
+            </div>
+            <div className="text-brand-sub mb-3 text-xs leading-relaxed">
+              Phản hồi nhanh và giao đúng hạn giúp gian hàng được ưu tiên hiển thị.
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="bg-brand-bg rounded-md px-2.5 py-1 font-bold">
+                Gói {PLAN_LABEL[planName] ?? planName}
+              </span>
+              <span className="text-brand-sub">{stats.orders.completed} đơn đã hoàn tất</span>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <ButtonLink href="/supplier/shop" variant="secondary" className="flex-1">
+                Xem gian hàng
+              </ButtonLink>
+              <ButtonLink href="/supplier/analytics" variant="secondary" className="flex-1">
+                Phân tích
+              </ButtonLink>
             </div>
           </div>
 
           <div className="border-brand-border rounded-[10px] border bg-white p-4">
-            <div className="text-brand-sub mb-3 text-xs font-bold tracking-[.04em] uppercase">
-              Thông báo gần đây
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-brand-sub text-xs font-bold tracking-[.04em] uppercase">
+                Thông báo gần đây
+              </span>
+              <Link href="/notifications" className="text-brand-red text-xs font-semibold">
+                Tất cả →
+              </Link>
             </div>
             {recentNotifications.length === 0 ? (
-              <div className="text-brand-light text-xs">Chưa có thông báo nào.</div>
+              <div className="text-brand-light text-[13px]">Chưa có thông báo nào.</div>
             ) : (
               recentNotifications.map((notif) => (
                 <div
                   key={notif.id}
                   className="flex gap-2.5 border-b border-[#F2F0EC] py-2.5 last:border-b-0 last:pb-0"
                 >
-                  {!notif.is_read && (
-                    <span className="bg-brand-red mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full" />
-                  )}
-                  <div className={notif.is_read ? 'pl-[14px]' : ''}>
-                    <div className="text-brand-ink text-[11.5px] leading-relaxed">
+                  <span
+                    className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
+                      notif.is_read ? 'bg-transparent' : 'bg-brand-red'
+                    }`}
+                  />
+                  <div className="min-w-0">
+                    <div className="text-brand-ink text-[13px] leading-relaxed break-words">
                       <strong className="font-semibold">{notif.title}</strong>
                       {notif.body ? ` — ${notif.body}` : ''}
                     </div>
-                    <div className="text-brand-light mt-0.5 text-[10px]">
+                    <div className="text-brand-light mt-0.5 text-xs">
                       {formatRelativeTime(notif.created_at)}
                     </div>
                   </div>
