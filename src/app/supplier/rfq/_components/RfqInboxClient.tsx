@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { daysUntil, formatVnDate, formatVnd, hoursUntil } from '@/lib/format';
 import { effectiveDeadline } from '@/lib/rfq';
+import { RFQ_OPEN_STATUSES } from '@/lib/quotes';
 
 export interface InboxRfqRow {
   id: string;
@@ -51,7 +52,8 @@ function bucketFor(rfq: InboxRfqRow, quote: MyQuoteRow | undefined): Bucket {
     if (quote.status === 'rejected') return 'lost';
     return 'quoted';
   }
-  return rfq.status === 'published' ? 'new' : 'lost';
+  // Chưa có báo giá của mình: còn mở (kể cả xưởng khác đã báo giá) thì vẫn là "mới".
+  return RFQ_OPEN_STATUSES.includes(rfq.status) ? 'new' : 'lost';
 }
 
 function budgetLabel(min: number | null, max: number | null) {

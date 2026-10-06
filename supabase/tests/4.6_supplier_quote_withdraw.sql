@@ -3,7 +3,7 @@
 --
 -- Chạy trên STAGING sau `npm run seed:staging`. Dán cả file vào SQL Editor
 -- rồi Run, hoặc psql -v ON_ERROR_STOP=1 -f.
--- Đạt: kết quả cuối là "4.6: TẤT CẢ ĐẠT (14 ca)". Hỏng: "FAIL …".
+-- Đạt: kết quả cuối là "4.6: TẤT CẢ ĐẠT (15 ca)". Hỏng: "FAIL …".
 -- Cả file ROLLBACK ở cuối: không đổi dữ liệu.
 -- Chạy lại thêm 1.5 và 4.4 (cùng đụng trigger báo giá / số liệu dashboard).
 
@@ -84,6 +84,10 @@ BEGIN
     RAISE EXCEPTION 'FAIL  % — không bị chặn (cần %)', p_label, p_code;
 END $$;
 
+-- Số "cần báo giá" của xưởng B trước khi xưởng A báo giá.
+SELECT pg_temp.login('xuong.b@langnghe.test');
+SELECT set_config('test.b_before', public.supplier_dashboard_stats() ->> 'new_rfq_count', TRUE);
+
 -- ── Xưởng A: gửi, sửa, rút ─────────────────────────────────────────────
 SELECT pg_temp.login('xuong.a@langnghe.test');
 SELECT set_config('test.new_before',
@@ -101,6 +105,14 @@ SELECT pg_temp.check('gửi báo giá → RFQ không còn trong "cần báo giá
     public.supplier_dashboard_stats() ->> 'new_rfq_count');
 SELECT pg_temp.expect_error('gửi báo giá thứ hai khi báo giá đầu còn hiệu lực', 'UNIQUE',
     $q$INSERT INTO rfq_quotes (rfq_id, unit_price) VALUES (current_setting('test.rfq')::UUID, 49000)$q$);
+
+-- Xưởng A đã báo giá (RFQ chuyển 'quoted'): xưởng B vẫn phải thấy RFQ cần báo giá.
+SELECT pg_temp.login('xuong.b@langnghe.test');
+SELECT pg_temp.check('xưởng khác vẫn thấy RFQ "cần báo giá" sau khi xưởng A báo giá trước',
+    (public.supplier_dashboard_stats() ->> 'new_rfq_count') = current_setting('test.b_before')
+    AND (SELECT status = 'quoted' FROM rfq_requests WHERE id = current_setting('test.rfq')::UUID),
+    public.supplier_dashboard_stats() ->> 'new_rfq_count');
+SELECT pg_temp.login('xuong.a@langnghe.test');
 
 UPDATE rfq_quotes SET unit_price = 48000, note = 'Giảm giá cho đơn đầu'
 WHERE id = current_setting('test.q1')::UUID;
@@ -183,4 +195,4 @@ DO $$ BEGIN RAISE NOTICE '4.6: TẤT CẢ ĐẠT'; END $$;
 
 ROLLBACK;
 
-SELECT '4.6: TẤT CẢ ĐẠT (14 ca)' AS ket_qua;
+SELECT '4.6: TẤT CẢ ĐẠT (15 ca)' AS ket_qua;

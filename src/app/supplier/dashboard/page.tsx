@@ -7,6 +7,7 @@ import { daysUntil, formatVnDate, formatVnd, hoursUntil } from '@/lib/format';
 import { effectiveDeadline } from '@/lib/rfq';
 import { PLAN_LABEL } from '@/lib/constants';
 import { orderCode } from '@/lib/orders';
+import { RFQ_OPEN_STATUSES } from '@/lib/quotes';
 import { buildSupplierNavGroups } from '../_lib/nav';
 import { getQuotedRfqIds, getUnreadNotificationCount } from '../_lib/counts';
 
@@ -214,7 +215,7 @@ export default async function SupplierDashboardPage() {
     .select(
       'id, title, quantity, unit, created_at, expires_at, deadline_days, buyer_profiles(company_name)',
     )
-    .eq('status', 'published')
+    .in('status', RFQ_OPEN_STATUSES)
     .order('created_at', { ascending: false })
     .limit(5);
   if (quotedRfqIds.length > 0) {

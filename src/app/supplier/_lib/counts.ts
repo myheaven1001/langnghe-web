@@ -1,4 +1,5 @@
 import type { createClient } from '@/lib/supabase/server';
+import { RFQ_OPEN_STATUSES } from '@/lib/quotes';
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -29,7 +30,9 @@ export async function getNewRfqCount(supabase: SupabaseServerClient, supplierId:
   let query = supabase
     .from('rfq_requests')
     .select('id', { count: 'exact', head: true })
-    .eq('status', 'published');
+    // Còn mở = còn nhận báo giá. Không chỉ 'published': RFQ chuyển 'quoted'
+    // ngay khi xưởng ĐẦU TIÊN báo giá, các xưởng khác vẫn cần báo giá.
+    .in('status', RFQ_OPEN_STATUSES);
   if (quotedIds.length > 0) {
     query = query.not('id', 'in', `(${quotedIds.join(',')})`);
   }
