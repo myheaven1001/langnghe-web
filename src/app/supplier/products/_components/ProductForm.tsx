@@ -464,9 +464,10 @@ export function ProductForm({
               </button>
             }
           />
-          <CardBody padded>
+          {/* 7 cột: kéo ngang trên điện thoại. */}
+          <CardBody padded className="overflow-x-auto">
             {variants.length > 0 && (
-              <div className="mb-1.5 grid grid-cols-[1fr_1fr_1fr_80px_100px_100px_30px] gap-2 text-[10px] font-bold tracking-[.04em] text-brand-light uppercase">
+              <div className="mb-1.5 grid min-w-[640px] grid-cols-[1fr_1fr_1fr_80px_100px_100px_30px] gap-2 text-[10px] font-bold tracking-[.04em] text-brand-light uppercase">
                 <span>Màu sắc</span>
                 <span>Kích thước</span>
                 <span>Chất liệu</span>
@@ -477,7 +478,7 @@ export function ProductForm({
               </div>
             )}
             {variants.map((v, i) => (
-              <div key={i} className="mb-2 grid grid-cols-[1fr_1fr_1fr_80px_100px_100px_30px] gap-2">
+              <div key={i} className="mb-2 grid min-w-[640px] grid-cols-[1fr_1fr_1fr_80px_100px_100px_30px] gap-2">
                 <input
                   value={v.color}
                   onChange={(e) => updateVariant(i, { color: e.target.value })}

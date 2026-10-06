@@ -104,8 +104,9 @@ export function ProductTable({ products }: { products: ProductListRow[] }) {
         </div>
       )}
 
-      <div className="border-brand-border overflow-hidden rounded-[10px] border bg-white">
-        <table className="w-full border-collapse">
+      {/* Bảng kéo ngang trên điện thoại (kế hoạch 4.5). */}
+      <div className="border-brand-border overflow-x-auto rounded-[10px] border bg-white">
+        <table className="w-full min-w-[760px] border-collapse">
           <thead>
             <tr className="bg-brand-bg border-brand-border border-b">
               <th className="w-9 px-3.5 py-2.5">

@@ -274,8 +274,8 @@ export default async function AdminOrdersPage({
           <div className="mb-1.5 text-sm font-bold">Không có đơn hàng nào ở mục này</div>
         </div>
       ) : (
-        <div className="border-brand-border overflow-hidden rounded-[10px] border bg-white">
-          <table className="w-full border-collapse">
+        <div className="border-brand-border overflow-x-auto rounded-[10px] border bg-white">
+          <table className="w-full min-w-[760px] border-collapse">
             <thead>
               <tr className="bg-brand-bg border-brand-border border-b">
                 {['Mã đơn', 'Buyer → Supplier', 'Giá trị', 'Ngày đặt', 'Trạng thái', ''].map(

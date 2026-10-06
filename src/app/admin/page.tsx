@@ -171,7 +171,7 @@ export default async function AdminDashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-[1fr_300px] items-start gap-4">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
         {/* LEFT */}
         <div>
           <Card>

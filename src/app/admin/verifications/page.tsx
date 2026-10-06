@@ -270,7 +270,7 @@ export default async function AdminVerificationsPage({
           <div className="text-brand-sub text-xs">Hàng đợi trống — quay lại sau.</div>
         </div>
       ) : (
-        <div className="grid grid-cols-[340px_1fr] items-start gap-4">
+        <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">
           {/* QUEUE LIST */}
           <div className="border-brand-border overflow-hidden rounded-[10px] border bg-white">
             {queue.map((v) => {

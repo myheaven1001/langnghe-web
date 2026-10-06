@@ -221,7 +221,7 @@ export default async function SupplierOrdersPage({
         })}
       </div>
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-x-3">
         <SupplierOrderFilterBar status={status} q={q} range={range} sort={sort} />
         <span className="text-brand-sub mb-3.5 shrink-0 text-xs">{totalCount} kết quả</span>
       </div>
@@ -250,11 +250,12 @@ export default async function SupplierOrdersPage({
                 key={order.id}
                 className={`border-brand-border rounded-[10px] border bg-white p-3.5 px-4 ${isCancelled ? 'opacity-60' : ''}`}
               >
-                <div className="flex items-center gap-3.5">
-                  <div className="bg-brand-bg flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[9px] text-xl">
+                {/* Điện thoại: mã + tên một dòng, tiền và trạng thái xuống dòng dưới. */}
+                <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2">
+                  <div className="bg-brand-bg hidden h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[9px] text-xl sm:flex">
                     📦
                   </div>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 basis-[220px]">
                     <div className="mb-0.5 flex items-center gap-2">
                       <span className="text-brand-light shrink-0 text-[11.5px] font-semibold">
                         #{order.id.slice(0, 8).toUpperCase()}
@@ -272,11 +273,11 @@ export default async function SupplierOrdersPage({
                       <span>Đặt ngày {formatVnDate(order.created_at)}</span>
                     </div>
                   </div>
-                  <div className="min-w-[120px] shrink-0 text-right">
+                  <div className="shrink-0 sm:min-w-[120px] sm:text-right">
                     <div className="font-tight text-[15px] font-bold">{formatVnd(order.total_amount)}</div>
                     <div className="text-brand-light mt-px text-[10px]">tổng giá trị</div>
                   </div>
-                  <div className="min-w-[118px] shrink-0 text-right">
+                  <div className="ml-auto shrink-0 sm:ml-0 sm:min-w-[118px] sm:text-right">
                     <StatusPill domain="order" status={order.status} />
                   </div>
                 </div>

@@ -243,8 +243,8 @@ export default async function AdminUsersPage({
           <div className="mb-1.5 text-sm font-bold">Không có người dùng nào ở mục này</div>
         </div>
       ) : (
-        <div className="border-brand-border overflow-hidden rounded-[10px] border bg-white">
-          <table className="w-full border-collapse">
+        <div className="border-brand-border overflow-x-auto rounded-[10px] border bg-white">
+          <table className="w-full min-w-[760px] border-collapse">
             <thead>
               <tr className="bg-brand-bg border-brand-border border-b">
                 {['Người dùng', 'Vai trò', 'Trạng thái', 'Trust score', 'Tham gia', ''].map((h) => (

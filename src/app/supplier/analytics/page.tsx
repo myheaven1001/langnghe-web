@@ -356,7 +356,8 @@ function AnalyticsBody({ stats, range }: { stats: SupplierAnalytics; range: Rang
               Chưa có sản phẩm nào xuất hiện trong kết quả tìm kiếm trong {range} ngày qua.
             </div>
           ) : (
-            <table className="w-full border-collapse">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[520px] border-collapse">
               <thead>
                 <tr>
                   <th className="text-brand-light border-brand-border border-b px-2.5 pb-2.5 text-left text-[10.5px] font-bold tracking-[.05em] uppercase">
@@ -394,6 +395,7 @@ function AnalyticsBody({ stats, range }: { stats: SupplierAnalytics; range: Rang
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </Card>

@@ -227,7 +227,7 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      <div className="mb-[18px] grid grid-cols-4 gap-3">
+      <div className="mb-[18px] grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           icon="📋"
           iconTone="blue"
@@ -254,7 +254,7 @@ export default async function DashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-[1fr_300px] items-start gap-4">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
         {/* LEFT: RFQ + Orders */}
         <div>
           <Card>
