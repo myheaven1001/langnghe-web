@@ -1,10 +1,18 @@
 import { AppShell, Card, CardBody, CardHeader, CardLink, Pill, StatCard } from '@/components/ui';
+import { buildSupplierNavGroups } from '@/app/supplier/_lib/nav';
 
 // Temporary visual check for the shared components extracted from the
 // *_page.html prototypes — mirrors a slice of dashboard_buyer_page.html so
 // it can be eyeballed against the original. Safe to delete once the real
 // /dashboard page is built (roadmap step 3.1).
-export default function UiPreviewPage() {
+// `?as=supplier` dựng khung khu nhà bán (có thanh điều hướng dưới cùng trên
+// điện thoại) để xem thử mà không cần đăng nhập.
+export default async function UiPreviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ as?: string }>;
+}) {
+  const asSupplier = (await searchParams).as === 'supplier';
   return (
     <AppShell
       header={{
@@ -16,24 +24,28 @@ export default function UiPreviewPage() {
         userRole: 'Shop Decor Hà Nội',
         userInitial: 'L',
       }}
-      navGroups={[
-        { items: [{ icon: '🏠', label: 'Dashboard', href: '/dev/ui-preview' }] },
-        {
-          label: 'Mua hàng',
-          items: [
-            { icon: '📝', label: 'Gửi RFQ mới', href: '/rfq/new' },
-            { icon: '📋', label: 'RFQ của tôi', href: '/rfq', count: 4 },
-            { icon: '📦', label: 'Đơn hàng', href: '/orders' },
-          ],
-        },
-        {
-          label: 'Kết nối',
-          items: [
-            { icon: '💬', label: 'Nhắn tin', href: '/messages', count: 3 },
-            { icon: '🔔', label: 'Thông báo', href: '/notifications' },
-          ],
-        },
-      ]}
+      navGroups={
+        asSupplier
+          ? buildSupplierNavGroups({ newRfqCount: 2, unreadCount: 5 })
+          : [
+              { items: [{ icon: '🏠', label: 'Dashboard', href: '/dev/ui-preview' }] },
+              {
+                label: 'Mua hàng',
+                items: [
+                  { icon: '📝', label: 'Gửi RFQ mới', href: '/rfq/new' },
+                  { icon: '📋', label: 'RFQ của tôi', href: '/rfq', count: 4 },
+                  { icon: '📦', label: 'Đơn hàng', href: '/orders' },
+                ],
+              },
+              {
+                label: 'Kết nối',
+                items: [
+                  { icon: '💬', label: 'Nhắn tin', href: '/messages', count: 3 },
+                  { icon: '🔔', label: 'Thông báo', href: '/notifications' },
+                ],
+              },
+            ]
+      }
     >
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -52,7 +64,7 @@ export default function UiPreviewPage() {
         </button>
       </div>
 
-      <div className="mb-[18px] grid grid-cols-4 gap-3">
+      <div className="mb-[18px] grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           icon="📋"
           iconTone="blue"

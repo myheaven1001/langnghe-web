@@ -88,23 +88,57 @@ export async function updateSession(request: NextRequest) {
       .eq('id', user.sub)
       .single();
 
-    if (profile?.status !== 'active') {
+    const redirectTo = (path: string, search = '') => {
       const url = request.nextUrl.clone();
-      url.pathname = '/';
-      url.search = '';
+      url.pathname = path;
+      url.search = search;
       return NextResponse.redirect(url);
+    };
+
+    // Chưa hoàn thiện hồ sơ: đưa thẳng tới bước "Hoàn thiện hồ sơ" (cùng URL
+    // confirmOtp() dùng), kèm `next` để xong thì quay lại trang đang định vào.
+    if (profile?.status === 'pending' && typeof user.email === 'string' && user.email) {
+      return redirectTo(
+        '/verify-email',
+        new URLSearchParams({
+          email: user.email,
+          mode: 'register',
+          step: 'profile',
+          role: profile.role,
+          next: pathname + request.nextUrl.search,
+        }).toString(),
+      );
     }
 
-    // /admin/* is further gated to role = 'admin' — that role is never
-    // self-assigned (see handle_new_user() in the users_and_auth migration),
-    // so any other authenticated, active user is bounced to '/' same as an
-    // unrelated private route they have no business in.
-    const isAdminPath = pathname === '/admin' || pathname.startsWith('/admin/');
-    if (isAdminPath && profile.role !== 'admin') {
-      const url = request.nextUrl.clone();
-      url.pathname = '/';
-      url.search = '';
-      return NextResponse.redirect(url);
+    // Bị khoá (hoặc không có dòng users): về trang chủ.
+    if (profile?.status !== 'active') {
+      return redirectTo('/');
+    }
+
+    // Phân quyền theo khu (kế hoạch 4.3). Mỗi vai trò có một "nhà"; vào nhầm
+    // khu của vai trò khác thì được đưa về nhà mình thay vì thấy trang trống
+    // hoặc bị đẩy ra trang chủ. /messages và /notifications dùng chung.
+    //   buyer     /dashboard, /rfq, /orders, /settings
+    //   supplier  /supplier/*
+    //   admin     /admin/* (role admin không bao giờ tự gán — handle_new_user())
+    //   both      khu buyer + khu supplier
+    const inArea = (prefixes: string[]) =>
+      prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+    const area = inArea(['/admin'])
+      ? 'admin'
+      : inArea(['/supplier'])
+        ? 'supplier'
+        : inArea(['/dashboard', '/rfq', '/orders', '/settings'])
+          ? 'buyer'
+          : 'shared';
+    const role = profile.role as string;
+    const home = role === 'admin' ? '/admin' : role === 'supplier' ? '/supplier/dashboard' : '/dashboard';
+    const allowed =
+      area === 'shared' ||
+      area === role ||
+      (role === 'both' && (area === 'buyer' || area === 'supplier'));
+    if (!allowed) {
+      return redirectTo(home);
     }
   }
 

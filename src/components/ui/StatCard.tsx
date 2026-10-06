@@ -50,7 +50,7 @@ export function StatCard({
         </div>
         {delta && (
           <span
-            className={`rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${DELTA_CLASSNAMES[deltaTone]}`}
+            className={`rounded-full px-1.5 py-0.5 text-xs font-semibold ${DELTA_CLASSNAMES[deltaTone]}`}
           >
             {delta}
           </span>

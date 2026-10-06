@@ -31,7 +31,7 @@ export function Overlay({
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-5 ${className}`}
+      className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-3 sm:p-5 ${className}`}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose?.();
       }}
@@ -64,7 +64,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         style={{ maxWidth }}
-        className={`max-h-[90vh] w-full overflow-y-auto rounded-xl bg-white p-6 ${centered ? 'text-center' : ''} ${className}`}
+        className={`max-h-[90vh] w-full overflow-y-auto rounded-xl bg-white p-5 sm:p-6 ${centered ? 'text-center' : ''} ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
         {children}
@@ -82,7 +82,7 @@ export function ModalTitle({ children }: { children: ReactNode }) {
 }
 
 export function ModalSub({ children }: { children: ReactNode }) {
-  return <div className="text-brand-sub mb-4 text-[11.5px] leading-relaxed">{children}</div>;
+  return <div className="text-brand-sub mb-4 text-[13px] leading-relaxed">{children}</div>;
 }
 
 export function ModalActions({

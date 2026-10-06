@@ -21,9 +21,12 @@ export interface SidebarNavGroup {
 export function Sidebar({
   groups,
   className = '',
+  onNavigate,
 }: {
   groups: SidebarNavGroup[];
   className?: string;
+  /** Gọi khi bấm một mục — ngăn kéo trên điện thoại dùng để tự đóng. */
+  onNavigate?: () => void;
 }) {
   const pathname = usePathname();
 
@@ -32,7 +35,7 @@ export function Sidebar({
       {groups.map((group, i) => (
         <div key={group.label ?? `group-${i}`} className="mb-[18px]">
           {group.label && (
-            <div className="text-brand-light mb-1.5 px-[18px] text-[10px] font-bold tracking-[.06em] uppercase">
+            <div className="text-brand-light mb-1.5 px-[18px] text-xs font-bold tracking-[.06em] uppercase lg:text-[10px]">
               {group.label}
             </div>
           )}
@@ -42,7 +45,9 @@ export function Sidebar({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2.5 border-l-[3px] px-[18px] py-[9px] text-[12.5px] transition-colors ${
+                onClick={onNavigate}
+                aria-current={active ? 'page' : undefined}
+                className={`flex min-h-[44px] items-center gap-2.5 border-l-[3px] px-[18px] py-[9px] text-sm transition-colors lg:min-h-0 lg:text-[12.5px] ${
                   active
                     ? 'border-brand-red text-brand-red bg-[#FFF0F0] font-semibold'
                     : 'text-brand-sub hover:text-brand-red border-transparent hover:bg-[#FFF5F5]'

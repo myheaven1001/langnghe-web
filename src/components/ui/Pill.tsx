@@ -24,7 +24,7 @@ export function Pill({
 }) {
   return (
     <span
-      className={`inline-block rounded-full px-2.5 py-1 text-[10.5px] font-semibold whitespace-nowrap ${TONE_CLASSNAMES[tone]} ${className}`}
+      className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap ${TONE_CLASSNAMES[tone]} ${className}`}
     >
       {children}
     </span>

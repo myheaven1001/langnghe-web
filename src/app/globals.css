@@ -25,3 +25,24 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ── Khung chung (kế hoạch 4.1) ─────────────────────────────────────────
+   Áp cho mọi trang mà không phải sửa từng ô nhập. Viết ngoài @layer nên
+   thắng các class tiện ích của Tailwind (text-[12.5px]…).
+   - Dưới lg: ô nhập 16px — iOS Safari tự phóng to trang khi chạm vào ô nhập
+     có chữ nhỏ hơn 16px.
+   - Màn cảm ứng: ô nhập cao tối thiểu 40px cho dễ chạm. */
+@media (max-width: 1023px) {
+  input:not([type='checkbox'], [type='radio'], [type='range'], [type='file']),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+@media (pointer: coarse) {
+  input:not([type='checkbox'], [type='radio'], [type='range'], [type='file']),
+  select {
+    min-height: 40px;
+  }
+}
