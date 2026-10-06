@@ -20,7 +20,7 @@ const RESOLUTIONS = [
 ] as const;
 
 type Resolution = (typeof RESOLUTIONS)[number]['key'];
-type ModalKind = 'none' | 'create-dispute' | 'resolve-dispute';
+type ModalKind = 'none' | 'create-dispute' | 'resolve-dispute' | 'cancel';
 
 interface ActiveDispute {
   id: string;
@@ -32,19 +32,20 @@ interface ActiveDispute {
 //     biên lai của buyer cạnh form (hàm admin_confirm_payment).
 //   - Ghi tranh chấp: RPC admin_open_dispute() — ghi đúng bên báo (buyer hoặc
 //     xưởng) + admin nhập, có nhật ký.
-//   - Xử lý tranh chấp: update disputes (RLS disputes_update_admin). Trigger
+//   - Xử lý tranh chấp: RPC admin_resolve_dispute(). Trigger
 //     trg_handle_dispute_insert/update tự gửi notification cho 2 bên.
+//   - Huỷ đơn (chỉ ở trang chi tiết): RPC admin_cancel_order(), bắt buộc lý do.
+// Admin không còn ghi thẳng orders/disputes qua API (20261005092200).
 export function OrderAdminActions({
   orderId,
   status,
-  adminUserId,
   activeDispute,
   canFlagDispute,
   showDetailLink = true,
 }: {
   orderId: string;
   status: string;
-  adminUserId: string;
+  adminUserId?: string;
   activeDispute: ActiveDispute | null;
   canFlagDispute: boolean;
   showDetailLink?: boolean;
@@ -62,6 +63,9 @@ export function OrderAdminActions({
   const [resolution, setResolution] = useState<Resolution | null>(null);
   const [ratio, setRatio] = useState(50);
   const [resolutionNote, setResolutionNote] = useState('');
+
+  const [cancelReason, setCancelReason] = useState('');
+  const canCancel = !showDetailLink && status !== 'completed' && status !== 'cancelled';
 
   function closeAndReset() {
     setModal('none');
@@ -98,20 +102,35 @@ export function OrderAdminActions({
     }
     setBusy(true);
     setError(null);
-    const { error } = await supabase
-      .from('disputes')
-      .update({
-        status: 'resolved',
-        resolution,
-        refund_ratio: resolution === 'partial' ? ratio / 100 : null,
-        resolution_note: resolutionNote.trim() || null,
-        resolved_by: adminUserId,
-        resolved_at: new Date().toISOString(),
-      })
-      .eq('id', activeDispute.id);
+    const { error } = await supabase.rpc('admin_resolve_dispute', {
+      p_dispute_id: activeDispute.id,
+      p_resolution: resolution,
+      p_refund_ratio: resolution === 'partial' ? ratio / 100 : null,
+      p_note: resolutionNote,
+    });
     setBusy(false);
     if (error) {
-      setError('Không thể lưu quyết định xử lý. Vui lòng thử lại.');
+      setError(adminErrorMessage(error.message, 'Không thể lưu quyết định xử lý. Vui lòng thử lại.'));
+      return;
+    }
+    closeAndReset();
+    router.refresh();
+  }
+
+  async function cancelOrder() {
+    if (!cancelReason.trim()) {
+      setError('Vui lòng ghi lý do hủy đơn.');
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    const { error } = await supabase.rpc('admin_cancel_order', {
+      p_order_id: orderId,
+      p_reason: cancelReason,
+    });
+    setBusy(false);
+    if (error) {
+      setError(adminErrorMessage(error.message, 'Không thể hủy đơn. Vui lòng thử lại.'));
       return;
     }
     closeAndReset();
@@ -142,6 +161,15 @@ export function OrderAdminActions({
             ⚠️ Xử lý
           </button>
         )}
+        {canCancel && (
+          <button
+            type="button"
+            onClick={() => setModal('cancel')}
+            className="border-brand-border text-brand-sub hover:border-brand-red hover:text-brand-red rounded-md border-[1.5px] bg-white px-3 py-1.5 text-[11.5px] font-semibold"
+          >
+            Hủy đơn
+          </button>
+        )}
         {canFlagDispute && (
           <button
             type="button"
@@ -152,6 +180,47 @@ export function OrderAdminActions({
           </button>
         )}
       </div>
+
+      {/* CANCEL ORDER */}
+      <Modal open={modal === 'cancel'} onClose={busy ? undefined : closeAndReset} maxWidth="420px">
+        <ModalTitle>Hủy đơn hàng</ModalTitle>
+        <div className="text-brand-sub mb-4 text-[11.5px]">
+          Đơn hàng #{orderId.slice(0, 8).toUpperCase()} — không hoàn tác được. Buyer và xưởng sẽ thấy
+          lý do này trên trang đơn.
+        </div>
+
+        <div className="mb-1">
+          <div className="mb-1.5 text-xs font-semibold">Lý do hủy</div>
+          <textarea
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            rows={3}
+            placeholder="VD: Buyer không chuyển khoản sau 7 ngày"
+            className="border-brand-border focus:border-brand-forest w-full resize-none rounded-lg border-[1.5px] px-3 py-2.5 text-[12.5px] outline-none"
+          />
+        </div>
+
+        {error && <div className="text-brand-red mt-2 text-[11.5px]">{error}</div>}
+
+        <ModalActions>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={closeAndReset}
+            className="border-brand-border flex-1 rounded-lg border-[1.5px] py-2.5 text-[13px] font-semibold disabled:opacity-50"
+          >
+            Để sau
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={cancelOrder}
+            className="bg-brand-red flex-1 rounded-lg py-2.5 text-[13px] font-semibold text-white disabled:opacity-60"
+          >
+            {busy ? 'Đang lưu...' : 'Hủy đơn'}
+          </button>
+        </ModalActions>
+      </Modal>
 
       {/* CREATE DISPUTE */}
       <Modal

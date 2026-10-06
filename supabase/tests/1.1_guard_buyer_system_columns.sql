@@ -119,9 +119,11 @@ DO $$
 DECLARE
     v_verified TIMESTAMP;
 BEGIN
-    UPDATE verifications SET status = 'approved'
-    WHERE entity_type = 'buyer' AND status = 'pending'
-      AND entity_id = current_setting('test.buyer_b_profile')::UUID;
+    -- Từ 20261005092200 admin duyệt qua hàm (không UPDATE thẳng verifications).
+    PERFORM public.admin_review_verification(v.id, TRUE)
+    FROM verifications v
+    WHERE v.entity_type = 'buyer' AND v.status = 'pending'
+      AND v.entity_id = current_setting('test.buyer_b_profile')::UUID;
 
     SELECT verified_at INTO v_verified
     FROM buyer_profiles WHERE id = current_setting('test.buyer_b_profile')::UUID;

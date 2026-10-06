@@ -113,12 +113,12 @@ SELECT pg_temp.expect_error('buyer tự đặt hoàn tất', 'FORBIDDEN_ORDER_ST
 SELECT pg_temp.expect_ok('buyer sửa địa chỉ nhận hàng',
     $q$UPDATE orders SET shipping_address = '12 Trần Duy Hưng, Hà Nội' WHERE id = current_setting('test.order1')::UUID$q$);
 
--- Admin xác nhận thanh toán — đúng các cột nút "Xác nhận thanh toán" gửi.
+-- Admin xác nhận thanh toán — từ 3.6 đi qua admin_confirm_payment() (admin
+-- không còn UPDATE thẳng orders: 20261005092200).
 SELECT pg_temp.login('admin@langnghe.test');
-SELECT pg_temp.expect_ok('admin xác nhận thanh toán (nút hiện có)',
-    $q$UPDATE orders SET status = 'confirmed', payment_confirmed_by = auth.uid(),
-          confirmed_at = NOW(), payment_note = 'Phương thức: Chuyển khoản · Mã GD: TEST'
-       WHERE id = current_setting('test.order1')::UUID$q$);
+SELECT pg_temp.expect_ok('admin xác nhận thanh toán (hàm admin_confirm_payment)',
+    $q$SELECT public.admin_confirm_payment(o.id, o.total_amount, NULL, 'Chuyển khoản', 'TEST', NULL)
+       FROM orders o WHERE o.id = current_setting('test.order1')::UUID$q$);
 
 -- ── Đơn 1: đã xác nhận → sản xuất → giao ───────────────────────────────
 SELECT pg_temp.login('buyer.a@langnghe.test');
@@ -160,12 +160,12 @@ SELECT pg_temp.expect_ok('xưởng "Tự vận chuyển" không có mã vận đ
 -- ── Đơn 3 và đơn 1: admin huỷ ──────────────────────────────────────────
 SELECT pg_temp.login('admin@langnghe.test');
 SELECT pg_temp.expect_error('admin huỷ không ghi lý do', 'ORDER_CANCEL_REASON_REQUIRED',
-    $q$UPDATE orders SET status = 'cancelled' WHERE id = current_setting('test.order3')::UUID$q$);
+    $q$SELECT public.admin_cancel_order(current_setting('test.order3')::UUID, '  ')$q$);
 SELECT pg_temp.expect_ok('admin huỷ có lý do',
-    $q$UPDATE orders SET status = 'cancelled', cancel_reason = 'Buyer không chuyển khoản sau 7 ngày'
-       WHERE id = current_setting('test.order3')::UUID$q$);
+    $q$SELECT public.admin_cancel_order(current_setting('test.order3')::UUID,
+                                        'Buyer không chuyển khoản sau 7 ngày')$q$);
 SELECT pg_temp.expect_error('admin huỷ đơn đã hoàn tất', 'FORBIDDEN_ORDER_STATUS_CHANGE',
-    $q$UPDATE orders SET status = 'cancelled', cancel_reason = 'x' WHERE id = current_setting('test.order1')::UUID$q$);
+    $q$SELECT public.admin_cancel_order(current_setting('test.order1')::UUID, 'x')$q$);
 
 -- ── Nhật ký đơn (trigger cũ) vẫn ghi đủ các bước của đơn 1 ─────────────
 RESET ROLE;
