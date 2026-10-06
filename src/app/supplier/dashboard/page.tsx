@@ -334,7 +334,7 @@ export default async function SupplierDashboardPage() {
                   return (
                     <Link
                       key={rfq.id}
-                      href={`/supplier/rfq?rfq=${rfq.id}`}
+                      href={`/supplier/rfq/${rfq.id}`}
                       className="flex min-h-[60px] items-center gap-3 border-b border-[#F2F0EC] px-4 py-3 last:border-b-0 hover:bg-[#FAFAF8]"
                     >
                       <div className="min-w-0 flex-1">

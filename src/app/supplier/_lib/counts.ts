@@ -15,7 +15,12 @@ export async function getUnreadNotificationCount(supabase: SupabaseServerClient,
 // (RLS rfq_requests_supplier_view đã tự giới hạn những RFQ supplier này
 // được thấy — xem giải thích trong /supplier/dashboard).
 export async function getQuotedRfqIds(supabase: SupabaseServerClient, supplierId: string) {
-  const { data } = await supabase.from('rfq_quotes').select('rfq_id').eq('supplier_id', supplierId);
+  // Báo giá đã rút (withdrawn) không tính: RFQ đó lại cần báo giá.
+  const { data } = await supabase
+    .from('rfq_quotes')
+    .select('rfq_id')
+    .eq('supplier_id', supplierId)
+    .neq('status', 'withdrawn');
   return (data ?? []).map((r) => r.rfq_id as string);
 }
 

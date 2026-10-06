@@ -61,7 +61,11 @@ export default async function SupplierRfqInboxPage() {
     supabase
       .from('rfq_quotes')
       .select('id, rfq_id, unit_price, min_qty, lead_time_days, valid_until, status, created_at')
-      .eq('supplier_id', supplier.id),
+      .eq('supplier_id', supplier.id)
+      // Báo giá đã rút coi như chưa báo giá. Xếp cũ → mới để bản mới nhất của
+      // mỗi RFQ thắng khi RfqInboxClient gom theo rfq_id.
+      .neq('status', 'withdrawn')
+      .order('created_at', { ascending: true }),
   ]);
 
   const rfqs = (rfqsData ?? []) as unknown as RfqRequestRow[];

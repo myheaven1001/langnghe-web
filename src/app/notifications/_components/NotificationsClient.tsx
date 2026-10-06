@@ -60,26 +60,26 @@ function metaFor(type: string) {
 // "order_id, rfq_id, quote_id... để link đúng trang" ở bảng notifications.
 // Thông báo về đơn dẫn thẳng tới trang chi tiết đơn của đúng vai trò
 // (/orders/[id] hoặc /supplier/orders/[id] — kế hoạch 3.8); thiếu order_id
-// thì về danh sách đơn. RFQ phía supplier chưa có trang chi tiết riêng nên
-// vẫn trỏ về danh sách.
+// thì về danh sách đơn. RFQ phía supplier dẫn tới /supplier/rfq/[id] (4.6).
 function resolveHref(n: NotificationRow, role: 'buyer' | 'supplier'): string | null {
   const rfqId = typeof n.payload?.rfq_id === 'string' ? n.payload.rfq_id : null;
   const orderId = typeof n.payload?.order_id === 'string' ? n.payload.order_id : null;
   const ordersBase = role === 'buyer' ? '/orders' : '/supplier/orders';
   const orderHref = orderId ? `${ordersBase}/${orderId}` : ordersBase;
+  const supplierRfqHref = rfqId ? `/supplier/rfq/${rfqId}` : '/supplier/rfq';
 
   switch (n.type) {
     case 'rfq_received':
-      return '/supplier/rfq';
+      return supplierRfqHref;
     case 'quote_received':
     case 'rfq_expired':
       return rfqId ? `/rfq/${rfqId}` : '/rfq';
     case 'quote_accepted':
       // Xưởng: báo giá được chấp nhận = có đơn mới.
-      if (role === 'supplier') return orderId ? orderHref : '/supplier/rfq';
+      if (role === 'supplier') return orderId ? orderHref : supplierRfqHref;
       return rfqId ? `/rfq/${rfqId}` : '/rfq';
     case 'quote_rejected':
-      return role === 'supplier' ? '/supplier/rfq' : rfqId ? `/rfq/${rfqId}` : '/rfq';
+      return role === 'supplier' ? supplierRfqHref : rfqId ? `/rfq/${rfqId}` : '/rfq';
     case 'order_confirmed':
     case 'order_shipped':
     case 'order_delivered':

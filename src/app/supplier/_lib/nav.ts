@@ -24,6 +24,7 @@ export function buildSupplierNavGroups({
           href: '/supplier/rfq',
           count: newRfqCount || undefined,
         },
+        { icon: '💰', label: 'Báo giá đã gửi', href: '/supplier/quotes' },
         { icon: '📦', label: 'Quản lý đơn hàng', href: '/supplier/orders' },
       ],
     },

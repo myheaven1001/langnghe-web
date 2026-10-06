@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { daysUntil, formatVnDate, formatVnd, hoursUntil } from '@/lib/format';
 import { effectiveDeadline } from '@/lib/rfq';
-import { QuoteModal } from './QuoteModal';
 
 export interface InboxRfqRow {
   id: string;
@@ -62,6 +61,8 @@ function budgetLabel(min: number | null, max: number | null) {
   return 'Ngân sách chưa nêu';
 }
 
+// Mỗi dòng dẫn tới /supplier/rfq/[id] — nơi xem đủ yêu cầu và gửi / sửa /
+// rút báo giá (kế hoạch 4.6). Trên điện thoại dòng tự xuống hàng.
 // Danh sách đã tải hết 1 lần ở server component cha (quy mô nhỏ, xem giải
 // thích trong page.tsx) — mọi filter/tab/sort/phân trang ở đây đều chạy
 // trên dữ liệu client, không round-trip DB lại.
@@ -70,7 +71,6 @@ export function RfqInboxClient({ rfqs, myQuotes }: { rfqs: InboxRfqRow[]; myQuot
   const [q, setQ] = useState('');
   const [sort, setSort] = useState<'newest' | 'deadline'>('newest');
   const [page, setPage] = useState(1);
-  const [quoteTarget, setQuoteTarget] = useState<InboxRfqRow | null>(null);
 
   const quoteByRfqId = useMemo(() => new Map(myQuotes.map((q) => [q.rfq_id, q])), [myQuotes]);
 
@@ -207,19 +207,24 @@ export function RfqInboxClient({ rfqs, myQuotes }: { rfqs: InboxRfqRow[]; myQuot
             return (
               <div
                 key={rfq.id}
-                className={`border-brand-border flex items-center gap-3.5 rounded-[10px] border bg-white p-3.5 px-4 ${
+                className={`border-brand-border flex flex-wrap items-center gap-x-3.5 gap-y-2 rounded-[10px] border bg-white p-3.5 px-4 ${
                   urgent ? 'border-l-brand-red border-l-[3px]' : ''
                 }`}
               >
-                <div className="bg-brand-bg flex h-11 w-11 shrink-0 items-center justify-center rounded-[9px] text-lg">
+                <div className="bg-brand-bg hidden h-11 w-11 shrink-0 items-center justify-center rounded-[9px] text-lg sm:flex">
                   🏭
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 basis-[220px]">
                   <div className="text-brand-light mb-0.5 text-[11px]">
                     {rfq.buyerName}
                     {rfq.buyerVerified && <span className="text-status-green"> · ✓ Đã xác minh</span>}
                   </div>
-                  <div className="text-brand-ink truncate text-[13px] font-bold">{rfq.title}</div>
+                  <Link
+                    href={`/supplier/rfq/${rfq.id}`}
+                    className="text-brand-ink hover:text-brand-red line-clamp-2 text-sm font-bold"
+                  >
+                    {rfq.title}
+                  </Link>
                   <div className="text-brand-light mt-0.5 flex flex-wrap gap-2.5 text-[11px]">
                     <span>
                       <b className="text-brand-sub font-semibold">{rfq.quantity.toLocaleString('vi-VN')}</b>{' '}
@@ -250,7 +255,7 @@ export function RfqInboxClient({ rfqs, myQuotes }: { rfqs: InboxRfqRow[]; myQuot
                   </div>
                 </div>
 
-                <div className="min-w-[96px] shrink-0 text-center">
+                <div className="shrink-0 sm:min-w-[96px] sm:text-center">
                   {bucket === 'won' || bucket === 'lost' ? (
                     <>
                       <div className="text-brand-light text-xs font-bold">
@@ -280,20 +285,22 @@ export function RfqInboxClient({ rfqs, myQuotes }: { rfqs: InboxRfqRow[]; myQuot
                   )}
                 </div>
 
-                <div className="shrink-0">
+                <div className="ml-auto shrink-0">
                   {bucket === 'new' && (
-                    <button
-                      type="button"
-                      onClick={() => setQuoteTarget(rfq)}
-                      className="bg-brand-red hover:bg-brand-red-dark rounded-md px-3.5 py-2 text-xs font-semibold whitespace-nowrap text-white"
+                    <Link
+                      href={`/supplier/rfq/${rfq.id}`}
+                      className="bg-brand-red hover:bg-brand-red-dark inline-flex min-h-10 items-center rounded-md px-3.5 text-[13px] font-semibold whitespace-nowrap text-white"
                     >
                       Báo giá ngay
-                    </button>
+                    </Link>
                   )}
                   {bucket === 'quoted' && (
-                    <span className="bg-status-amber-soft text-status-amber rounded-full px-2.5 py-1 text-[10.5px] font-semibold">
-                      Đã báo giá
-                    </span>
+                    <Link
+                      href={`/supplier/rfq/${rfq.id}`}
+                      className="border-status-amber text-status-amber inline-flex min-h-10 items-center rounded-md border-[1.5px] px-3.5 text-[13px] font-semibold whitespace-nowrap"
+                    >
+                      Xem / sửa báo giá
+                    </Link>
                   )}
                   {bucket === 'won' && (
                     <Link
@@ -339,14 +346,6 @@ export function RfqInboxClient({ rfqs, myQuotes }: { rfqs: InboxRfqRow[]; myQuot
         </div>
       )}
 
-      {quoteTarget && (
-        <QuoteModal
-          rfqId={quoteTarget.id}
-          buyerName={quoteTarget.buyerName}
-          rfqTitle={quoteTarget.title}
-          onClose={() => setQuoteTarget(null)}
-        />
-      )}
     </div>
   );
 }
