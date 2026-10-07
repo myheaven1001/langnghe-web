@@ -86,7 +86,7 @@ export function ProductDetailClient({
         )}
 
         <div className="border-brand-border grid grid-cols-1 rounded border bg-white lg:grid-cols-2 xl:grid-cols-[400px_1fr_280px]">
-          <ImageGallery media={media} product={product} supplier={supplier} />
+          <ImageGallery media={media} product={product} supplier={supplier} variantId={variantId} />
           <InfoPanel
             product={product}
             supplier={supplier}

@@ -30,6 +30,8 @@ export interface VariantView {
 export interface MediaView {
   id: string;
   url: string;
+  /** Biến thể mà ảnh minh hoạ; null = ảnh chung của sản phẩm (4.5). */
+  variantId: string | null;
 }
 
 export interface SupplierView {

@@ -31,7 +31,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const { data: product } = await supabase
     .from('products')
     .select(
-      'id, name, category_id, description, accept_oem, accept_custom, min_order_qty, lead_time_days, status, price_tiers(min_qty, max_qty, unit_price), product_variants(id, color, size, material, stock_qty, price_adjustment, sku, is_active), product_media(id, r2_key, cdn_url, thumbnail_url, is_primary, sort_order)',
+      'id, name, category_id, description, accept_oem, accept_custom, min_order_qty, lead_time_days, status, price_tiers(min_qty, max_qty, unit_price), product_variants(id, color, size, material, stock_qty, price_adjustment, sku, is_active), product_media(id, r2_key, cdn_url, thumbnail_url, is_primary, sort_order, variant_id)',
     )
     .eq('id', id)
     .eq('supplier_id', supplier.id)
@@ -55,6 +55,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
       path: m.r2_key,
       url: m.cdn_url ?? m.thumbnail_url ?? '',
       isPrimary: m.is_primary,
+      variantId: m.variant_id as string | null,
     }));
 
   return (

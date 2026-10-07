@@ -14,12 +14,27 @@ export function ImageGallery({
   media,
   product,
   supplier,
+  variantId,
 }: {
   media: MediaView[];
   product: ProductView;
   supplier: SupplierView;
+  /** Biến thể buyer đang chọn — có ảnh riêng thì ảnh lớn đổi theo. */
+  variantId?: string | null;
 }) {
-  const [activeIndex, setActiveIndex] = useState(0);
+  // Ảnh buyer tự bấm chọn, kèm biến thể lúc bấm: đổi biến thể thì lựa chọn
+  // cũ hết hiệu lực và ảnh lớn nhảy sang ảnh của biến thể mới (nếu có).
+  const [picked, setPicked] = useState<{ index: number; variantId: string | null }>({
+    index: 0,
+    variantId: null,
+  });
+  const currentVariant = variantId ?? null;
+  const variantIndex = currentVariant ? media.findIndex((m) => m.variantId === currentVariant) : -1;
+  const activeIndex =
+    picked.variantId === currentVariant && picked.index < media.length
+      ? picked.index
+      : Math.max(0, variantIndex);
+  const setActiveIndex = (index: number) => setPicked({ index, variantId: currentVariant });
   const active = media[activeIndex];
 
   const tags = [

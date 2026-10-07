@@ -47,7 +47,7 @@ const loadProduct = cache(async (key: string) => {
       .order('price_adjustment'),
     supabase
       .from('product_media')
-      .select('id, cdn_url, thumbnail_url')
+      .select('id, cdn_url, thumbnail_url, variant_id')
       .eq('product_id', p.id)
       .eq('media_type', 'image')
       .order('is_primary', { ascending: false })
@@ -119,7 +119,11 @@ const loadProduct = cache(async (key: string) => {
   }));
 
   const media: MediaView[] = (mediaRes.data ?? [])
-    .map((m) => ({ id: m.id, url: m.cdn_url ?? m.thumbnail_url ?? '' }))
+    .map((m) => ({
+      id: m.id,
+      url: m.cdn_url ?? m.thumbnail_url ?? '',
+      variantId: (m.variant_id as string | null) ?? null,
+    }))
     .filter((m) => m.url);
 
   const supplier: SupplierView = {

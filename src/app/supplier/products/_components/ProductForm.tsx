@@ -16,6 +16,9 @@ interface PriceTierInput {
 interface VariantInput {
   // id biến thể đã lưu — save_product() sửa tại chỗ thay vì tạo mới.
   id?: string;
+  // Mã tạm phía web (không lưu): để ảnh trỏ tới biến thể kể cả khi biến thể
+  // chưa có id hoặc đang bị sửa tên. Biến thể đã lưu dùng luôn id.
+  uid?: string;
   color: string;
   size: string;
   material: string;
@@ -30,6 +33,8 @@ interface ExistingMedia {
   path: string;
   url: string;
   isPrimary: boolean;
+  /** id biến thể mà ảnh đang gắn trong database (null = ảnh chung). */
+  variantId?: string | null;
 }
 
 // Ảnh mới chọn, đã nén, chưa tải lên. `url` là blob URL để xem trước (tạo 1
@@ -38,6 +43,22 @@ interface PendingImage {
   key: string;
   file: File;
   url: string;
+}
+
+// "màu|kích thước|chất liệu" chữ thường — save_product() dùng khoá này để
+// tìm biến thể của ảnh (20261005092700).
+function variantKey(v: { color: string; size: string; material: string }) {
+  return [v.color, v.size, v.material]
+    .map((part) => part.trim())
+    .join('|')
+    .toLowerCase();
+}
+
+function variantLabel(v: { color: string; size: string; material: string }) {
+  return [v.color, v.size, v.material]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(' · ');
 }
 
 interface ProductFormInitial {
@@ -144,7 +165,15 @@ export function ProductForm({
   const [tiers, setTiers] = useState<PriceTierInput[]>(
     initial?.priceTiers.length ? initial.priceTiers : [EMPTY_TIER],
   );
-  const [variants, setVariants] = useState<VariantInput[]>(initial?.variants ?? []);
+  const [variants, setVariants] = useState<VariantInput[]>(() =>
+    (initial?.variants ?? []).map((v) => ({ ...v, uid: v.id ?? crypto.randomUUID() })),
+  );
+  // Ảnh (id ảnh đã lưu hoặc key ảnh mới) → uid biến thể. Không có = ảnh chung.
+  const [imageVariant, setImageVariant] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      (initial?.media ?? []).filter((m) => m.variantId).map((m) => [m.id, m.variantId as string]),
+    ),
+  );
   const [existingMedia, setExistingMedia] = useState<ExistingMedia[]>(initial?.media ?? []);
   const [removedMediaIds, setRemovedMediaIds] = useState<string[]>([]);
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
@@ -256,7 +285,13 @@ export function ProductForm({
       for (const color of colors) {
         for (const size of sizes) {
           for (const material of materials) {
-            const candidate = { ...EMPTY_VARIANT, color, size, material };
+            const candidate = {
+              ...EMPTY_VARIANT,
+              uid: crypto.randomUUID(),
+              color,
+              size,
+              material,
+            };
             if (next.length < MAX_VARIANTS && !seen.has(key(candidate))) {
               seen.add(key(candidate));
               next.push(candidate);
@@ -304,11 +339,22 @@ export function ProductForm({
     window.scrollTo({ top: 0 });
   }
 
+  // Khoá biến thể của một ảnh lúc lưu ('' = ảnh chung).
+  function keyForImage(imageId: string) {
+    const target = variants.find((v) => v.uid === imageVariant[imageId]);
+    return target ? variantKey(target) : '';
+  }
+
   // Tải ảnh mới lên kho; lỗi giữa chừng thì xoá những ảnh đã tải.
   async function uploadPendingMedia(targetProductId: string, startSortOrder: number) {
-    const uploaded: { r2_key: string; cdn_url: string; sort_order: number }[] = [];
+    const uploaded: {
+      r2_key: string;
+      cdn_url: string;
+      sort_order: number;
+      variant_key: string;
+    }[] = [];
     for (let i = 0; i < pendingImages.length; i++) {
-      const { file } = pendingImages[i];
+      const { file, key } = pendingImages[i];
       const path = `${supplierId}/${targetProductId}/${Date.now()}-${i}-${safeFileName(file.name)}`;
       const { error: uploadError } = await supabase.storage
         .from('product-media')
@@ -318,7 +364,12 @@ export function ProductForm({
         throw new Error('Không thể tải ảnh lên. Kiểm tra kết nối mạng rồi thử lại.');
       }
       const { data: pub } = supabase.storage.from('product-media').getPublicUrl(path);
-      uploaded.push({ r2_key: path, cdn_url: pub.publicUrl, sort_order: startSortOrder + i });
+      uploaded.push({
+        r2_key: path,
+        cdn_url: pub.publicUrl,
+        sort_order: startSortOrder + i,
+        variant_key: keyForImage(key),
+      });
     }
     return uploaded;
   }
@@ -381,6 +432,7 @@ export function ProductForm({
           })),
         p_media_add: uploaded,
         p_media_remove: removedMediaIds,
+        p_media_variants: existingMedia.map((m) => ({ id: m.id, variant_key: keyForImage(m.id) })),
       });
 
       if (error) {
@@ -764,7 +816,7 @@ export function ProductForm({
             <div className="flex flex-col gap-2.5">
               {variants.map((v, i) => (
                 <div
-                  key={v.id ?? `new-${i}`}
+                  key={v.uid ?? v.id ?? `new-${i}`}
                   className="border-brand-border rounded-lg border p-2.5"
                 >
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-[1fr_1fr_1fr_84px_104px_104px_40px]">
@@ -830,7 +882,9 @@ export function ProductForm({
               variant="ghost"
               disabled={variants.length >= MAX_VARIANTS}
               className="mt-2"
-              onClick={() => setVariants((prev) => [...prev, EMPTY_VARIANT])}
+              onClick={() =>
+                setVariants((prev) => [...prev, { ...EMPTY_VARIANT, uid: crypto.randomUUID() }])
+              }
             >
               + Thêm một biến thể
             </Button>
@@ -838,6 +892,53 @@ export function ProductForm({
               &quot;± Giá&quot; cộng/trừ vào đơn giá theo bậc cho riêng biến thể đó (có thể âm).
             </div>
           </section>
+
+          {/* ẢNH THEO BIẾN THỂ — chỉ hiện khi có cả ảnh lẫn biến thể đã đặt tên. */}
+          {imageCount > 0 && variants.some((v) => variantLabel(v)) && (
+            <section className={sectionClass}>
+              <h2 className={sectionTitle}>🖼️ Ảnh theo biến thể</h2>
+              <div className="text-brand-sub mb-3 text-xs leading-relaxed">
+                Chọn biến thể mà mỗi ảnh minh hoạ. Buyer chọn biến thể nào sẽ thấy ảnh của biến thể
+                đó. Để &quot;Ảnh chung&quot; nếu ảnh dùng cho cả sản phẩm.
+              </div>
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                {[
+                  ...existingMedia.map((m) => ({ id: m.id, url: m.url })),
+                  ...pendingImages.map((p) => ({ id: p.key, url: p.url })),
+                ].map((img) => (
+                  <div key={img.id} className="flex items-center gap-2.5">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- ảnh xem trước */}
+                    <img
+                      src={img.url}
+                      alt=""
+                      className="border-brand-border h-14 w-14 shrink-0 rounded-md border object-cover"
+                    />
+                    <select
+                      aria-label="Biến thể của ảnh"
+                      value={
+                        variants.some((v) => v.uid === imageVariant[img.id])
+                          ? imageVariant[img.id]
+                          : ''
+                      }
+                      onChange={(e) =>
+                        setImageVariant((prev) => ({ ...prev, [img.id]: e.target.value }))
+                      }
+                      className={smallInput}
+                    >
+                      <option value="">Ảnh chung</option>
+                      {variants
+                        .filter((v) => variantLabel(v))
+                        .map((v) => (
+                          <option key={v.uid} value={v.uid}>
+                            {variantLabel(v)}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       )}
 
