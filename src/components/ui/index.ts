@@ -10,3 +10,4 @@ export * from './Breadcrumb';
 export * from './UserMenu';
 export * from './Button';
 export * from './Field';
+export * from './Tiles';

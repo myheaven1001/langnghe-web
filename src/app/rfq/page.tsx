@@ -212,6 +212,7 @@ export default async function RfqListPage({
             { icon: '📍', label: 'Sổ địa chỉ', href: '/settings/addresses' },
             { icon: '💳', label: 'Membership & credit', href: '/settings/membership' },
             { icon: '⚙️', label: 'Cài đặt thông báo', href: '/settings/notifications' },
+            { icon: '🔑', label: 'Tài khoản & bảo mật', href: '/settings/account' },
           ],
         },
       ]}

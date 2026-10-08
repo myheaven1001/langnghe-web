@@ -1,6 +1,7 @@
 import { AppShell, Card, CardBody, CardHeader, CardLink, Pill, StatCard } from '@/components/ui';
 import { buildSupplierNavGroups } from '@/app/supplier/_lib/nav';
 import { ProductForm } from '@/app/supplier/products/_components/ProductForm';
+import { AccountSecurity } from '@/components/account/AccountSecurity';
 
 // Temporary visual check for the shared components extracted from the
 // *_page.html prototypes — mirrors a slice of dashboard_buyer_page.html so
@@ -51,7 +52,9 @@ export default async function UiPreviewPage({
             ]
       }
     >
-      {showProductForm ? (
+      {sp.view === 'account' ? (
+        <AccountSecurity email="lan@example.com" />
+      ) : showProductForm ? (
         <ProductForm
           mode="create"
           supplierId="00000000-0000-0000-0000-000000000000"

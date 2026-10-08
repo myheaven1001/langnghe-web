@@ -3,19 +3,15 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AppShell } from '@/components/ui';
-import { NotificationPreferencesGrid } from './_components/NotificationPreferencesGrid';
+import { AccountSecurity } from '@/components/account/AccountSecurity';
 
 export const metadata: Metadata = {
-  title: 'Cài đặt thông báo — LàngNghề.vn',
+  title: 'Tài khoản & bảo mật — LàngNghề.vn',
 };
 
-interface PreferenceRow {
-  notification_type: string;
-  channel: string;
-  enabled: boolean;
-}
-
-export default async function NotificationSettingsPage() {
+// Tài khoản & bảo mật của buyer (kế hoạch 4.9): đổi mật khẩu, đổi email
+// đăng nhập — xem components/account/AccountSecurity.
+export default async function BuyerAccountPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -30,7 +26,7 @@ export default async function NotificationSettingsPage() {
 
   if (!buyer) redirect('/');
 
-  const [{ data: unreadCount }, { count: activeRfqCount }, { data: prefsData }] = await Promise.all([
+  const [{ data: unreadCount }, { count: activeRfqCount }] = await Promise.all([
     supabase
       .from('notifications')
       .select('id', { count: 'exact', head: true })
@@ -42,16 +38,7 @@ export default async function NotificationSettingsPage() {
       .select('id', { count: 'exact', head: true })
       .eq('buyer_id', buyer.id)
       .in('status', ['published', 'quoted', 'negotiating']),
-    supabase
-      .from('notification_preferences')
-      .select('notification_type, channel, enabled')
-      .eq('user_id', user.id),
   ]);
-
-  const initialPrefs: Record<string, boolean> = {};
-  for (const row of (prefsData ?? []) as PreferenceRow[]) {
-    initialPrefs[`${row.notification_type}:${row.channel}`] = row.enabled;
-  }
 
   return (
     <AppShell
@@ -102,22 +89,17 @@ export default async function NotificationSettingsPage() {
           Dashboard
         </Link>
         <span>/</span>
-        <span>Cài đặt thông báo</span>
+        <span>Tài khoản & bảo mật</span>
       </div>
 
       <div className="mb-[18px]">
-        <div className="text-xl font-bold">Cài đặt thông báo</div>
+        <div className="text-xl font-bold">Tài khoản & bảo mật</div>
         <div className="text-brand-sub mt-1 text-[13px]">
-          Chọn cách bạn muốn nhận thông báo cho từng loại sự kiện — trong ứng dụng hoặc qua email.
+          Đổi mật khẩu và email dùng để đăng nhập.
         </div>
       </div>
 
-      <NotificationPreferencesGrid
-        userId={user.id}
-        initialPrefs={initialPrefs}
-        email={user.email ?? ''}
-        phone={user.phone ?? null}
-      />
+      <AccountSecurity email={user.email ?? ''} />
     </AppShell>
   );
 }

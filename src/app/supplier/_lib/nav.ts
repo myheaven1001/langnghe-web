@@ -43,6 +43,7 @@ export function buildSupplierNavGroups({
         { icon: '🏢', label: 'Hồ sơ & xác minh', href: '/supplier/settings/profile' },
         { icon: '📊', label: 'Analytics', href: '/supplier/analytics' },
         { icon: '⚙️', label: 'Cài đặt gian hàng', href: '/supplier/settings/shop' },
+        { icon: '🔑', label: 'Tài khoản & bảo mật', href: '/supplier/settings/account' },
       ],
     },
   ];
