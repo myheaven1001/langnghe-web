@@ -145,8 +145,8 @@ export function OrderAdminActions({
             href={`/admin/orders/${orderId}`}
             className={
               status === 'pending_payment'
-                ? 'border-brand-green text-brand-green rounded-md border-[1.5px] bg-white px-3 py-1.5 text-[11.5px] font-semibold whitespace-nowrap hover:bg-[#F0FBF5]'
-                : 'border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] bg-white px-3 py-1.5 text-[11.5px] font-semibold whitespace-nowrap'
+                ? 'border-brand-green text-brand-green rounded-md border-[1.5px] bg-white px-3 py-1.5 text-xs font-semibold whitespace-nowrap hover:bg-[#F0FBF5]'
+                : 'border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] bg-white px-3 py-1.5 text-xs font-semibold whitespace-nowrap'
             }
           >
             {status === 'pending_payment' ? '💳 Xem & xác nhận TT' : 'Chi tiết'}
@@ -156,7 +156,7 @@ export function OrderAdminActions({
           <button
             type="button"
             onClick={() => setModal('resolve-dispute')}
-            className="border-brand-red text-brand-red rounded-md border-[1.5px] bg-white px-3 py-1.5 text-[11.5px] font-semibold hover:bg-[#FFF0F0]"
+            className="border-brand-red text-brand-red rounded-md border-[1.5px] bg-white px-3 py-1.5 text-xs font-semibold hover:bg-[#FFF0F0]"
           >
             ⚠️ Xử lý
           </button>
@@ -165,7 +165,7 @@ export function OrderAdminActions({
           <button
             type="button"
             onClick={() => setModal('cancel')}
-            className="border-brand-border text-brand-sub hover:border-brand-red hover:text-brand-red rounded-md border-[1.5px] bg-white px-3 py-1.5 text-[11.5px] font-semibold"
+            className="border-brand-border text-brand-sub hover:border-brand-red hover:text-brand-red rounded-md border-[1.5px] bg-white px-3 py-1.5 text-xs font-semibold"
           >
             Hủy đơn
           </button>
@@ -174,7 +174,7 @@ export function OrderAdminActions({
           <button
             type="button"
             onClick={() => setModal('create-dispute')}
-            className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] bg-white px-3 py-1.5 text-[11.5px] font-semibold"
+            className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] bg-white px-3 py-1.5 text-xs font-semibold"
           >
             ⚠️ Báo tranh chấp
           </button>
@@ -184,7 +184,7 @@ export function OrderAdminActions({
       {/* CANCEL ORDER */}
       <Modal open={modal === 'cancel'} onClose={busy ? undefined : closeAndReset} maxWidth="420px">
         <ModalTitle>Hủy đơn hàng</ModalTitle>
-        <div className="text-brand-sub mb-4 text-[11.5px]">
+        <div className="text-brand-sub mb-4 text-xs">
           Đơn hàng #{orderId.slice(0, 8).toUpperCase()} — không hoàn tác được. Buyer và xưởng sẽ thấy
           lý do này trên trang đơn.
         </div>
@@ -196,11 +196,11 @@ export function OrderAdminActions({
             onChange={(e) => setCancelReason(e.target.value)}
             rows={3}
             placeholder="VD: Buyer không chuyển khoản sau 7 ngày"
-            className="border-brand-border focus:border-brand-forest w-full resize-none rounded-lg border-[1.5px] px-3 py-2.5 text-[12.5px] outline-none"
+            className="border-brand-border focus:border-brand-forest w-full resize-none rounded-lg border-[1.5px] px-3 py-2.5 text-[13px] outline-none"
           />
         </div>
 
-        {error && <div className="text-brand-red mt-2 text-[11.5px]">{error}</div>}
+        {error && <div className="text-brand-red mt-2 text-xs">{error}</div>}
 
         <ModalActions>
           <button
@@ -229,7 +229,7 @@ export function OrderAdminActions({
         maxWidth="420px"
       >
         <ModalTitle>Báo tranh chấp</ModalTitle>
-        <div className="text-brand-sub mb-4 text-[11.5px]">
+        <div className="text-brand-sub mb-4 text-xs">
           Đơn hàng #{orderId.slice(0, 8).toUpperCase()} — ghi lại khiếu nại nhận qua điện
           thoại/email
         </div>
@@ -240,7 +240,7 @@ export function OrderAdminActions({
             {REPORTERS.map((r) => (
               <label
                 key={r.key}
-                className={`flex flex-1 items-center gap-2 rounded-lg border-[1.5px] px-3 py-2 text-[12.5px] font-semibold ${
+                className={`flex flex-1 items-center gap-2 rounded-lg border-[1.5px] px-3 py-2 text-[13px] font-semibold ${
                   reporter === r.key ? 'border-brand-forest bg-[#F0FBF5]' : 'border-brand-border'
                 }`}
               >
@@ -264,11 +264,11 @@ export function OrderAdminActions({
             onChange={(e) => setDisputeReason(e.target.value)}
             rows={4}
             placeholder="VD: Hàng nhận được không đúng mô tả — sản phẩm bị sứt mẻ..."
-            className="border-brand-border focus:border-brand-forest w-full resize-none rounded-lg border-[1.5px] px-3 py-2.5 text-[12.5px] outline-none"
+            className="border-brand-border focus:border-brand-forest w-full resize-none rounded-lg border-[1.5px] px-3 py-2.5 text-[13px] outline-none"
           />
         </div>
 
-        {error && <div className="text-brand-red mt-2 text-[11.5px]">{error}</div>}
+        {error && <div className="text-brand-red mt-2 text-xs">{error}</div>}
 
         <ModalActions>
           <button
@@ -297,7 +297,7 @@ export function OrderAdminActions({
         maxWidth="440px"
       >
         <ModalTitle>Xử lý tranh chấp</ModalTitle>
-        <div className="text-brand-sub mb-4 text-[11.5px]">
+        <div className="text-brand-sub mb-4 text-xs">
           Đơn hàng #{orderId.slice(0, 8).toUpperCase()}
         </div>
 
@@ -324,14 +324,14 @@ export function OrderAdminActions({
                 onChange={() => setResolution(r.key)}
                 className="accent-brand-forest"
               />
-              <span className="text-[12.5px] font-semibold">{r.label}</span>
+              <span className="text-[13px] font-semibold">{r.label}</span>
             </label>
           ))}
         </div>
 
         {resolution === 'partial' && (
           <div className="mb-3.5 flex items-center gap-2.5">
-            <span className="text-brand-sub text-[11.5px]">% hoàn cho buyer</span>
+            <span className="text-brand-sub text-xs">% hoàn cho buyer</span>
             <input
               type="range"
               min={0}
@@ -351,11 +351,11 @@ export function OrderAdminActions({
             onChange={(e) => setResolutionNote(e.target.value)}
             rows={3}
             placeholder="Giải thích quyết định để buyer và supplier đều hiểu rõ..."
-            className="border-brand-border focus:border-brand-forest w-full resize-none rounded-lg border-[1.5px] px-3 py-2.5 text-[12.5px] outline-none"
+            className="border-brand-border focus:border-brand-forest w-full resize-none rounded-lg border-[1.5px] px-3 py-2.5 text-[13px] outline-none"
           />
         </div>
 
-        {error && <div className="text-brand-red mt-2 text-[11.5px]">{error}</div>}
+        {error && <div className="text-brand-red mt-2 text-xs">{error}</div>}
 
         <ModalActions>
           <button

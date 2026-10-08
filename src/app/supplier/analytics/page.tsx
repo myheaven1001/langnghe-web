@@ -112,7 +112,7 @@ export default async function SupplierAnalyticsPage({
       }}
       navGroups={buildSupplierNavGroups({ newRfqCount, unreadCount })}
     >
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/supplier/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -123,7 +123,7 @@ export default async function SupplierAnalyticsPage({
       <div className="mb-[18px] flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="text-xl font-bold">Analytics xưởng</div>
-          <div className="text-brand-sub mt-1 text-[12.5px]">
+          <div className="text-brand-sub mt-1 text-[13px]">
             Hiệu suất tìm kiếm và chỉ số RFQ của gian hàng — cập nhật theo thời gian thực.
           </div>
         </div>
@@ -227,7 +227,7 @@ function AnalyticsBody({ stats, range }: { stats: SupplierAnalytics; range: Rang
         <CardHeader
           title={<>📈 Lượt xuất hiện trong tìm kiếm theo ngày</>}
           action={
-            <div className="text-brand-sub text-[11.5px]">
+            <div className="text-brand-sub text-xs">
               <span className="bg-brand-orange mr-1.5 inline-block h-2 w-2 rounded-sm" />
               Lượt tìm kiếm khớp sản phẩm của bạn
             </div>
@@ -252,11 +252,11 @@ function AnalyticsBody({ stats, range }: { stats: SupplierAnalytics; range: Rang
                       height: d.count > 0 ? `${Math.max((d.count / maxDaily) * 100, 3)}%` : 0,
                     }}
                   >
-                    <span className="text-brand-ink absolute -top-[18px] left-1/2 -translate-x-1/2 text-[9.5px] font-bold whitespace-nowrap opacity-0 transition-opacity group-hover:opacity-100">
+                    <span className="text-brand-ink absolute -top-[18px] left-1/2 -translate-x-1/2 text-xs font-bold whitespace-nowrap opacity-0 transition-opacity group-hover:opacity-100">
                       {d.count}
                     </span>
                   </div>
-                  <div className="text-brand-light mt-1.5 h-3 text-[9.5px] whitespace-nowrap">
+                  <div className="text-brand-light mt-1.5 h-3 text-xs whitespace-nowrap">
                     {i % labelStep === 0 ? dayLabel(d.day) : ''}
                   </div>
                 </div>
@@ -286,10 +286,10 @@ function AnalyticsBody({ stats, range }: { stats: SupplierAnalytics; range: Rang
                         >
                           {step.value}
                         </div>
-                        <div className="text-brand-sub text-[11.5px] font-semibold">
+                        <div className="text-brand-sub text-xs font-semibold">
                           {step.label}
                         </div>
-                        <div className="text-brand-light mt-0.5 text-[10px]">
+                        <div className="text-brand-light mt-0.5 text-xs">
                           {Math.round((step.value / funnel.received) * 100)}%
                         </div>
                       </div>
@@ -339,8 +339,8 @@ function AnalyticsBody({ stats, range }: { stats: SupplierAnalytics; range: Rang
                   key={k.query}
                   className="flex items-center justify-between border-b border-[#F2F0EC] py-[9px] last:border-b-0"
                 >
-                  <span className="text-[12.5px] font-semibold">{k.query}</span>
-                  <span className="text-brand-light text-[11px]">{k.count} lượt</span>
+                  <span className="text-[13px] font-semibold">{k.query}</span>
+                  <span className="text-brand-light text-xs">{k.count} lượt</span>
                 </div>
               ))
             )}
@@ -360,10 +360,10 @@ function AnalyticsBody({ stats, range }: { stats: SupplierAnalytics; range: Rang
             <table className="w-full min-w-[520px] border-collapse">
               <thead>
                 <tr>
-                  <th className="text-brand-light border-brand-border border-b px-2.5 pb-2.5 text-left text-[10.5px] font-bold tracking-[.05em] uppercase">
+                  <th className="text-brand-light border-brand-border border-b px-2.5 pb-2.5 text-left text-xs font-bold tracking-[.05em] uppercase">
                     Sản phẩm
                   </th>
-                  <th className="text-brand-light border-brand-border border-b px-2.5 pb-2.5 text-left text-[10.5px] font-bold tracking-[.05em] uppercase">
+                  <th className="text-brand-light border-brand-border border-b px-2.5 pb-2.5 text-left text-xs font-bold tracking-[.05em] uppercase">
                     Lượt xuất hiện
                   </th>
                 </tr>
@@ -371,7 +371,7 @@ function AnalyticsBody({ stats, range }: { stats: SupplierAnalytics; range: Rang
               <tbody>
                 {stats.top_products.map((p) => (
                   <tr key={p.id} className="border-b border-[#F2F0EC] last:border-b-0">
-                    <td className="px-2.5 py-[11px] text-[12.5px]">
+                    <td className="px-2.5 py-[11px] text-[13px]">
                       <Link
                         href={`/supplier/products/${p.id}/edit`}
                         className="hover:text-brand-red flex items-center gap-[9px]"
@@ -382,7 +382,7 @@ function AnalyticsBody({ stats, range }: { stats: SupplierAnalytics; range: Rang
                         {p.name}
                       </Link>
                     </td>
-                    <td className="px-2.5 py-[11px] text-[12.5px]">
+                    <td className="px-2.5 py-[11px] text-[13px]">
                       <span className="bg-brand-bg mr-1.5 inline-block h-[5px] w-[60px] overflow-hidden rounded-sm align-middle">
                         <span
                           className="bg-brand-orange block h-full rounded-sm"
@@ -400,7 +400,7 @@ function AnalyticsBody({ stats, range }: { stats: SupplierAnalytics; range: Rang
         </div>
       </Card>
 
-      <p className="text-brand-light mt-1 text-[11px] leading-relaxed">
+      <p className="text-brand-light mt-1 text-xs leading-relaxed">
         &ldquo;Lượt xuất hiện&rdquo; = số lượt tìm kiếm có ít nhất một sản phẩm đang bán của bạn
         khớp từ khóa (không tính lượt bạn tự tìm). Đây là số lần sản phẩm nằm trong kết quả, chưa
         phải lượt xem hay lượt bấm — hệ thống chưa ghi lượt xem gian hàng/sản phẩm. Mức thay đổi

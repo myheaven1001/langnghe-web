@@ -210,12 +210,12 @@ export default async function DashboardPage() {
           <div className="flex items-center gap-2 text-xl font-bold">
             Chào {buyer.company_name} 👋
             {buyer.verified_at && (
-              <span className="bg-status-green-soft text-status-green inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold">
+              <span className="bg-status-green-soft text-status-green inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold">
                 ✓ Đã xác minh
               </span>
             )}
           </div>
-          <div className="text-brand-sub mt-1 text-[12.5px]">
+          <div className="text-brand-sub mt-1 text-[13px]">
             Đây là tổng quan hoạt động mua sỉ của bạn.
           </div>
         </div>
@@ -283,10 +283,10 @@ export default async function DashboardPage() {
                         📋
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="text-brand-ink truncate text-[12.5px] font-semibold">
+                        <div className="text-brand-ink truncate text-[13px] font-semibold">
                           {rfq.title}
                         </div>
-                        <div className="text-brand-light mt-0.5 text-[11px]">
+                        <div className="text-brand-light mt-0.5 text-xs">
                           {rfq.quantity.toLocaleString('vi-VN')} {rfq.unit ?? ''} ·{' '}
                           {quoteCount > 0 ? `${quoteCount} báo giá` : 'Chưa có báo giá'} · gửi{' '}
                           {formatDate(rfq.created_at)}
@@ -327,18 +327,18 @@ export default async function DashboardPage() {
                       📦
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-brand-ink truncate text-[12.5px] font-semibold">
+                      <div className="text-brand-ink truncate text-[13px] font-semibold">
                         {order.supplier_profiles?.shop_name ?? 'Xưởng'} — #
                         {order.id.slice(0, 8).toUpperCase()}
                       </div>
-                      <div className="text-brand-light mt-0.5 text-[11px]">
+                      <div className="text-brand-light mt-0.5 text-xs">
                         {order.quantity.toLocaleString('vi-VN')} ·{' '}
                         {order.rfq_quotes?.rfq_requests?.title ?? 'Đơn hàng'}
                         {order.tracking_number ? ` · ${order.tracking_number}` : ''}
                       </div>
                     </div>
                     <div className="shrink-0 text-right">
-                      <div className="text-brand-ink text-[12.5px] font-bold">
+                      <div className="text-brand-ink text-[13px] font-bold">
                         {order.total_amount.toLocaleString('vi-VN')}đ
                       </div>
                       <StatusPill domain="order" status={order.status} />
@@ -359,7 +359,7 @@ export default async function DashboardPage() {
             <div className="bg-brand-bg text-brand-ink mb-2.5 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-bold">
               🆓 Gói Miễn phí
             </div>
-            <div className="text-brand-sub mb-1.5 flex justify-between text-[11.5px]">
+            <div className="text-brand-sub mb-1.5 flex justify-between text-xs">
               <span>RFQ dùng trong tháng</span>
               <span>
                 <strong className="text-brand-ink">{quotaUsed}</strong>/{FREE_TIER_MONTHLY_QUOTA}
@@ -371,7 +371,7 @@ export default async function DashboardPage() {
             <div className="bg-brand-bg mb-3 flex items-center justify-between rounded-lg px-3 py-2.5">
               <div>
                 <div className="font-tight text-base font-bold">{buyer.credit_balance}</div>
-                <div className="text-brand-sub text-[10.5px]">Credit RFQ còn lại</div>
+                <div className="text-brand-sub text-xs">Credit RFQ còn lại</div>
               </div>
               <div className="text-xl">🎟️</div>
             </div>
@@ -407,7 +407,7 @@ export default async function DashboardPage() {
                   {buyer.trust_score}
                 </div>
               </div>
-              <div className="text-brand-sub text-[11.5px] leading-relaxed">
+              <div className="text-brand-sub text-xs leading-relaxed">
                 <strong className="text-brand-ink">{trustLabel(buyer.trust_score)}</strong> — thanh
                 toán đúng hạn, phản hồi nhanh giúp bạn được xưởng ưu tiên báo giá.
               </div>
@@ -430,11 +430,11 @@ export default async function DashboardPage() {
                     <span className="bg-brand-red mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full" />
                   )}
                   <div className={notif.is_read ? 'pl-[14px]' : ''}>
-                    <div className="text-brand-ink text-[11.5px] leading-relaxed">
+                    <div className="text-brand-ink text-xs leading-relaxed">
                       <strong className="font-semibold">{notif.title}</strong>
                       {notif.body ? ` — ${notif.body}` : ''}
                     </div>
-                    <div className="text-brand-light mt-0.5 text-[10px]">
+                    <div className="text-brand-light mt-0.5 text-xs">
                       {formatRelativeTime(notif.created_at)}
                     </div>
                   </div>

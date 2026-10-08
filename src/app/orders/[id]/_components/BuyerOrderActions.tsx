@@ -75,7 +75,7 @@ export function BuyerOrderActions({
             : 'Hoàn tất nghĩa là bạn hài lòng với đơn hàng. Sau khi hoàn tất, nếu có vấn đề hãy liên hệ sàn để được hỗ trợ.'}
         </ModalSub>
         {error && (
-          <div className="border-status-red-soft bg-status-red-soft text-status-red mb-3 rounded-lg border px-3 py-2 text-left text-[11.5px]">
+          <div className="border-status-red-soft bg-status-red-soft text-status-red mb-3 rounded-lg border px-3 py-2 text-left text-xs">
             {error}
           </div>
         )}

@@ -154,7 +154,7 @@ export function ShopSettingsForm({
           type="button"
           disabled={uploading !== null}
           onClick={() => bannerInputRef.current?.click()}
-          className="absolute right-2.5 bottom-2.5 rounded-md bg-black/55 px-3 py-1.5 text-[11.5px] font-semibold text-white disabled:opacity-60"
+          className="absolute right-2.5 bottom-2.5 rounded-md bg-black/55 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
         >
           {uploading === 'banner' ? '⏳ Đang tải...' : '📷 Đổi banner'}
         </button>
@@ -170,7 +170,7 @@ export function ShopSettingsForm({
           e.target.value = '';
         }}
       />
-      <div className="text-brand-light mb-4 text-[11px]">Hiển thị ở đầu gian hàng công khai. JPG/PNG/WebP, tối đa 5MB.</div>
+      <div className="text-brand-light mb-4 text-xs">Hiển thị ở đầu gian hàng công khai. JPG/PNG/WebP, tối đa 5MB.</div>
 
       <div className="mb-1.5 text-xs font-semibold">Logo gian hàng</div>
       <div className="mb-1 flex items-center gap-3.5">
@@ -186,7 +186,7 @@ export function ShopSettingsForm({
           type="button"
           disabled={uploading !== null}
           onClick={() => logoInputRef.current?.click()}
-          className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] px-3.5 py-2 text-[11.5px] font-semibold disabled:opacity-60"
+          className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] px-3.5 py-2 text-xs font-semibold disabled:opacity-60"
         >
           {uploading === 'logo' ? '⏳ Đang tải...' : '📷 Đổi logo'}
         </button>
@@ -202,7 +202,7 @@ export function ShopSettingsForm({
           e.target.value = '';
         }}
       />
-      <div className="text-brand-light mb-5 text-[11px]">Hình vuông, tối thiểu 200×200px. JPG/PNG/WebP, tối đa 2MB.</div>
+      <div className="text-brand-light mb-5 text-xs">Hình vuông, tối thiểu 200×200px. JPG/PNG/WebP, tối đa 2MB.</div>
 
       <div className="mb-4 grid grid-cols-2 gap-2.5">
         <div>
@@ -260,7 +260,7 @@ export function ShopSettingsForm({
               onChange={() => toggleCarrier(c)}
               className="accent-brand-red h-4 w-4"
             />
-            <span className="text-[12.5px] font-semibold">{c}</span>
+            <span className="text-[13px] font-semibold">{c}</span>
           </label>
         ))}
       </div>
@@ -273,18 +273,18 @@ export function ShopSettingsForm({
           onChange={(e) => setProcessingDays(e.target.value)}
           className="border-brand-border focus:border-brand-red w-full max-w-[140px] rounded-lg border-[1.5px] px-3 py-2.5 text-[13px] outline-none"
         />
-        <div className="text-brand-light mt-1 text-[11px]">
+        <div className="text-brand-light mt-1 text-xs">
           Thời gian từ lúc xác nhận thanh toán đến khi bắt đầu sản xuất.
         </div>
       </div>
 
-      {error && <div className="text-brand-red mt-3 text-[11.5px]">{error}</div>}
+      {error && <div className="text-brand-red mt-3 text-xs">{error}</div>}
 
       <div className="mt-4 flex justify-end">
         <button
           type="submit"
           disabled={saving}
-          className={`rounded-lg px-4 py-2.5 text-[12.5px] font-semibold text-white disabled:opacity-60 ${
+          className={`rounded-lg px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-60 ${
             saved ? 'bg-brand-green' : 'bg-brand-red hover:bg-brand-red-dark'
           }`}
         >

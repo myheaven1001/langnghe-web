@@ -202,7 +202,7 @@ export default function RfqCreateForm({
 
   return (
     <div>
-      <div className="mb-2 text-[11.5px] text-[#999]">
+      <div className="mb-2 text-xs text-[#999]">
         <Link href="/dashboard" className="text-[#666] hover:text-[#E53333]">
           Dashboard
         </Link>{' '}
@@ -211,12 +211,12 @@ export default function RfqCreateForm({
 
       <div className="mb-5">
         <div className="text-xl font-bold">Gửi yêu cầu báo giá (RFQ)</div>
-        <div className="mt-1 text-[12.5px] text-[#666]">
+        <div className="mt-1 text-[13px] text-[#666]">
           Mô tả nhu cầu của bạn — xưởng phù hợp sẽ gửi báo giá trong vòng vài giờ.
         </div>
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_300px]">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
         {/* LEFT: FORM */}
         <div>
           <Card>
@@ -234,7 +234,7 @@ export default function RfqCreateForm({
                     <span className="text-base">🎯</span>
                     <span className="text-[13px] font-bold">RFQ đơn</span>
                   </div>
-                  <div className="text-[11px] leading-normal text-[#666]">
+                  <div className="text-xs leading-normal text-[#666]">
                     Gửi cho 1 xưởng cụ thể — phù hợp khi bạn đã chọn được nhà cung cấp ưng ý.
                   </div>
                 </button>
@@ -250,12 +250,12 @@ export default function RfqCreateForm({
                     <span className="text-base">🧮</span>
                     <span className="text-[13px] font-bold">Multi-RFQ</span>
                   </div>
-                  <div className="text-[11px] leading-normal text-[#666]">
+                  <div className="text-xs leading-normal text-[#666]">
                     Gửi đồng thời nhiều xưởng để so sánh báo giá — tối đa{' '}
                     <strong>{maxSuppliersPerRfq} xưởng</strong> với gói hiện tại.
                   </div>
                   {!multiRfqAllowed && (
-                    <div className="mt-1.5 text-[10px] font-semibold text-[#C4622D]">
+                    <div className="mt-1.5 text-xs font-semibold text-[#C4622D]">
                       🔒 Nâng cấp gói để dùng Multi-RFQ
                     </div>
                   )}
@@ -268,7 +268,7 @@ export default function RfqCreateForm({
             <CardHeader
               title="2️⃣ Chọn xưởng nhận báo giá"
               action={
-                <span className="text-[11px] text-[#666]">
+                <span className="text-xs text-[#666]">
                   Đã chọn <strong className="text-[#E53333]">{selectedSuppliers.length}</strong>/{maxSuppliers}
                 </span>
               }
@@ -307,8 +307,8 @@ export default function RfqCreateForm({
                         🏺
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-[12.5px] font-semibold">{s.shop_name}</div>
-                        <div className="truncate text-[11px] text-[#999]">
+                        <div className="truncate text-[13px] font-semibold">{s.shop_name}</div>
+                        <div className="truncate text-xs text-[#999]">
                           {s.village_origin ?? 'Chưa rõ làng nghề'} · {s.craft_category ?? ''}
                         </div>
                       </div>
@@ -323,9 +323,9 @@ export default function RfqCreateForm({
                   );
                 })}
               </div>
-              {errors.suppliers && <div className="text-[11px] text-[#E53333]">{errors.suppliers}</div>}
+              {errors.suppliers && <div className="text-xs text-[#E53333]">{errors.suppliers}</div>}
               {!errors.suppliers && (
-                <div className="text-[11px] text-[#999]">
+                <div className="text-xs text-[#999]">
                   {rfqType === 'single'
                     ? 'RFQ đơn chỉ gửi cho 1 xưởng — chọn xưởng bạn muốn nhận báo giá.'
                     : `Bạn có thể chọn tối đa ${maxSuppliers} xưởng để so sánh báo giá.`}
@@ -353,7 +353,7 @@ export default function RfqCreateForm({
                     errors.title ? 'border-[#E53333] bg-[#FFF8F8]' : 'border-[#E0DDD8]'
                   }`}
                 />
-                {errors.title && <div className="mt-1 text-[11px] text-[#E53333]">{errors.title}</div>}
+                {errors.title && <div className="mt-1 text-xs text-[#E53333]">{errors.title}</div>}
               </div>
 
               <div className="mb-4">
@@ -397,9 +397,9 @@ export default function RfqCreateForm({
                     errors.description ? 'border-[#E53333] bg-[#FFF8F8]' : 'border-[#E0DDD8]'
                   }`}
                 />
-                <div className="mt-1 text-right text-[10.5px] text-[#999]">{description.length}/1000 ký tự</div>
+                <div className="mt-1 text-right text-xs text-[#999]">{description.length}/1000 ký tự</div>
                 {errors.description && (
-                  <div className="mt-1 text-[11px] text-[#E53333]">{errors.description}</div>
+                  <div className="mt-1 text-xs text-[#E53333]">{errors.description}</div>
                 )}
               </div>
 
@@ -421,7 +421,7 @@ export default function RfqCreateForm({
                       errors.quantity ? 'border-[#E53333] bg-[#FFF8F8]' : 'border-[#E0DDD8]'
                     }`}
                   />
-                  {errors.quantity && <div className="mt-1 text-[11px] text-[#E53333]">{errors.quantity}</div>}
+                  {errors.quantity && <div className="mt-1 text-xs text-[#E53333]">{errors.quantity}</div>}
                 </div>
                 <div>
                   <div className="mb-1.5 text-xs font-semibold">Đơn vị</div>
@@ -469,7 +469,7 @@ export default function RfqCreateForm({
                     className="w-full rounded-lg border-[1.5px] border-[#E0DDD8] px-3 py-2.5 text-[13px] outline-none focus:border-[#E53333]"
                   />
                 </div>
-                <div className="mt-1 text-[11px] text-[#999]">
+                <div className="mt-1 text-xs text-[#999]">
                   Giúp xưởng báo giá sát với khả năng chi trả của bạn, tăng tỷ lệ phản hồi.
                 </div>
               </div>
@@ -489,7 +489,7 @@ export default function RfqCreateForm({
                       }`}
                     >
                       {d.label}
-                      <span className="mt-0.5 block text-[10px] font-normal text-[#999]">{d.sub}</span>
+                      <span className="mt-0.5 block text-xs font-normal text-[#999]">{d.sub}</span>
                     </button>
                   ))}
                 </div>
@@ -525,7 +525,7 @@ export default function RfqCreateForm({
             <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-md bg-[#F5F3EF] px-2.5 py-1 text-xs font-bold">
               {planLabel}
             </div>
-            <div className="mb-1.5 flex justify-between text-[11.5px] text-[#666]">
+            <div className="mb-1.5 flex justify-between text-xs text-[#666]">
               <span>Đã dùng</span>
               <span>
                 <strong>{quotaUsed}</strong>/{monthlyQuota ?? '∞'} RFQ
@@ -539,7 +539,7 @@ export default function RfqCreateForm({
                 />
               </div>
             )}
-            <div className="mb-2.5 text-[11px] leading-relaxed text-[#666]">
+            <div className="mb-2.5 text-xs leading-relaxed text-[#666]">
               {monthlyQuota === null
                 ? 'Gói của bạn không giới hạn số lượng RFQ mỗi tháng.'
                 : `Còn ${Math.max(0, monthlyQuota - quotaUsed)} yêu cầu trong tháng này. Reset vào ${formatDate(quotaResetAt)}.`}{' '}

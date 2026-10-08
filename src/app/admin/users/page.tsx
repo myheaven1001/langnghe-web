@@ -191,7 +191,7 @@ export default async function AdminUsersPage({
       }}
       navGroups={buildAdminNavGroups({ pendingVerificationCount: pendingVerificationCount ?? 0 })}
     >
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/admin" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -201,7 +201,7 @@ export default async function AdminUsersPage({
 
       <div className="mb-[18px]">
         <div className="text-xl font-bold">Quản lý user</div>
-        <div className="text-brand-sub mt-1 text-[12.5px]">
+        <div className="text-brand-sub mt-1 text-[13px]">
           {tabCounts.all} người dùng · {tabCounts.suspended} đang tạm khóa
         </div>
       </div>
@@ -213,7 +213,7 @@ export default async function AdminUsersPage({
             <Link
               key={t.key}
               href={buildUsersUrl({ tab: t.key, q, sort })}
-              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[12.5px] font-semibold whitespace-nowrap ${
+              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold whitespace-nowrap ${
                 isActive
                   ? 'border-brand-forest text-brand-forest'
                   : 'text-brand-sub hover:text-brand-forest border-transparent'
@@ -221,7 +221,7 @@ export default async function AdminUsersPage({
             >
               {t.label}
               <span
-                className={`rounded-full px-1.5 py-px text-[10.5px] font-bold ${
+                className={`rounded-full px-1.5 py-px text-xs font-bold ${
                   isActive ? 'bg-status-green-soft text-brand-forest' : 'bg-brand-bg text-brand-sub'
                 }`}
               >
@@ -250,7 +250,7 @@ export default async function AdminUsersPage({
                 {['Người dùng', 'Vai trò', 'Trạng thái', 'Trust score', 'Tham gia', ''].map((h) => (
                   <th
                     key={h}
-                    className="text-brand-light px-3.5 py-2.5 text-left text-[10.5px] font-bold tracking-[.05em] uppercase"
+                    className="text-brand-light px-3.5 py-2.5 text-left text-xs font-bold tracking-[.05em] uppercase"
                   >
                     {h}
                   </th>
@@ -274,12 +274,12 @@ export default async function AdminUsersPage({
                         <div className="bg-brand-bg flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-base">
                           {u.icon}
                         </div>
-                        <span className="text-[12.5px] font-semibold">{u.name}</span>
+                        <span className="text-[13px] font-semibold">{u.name}</span>
                       </div>
                     </td>
                     <td className="px-3.5 py-3">
                       <span
-                        className={`rounded px-2 py-1 text-[10px] font-bold ${roleTag.className}`}
+                        className={`rounded px-2 py-1 text-xs font-bold ${roleTag.className}`}
                       >
                         {roleTag.label}
                       </span>

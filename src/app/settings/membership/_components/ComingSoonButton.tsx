@@ -22,7 +22,7 @@ export function ComingSoonButton({
         {children}
       </button>
       {showNote && (
-        <div className="text-brand-light mt-2 text-center text-[10.5px] leading-relaxed">
+        <div className="text-brand-light mt-2 text-center text-xs leading-relaxed">
           🚧 Thanh toán trực tuyến chưa được nối — tính năng này sẽ mở ở Giai đoạn 9.
         </div>
       )}

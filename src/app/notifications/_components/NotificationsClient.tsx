@@ -302,7 +302,7 @@ export function NotificationsClient({
 
   return (
     <AppShell header={header} navGroups={navGroups}>
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -313,7 +313,7 @@ export function NotificationsClient({
       <div className="mb-[18px] flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="text-xl font-bold">Thông báo</div>
-          <div className="text-brand-sub mt-1 text-[12.5px]">
+          <div className="text-brand-sub mt-1 text-[13px]">
             {notifications.length} thông báo · {unreadCount} chưa đọc
           </div>
         </div>
@@ -335,7 +335,7 @@ export function NotificationsClient({
               key={t.key}
               type="button"
               onClick={() => setTab(t.key)}
-              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[12.5px] font-semibold whitespace-nowrap ${
+              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold whitespace-nowrap ${
                 isActive
                   ? 'border-brand-red text-brand-red'
                   : 'text-brand-sub hover:text-brand-red border-transparent'
@@ -343,7 +343,7 @@ export function NotificationsClient({
             >
               {t.label}
               <span
-                className={`rounded-full px-1.5 py-px text-[10.5px] font-bold ${
+                className={`rounded-full px-1.5 py-px text-xs font-bold ${
                   isActive ? 'bg-status-red-soft text-brand-red' : 'bg-brand-bg text-brand-sub'
                 }`}
               >
@@ -363,7 +363,7 @@ export function NotificationsClient({
       ) : (
         groups.map((group) => (
           <div key={group.label} className="mb-5">
-            <div className="text-brand-light mb-2 pl-0.5 text-[11.5px] font-bold tracking-[.05em] uppercase">
+            <div className="text-brand-light mb-2 pl-0.5 text-xs font-bold tracking-[.05em] uppercase">
               {group.label}
             </div>
             <div className="border-brand-border overflow-hidden rounded-[10px] border bg-white">
@@ -380,16 +380,16 @@ export function NotificationsClient({
                     </div>
                     <div className="min-w-0 flex-1">
                       <div
-                        className={`text-[12.5px] leading-relaxed ${n.is_read ? 'font-semibold' : 'font-bold'}`}
+                        className={`text-[13px] leading-relaxed ${n.is_read ? 'font-semibold' : 'font-bold'}`}
                       >
                         {n.title}
                       </div>
                       {n.body && (
-                        <div className="text-brand-sub mt-0.5 text-[11.5px] leading-relaxed">
+                        <div className="text-brand-sub mt-0.5 text-xs leading-relaxed">
                           {n.body}
                         </div>
                       )}
-                      <div className="text-brand-light mt-1 text-[10.5px]">
+                      <div className="text-brand-light mt-1 text-xs">
                         {formatTime(n.created_at)}
                       </div>
                     </div>

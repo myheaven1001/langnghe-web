@@ -40,7 +40,7 @@ export function RfqFilterBar({
           name="q"
           defaultValue={q}
           placeholder="Tìm theo tiêu đề RFQ..."
-          className="border-brand-border focus:border-brand-red w-full rounded-lg border py-2 pr-3 pl-8 text-[12.5px] outline-none"
+          className="border-brand-border focus:border-brand-red w-full rounded-lg border py-2 pr-3 pl-8 text-[13px] outline-none"
         />
       </div>
 
@@ -48,7 +48,7 @@ export function RfqFilterBar({
         name="category"
         defaultValue={category}
         onChange={() => formRef.current?.submit()}
-        className="border-brand-border focus:border-brand-red rounded-lg border bg-white px-3 py-2 text-[12.5px] outline-none"
+        className="border-brand-border focus:border-brand-red rounded-lg border bg-white px-3 py-2 text-[13px] outline-none"
       >
         <option value="">Tất cả ngành hàng</option>
         {categories.map((c) => (
@@ -62,7 +62,7 @@ export function RfqFilterBar({
         name="sort"
         defaultValue={sort}
         onChange={() => formRef.current?.submit()}
-        className="border-brand-border focus:border-brand-red rounded-lg border bg-white px-3 py-2 text-[12.5px] outline-none"
+        className="border-brand-border focus:border-brand-red rounded-lg border bg-white px-3 py-2 text-[13px] outline-none"
       >
         <option value="newest">Mới nhất</option>
         <option value="deadline">Sắp hết hạn</option>
@@ -70,7 +70,7 @@ export function RfqFilterBar({
 
       <button
         type="submit"
-        className="text-brand-red text-[12.5px] font-semibold hover:underline"
+        className="text-brand-red text-[13px] font-semibold hover:underline"
       >
         Tìm
       </button>

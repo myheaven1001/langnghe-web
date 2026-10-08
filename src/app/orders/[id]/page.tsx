@@ -218,7 +218,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     >
       <OrderRealtime orderId={order.id} />
 
-      <div className="text-brand-light mb-2 flex flex-wrap items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex flex-wrap items-center gap-1.5 text-xs">
         <Link href="/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -253,12 +253,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       </div>
 
       {order.status === 'cancelled' && order.cancel_reason && (
-        <div className="border-status-red-soft bg-status-red-soft text-status-red mb-4 rounded-[10px] border px-4 py-3 text-[12.5px]">
+        <div className="border-status-red-soft bg-status-red-soft text-status-red mb-4 rounded-[10px] border px-4 py-3 text-[13px]">
           <strong>Đơn đã bị hủy.</strong> Lý do: {order.cancel_reason}
         </div>
       )}
 
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         {/* LEFT */}
         <div className="min-w-0">
           <Card>
@@ -278,26 +278,26 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-[13px] font-bold">{rfq?.title ?? 'Đơn hàng'}</div>
-                  <div className="text-brand-light mt-0.5 text-[11.5px]">
+                  <div className="text-brand-light mt-0.5 text-xs">
                     {order.quantity.toLocaleString('vi-VN')} {rfq?.unit ?? ''}
                   </div>
                   {rfq && (
                     <Link
                       href={`/rfq/${rfq.id}`}
-                      className="text-brand-blue mt-0.5 block text-[11px]"
+                      className="text-brand-blue mt-0.5 block text-xs"
                     >
                       Xem lại RFQ gốc →
                     </Link>
                   )}
                 </div>
               </div>
-              <div className="text-brand-sub flex justify-between py-1.5 text-[12.5px]">
+              <div className="text-brand-sub flex justify-between py-1.5 text-[13px]">
                 <span>Đơn giá</span>
                 <span>
                   {formatVnd(order.unit_price)} / {rfq?.unit ?? 'đơn vị'}
                 </span>
               </div>
-              <div className="text-brand-sub flex justify-between py-1.5 text-[12.5px]">
+              <div className="text-brand-sub flex justify-between py-1.5 text-[13px]">
                 <span>Số lượng</span>
                 <span>
                   {order.quantity.toLocaleString('vi-VN')} {rfq?.unit ?? ''}
@@ -326,7 +326,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <Card>
             <CardHeader title={<>📍 Địa chỉ giao hàng</>} />
             <CardBody padded>
-              <div className="text-brand-sub text-[12.5px] leading-relaxed whitespace-pre-line">
+              <div className="text-brand-sub text-[13px] leading-relaxed whitespace-pre-line">
                 {order.shipping_address ||
                   'Đơn này chưa có địa chỉ giao hàng — liên hệ sàn để bổ sung.'}
               </div>
@@ -364,7 +364,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             {order.status === 'pending_payment' &&
               (hasAccount ? (
                 <>
-                  <div className="text-brand-sub mb-1.5 text-[11.5px] leading-relaxed">
+                  <div className="text-brand-sub mb-1.5 text-xs leading-relaxed">
                     Chuyển khoản đúng số tiền và nội dung dưới đây, rồi tải biên lai ở mục{' '}
                     <strong>Chứng từ</strong>. Sàn sẽ xác nhận và báo xưởng bắt đầu sản xuất.
                   </div>
@@ -375,12 +375,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   <InfoRow label="Số tiền" value={formatVnd(order.total_amount)} />
                   <InfoRow label="Nội dung CK" value={transferContent} />
                   {account.note && (
-                    <div className="text-brand-sub mt-2 text-[11.5px] leading-relaxed">
+                    <div className="text-brand-sub mt-2 text-xs leading-relaxed">
                       {account.note}
                     </div>
                   )}
                   <div
-                    className={`mt-3 rounded-lg px-3 py-2 text-[11.5px] font-semibold ${
+                    className={`mt-3 rounded-lg px-3 py-2 text-xs font-semibold ${
                       hasReceipt
                         ? 'bg-status-green-soft text-status-green'
                         : 'bg-brand-bg text-brand-sub'
@@ -392,7 +392,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   </div>
                 </>
               ) : (
-                <div className="text-brand-sub text-[11.5px] leading-relaxed">
+                <div className="text-brand-sub text-xs leading-relaxed">
                   Sàn chưa cập nhật tài khoản nhận tiền. Vui lòng liên hệ đội hỗ trợ để được hướng
                   dẫn thanh toán.
                 </div>
@@ -423,12 +423,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   <div className="flex flex-wrap items-center gap-1.5 text-[13.5px] font-bold">
                     {order.supplier_profiles.shop_name}
                     {isVerifiedSupplier && (
-                      <span className="bg-status-green-soft text-status-green rounded-full px-1.5 py-px text-[9px] font-bold">
+                      <span className="bg-status-green-soft text-status-green rounded-full px-1.5 py-px text-xs font-bold">
                         ✓ Đã xác minh
                       </span>
                     )}
                   </div>
-                  <div className="text-brand-light mt-0.5 text-[11.5px]">
+                  <div className="text-brand-light mt-0.5 text-xs">
                     {order.supplier_profiles.village_origin ?? 'Chưa rõ làng nghề'}
                     {order.supplier_profiles.rating_avg
                       ? ` · ${order.supplier_profiles.rating_avg.toFixed(1)}★`
@@ -439,13 +439,13 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <div className="mt-3 flex gap-2">
                 <Link
                   href={`/shops/${order.supplier_profiles.id}`}
-                  className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink flex-1 rounded-md border-[1.5px] py-2 text-center text-[11.5px] font-semibold"
+                  className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink flex-1 rounded-md border-[1.5px] py-2 text-center text-xs font-semibold"
                 >
                   🏪 Xem gian hàng
                 </Link>
                 <Link
                   href={rfq ? `/messages/${rfq.id}` : '/messages'}
-                  className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink flex-1 rounded-md border-[1.5px] py-2 text-center text-[11.5px] font-semibold"
+                  className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink flex-1 rounded-md border-[1.5px] py-2 text-center text-xs font-semibold"
                 >
                   💬 Nhắn tin
                 </Link>
@@ -474,7 +474,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 <InfoRow key={label} label={label} value={value} />
               ))
             ) : (
-              <div className="text-brand-sub text-[11.5px] leading-relaxed">
+              <div className="text-brand-sub text-xs leading-relaxed">
                 Có vấn đề với đơn hàng này? Ghi chú vào lịch sử đơn hàng — đội ngũ sàn sẽ thấy và
                 phản hồi.
               </div>

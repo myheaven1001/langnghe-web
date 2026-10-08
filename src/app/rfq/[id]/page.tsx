@@ -274,7 +274,7 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
         },
       ]}
     >
-      <div className="text-brand-light mb-2 flex flex-wrap items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex flex-wrap items-center gap-1.5 text-xs">
         <Link href="/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -291,7 +291,7 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
           <div className="flex flex-wrap items-center gap-2.5">
             <div className="text-[19px] font-bold">{rfq.title}</div>
             {rfq.rfq_type === 'multi' && (
-              <span className="rounded-[5px] bg-[#F1EEFF] px-2 py-0.5 text-[10px] font-semibold text-[#5B4CDB]">
+              <span className="rounded-[5px] bg-[#F1EEFF] px-2 py-0.5 text-xs font-semibold text-[#5B4CDB]">
                 Multi-RFQ
               </span>
             )}
@@ -333,7 +333,7 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
       {rfq.status === 'awarded' && acceptedQuote && (
         <div className="border-status-green-soft bg-status-green-soft mb-4 flex items-center gap-3 rounded-[10px] border p-3.5">
           <div className="text-[22px]">🎉</div>
-          <div className="text-status-green flex-1 text-[12.5px] leading-relaxed">
+          <div className="text-status-green flex-1 text-[13px] leading-relaxed">
             <strong className="mb-0.5 block text-[13.5px]">
               Đã chốt xưởng: {acceptedQuote.supplier_profiles?.shop_name ?? 'Xưởng đã chọn'}
             </strong>
@@ -348,34 +348,34 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
         </div>
       )}
 
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_280px]">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
         {/* LEFT */}
         <div>
           <Card>
             <CardHeader title={<>📄 Chi tiết yêu cầu</>} />
             <CardBody padded>
-              <div className="text-brand-sub mb-3.5 text-[12.5px] leading-relaxed">
+              <div className="text-brand-sub mb-3.5 text-[13px] leading-relaxed">
                 {rfq.requirements || 'Không có mô tả chi tiết.'}
               </div>
               <div className="mb-1 grid grid-cols-2 gap-3 lg:grid-cols-4">
                 <div className="bg-brand-bg rounded-lg px-3 py-2.5">
-                  <div className="text-brand-light mb-0.5 text-[10.5px]">Số lượng</div>
+                  <div className="text-brand-light mb-0.5 text-xs">Số lượng</div>
                   <div className="text-[13px] font-bold">
                     {rfq.quantity.toLocaleString('vi-VN')} {rfq.unit ?? ''}
                   </div>
                 </div>
                 <div className="bg-brand-bg rounded-lg px-3 py-2.5">
-                  <div className="text-brand-light mb-0.5 text-[10.5px]">Ngân sách dự kiến</div>
+                  <div className="text-brand-light mb-0.5 text-xs">Ngân sách dự kiến</div>
                   <div className="text-[13px] font-bold">{budgetLabel}</div>
                 </div>
                 <div className="bg-brand-bg rounded-lg px-3 py-2.5">
-                  <div className="text-brand-light mb-0.5 text-[10.5px]">Ngành hàng</div>
+                  <div className="text-brand-light mb-0.5 text-xs">Ngành hàng</div>
                   <div className="text-[13px] font-bold">
                     {rfq.categories?.name ?? 'Chưa phân loại'}
                   </div>
                 </div>
                 <div className="bg-brand-bg rounded-lg px-3 py-2.5">
-                  <div className="text-brand-light mb-0.5 text-[10.5px]">Thời hạn báo giá</div>
+                  <div className="text-brand-light mb-0.5 text-xs">Thời hạn báo giá</div>
                   <div className="text-[13px] font-bold">
                     {rfq.deadline_days != null ? `${rfq.deadline_days} ngày` : 'Không giới hạn'}
                   </div>
@@ -388,13 +388,13 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
             <CardHeader
               title={<>💰 So sánh báo giá</>}
               action={
-                <span className="text-brand-sub text-[11.5px]">
+                <span className="text-brand-sub text-xs">
                   {quotes.length}/{targetCount} xưởng đã phản hồi
                 </span>
               }
             />
             {bestPrice !== null && (
-              <div className="text-brand-sub px-[18px] pb-3 text-[11.5px]">
+              <div className="text-brand-sub px-[18px] pb-3 text-xs">
                 Giá thấp nhất <strong className="text-brand-ink">{formatVnd(bestPrice)}</strong>
                 {fastestLeadTime !== null && (
                   <>
@@ -439,17 +439,17 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                         <div className="flex flex-wrap items-center gap-1.5 text-[13px] font-bold">
                           {quote.supplier_profiles?.shop_name ?? 'Xưởng'}
                           {isVerified && (
-                            <span className="bg-status-green-soft text-status-green rounded-full px-1.5 py-px text-[9px] font-bold">
+                            <span className="bg-status-green-soft text-status-green rounded-full px-1.5 py-px text-xs font-bold">
                               ✓ Đã xác minh
                             </span>
                           )}
                           {isBest && quote.status !== 'rejected' && (
-                            <span className="bg-brand-green rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white">
+                            <span className="bg-brand-green rounded-full px-1.5 py-0.5 text-xs font-bold text-white">
                               💰 Giá tốt nhất
                             </span>
                           )}
                         </div>
-                        <div className="text-brand-light mt-0.5 text-[11px]">
+                        <div className="text-brand-light mt-0.5 text-xs">
                           {quote.supplier_profiles?.village_origin ?? 'Chưa rõ làng nghề'}
                           {quote.supplier_profiles?.rating_avg
                             ? ` · ${quote.supplier_profiles.rating_avg.toFixed(1)}★`
@@ -460,36 +460,36 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                         <div className="font-tight text-lg font-bold">
                           {formatVnd(quote.unit_price)}
                         </div>
-                        <div className="text-brand-light text-[10.5px]">
+                        <div className="text-brand-light text-xs">
                           / {rfq.unit ?? 'đơn vị'}
                         </div>
                       </div>
                     </div>
 
                     <div className="mb-2.5 flex flex-wrap gap-4 border-y border-[#F2F0EC] py-2.5">
-                      <div className="text-brand-sub text-[11.5px]">
+                      <div className="text-brand-sub text-xs">
                         Số lượng tối thiểu
-                        <b className="text-brand-ink block text-[12.5px]">
+                        <b className="text-brand-ink block text-[13px]">
                           {quote.min_qty
                             ? `${quote.min_qty.toLocaleString('vi-VN')} ${rfq.unit ?? ''}`
                             : '—'}
                         </b>
                       </div>
-                      <div className="text-brand-sub text-[11.5px]">
+                      <div className="text-brand-sub text-xs">
                         Thời gian sản xuất
-                        <b className="text-brand-ink block text-[12.5px]">
+                        <b className="text-brand-ink block text-[13px]">
                           {quote.lead_time_days != null ? `${quote.lead_time_days} ngày` : '—'}
                         </b>
                       </div>
-                      <div className="text-brand-sub text-[11.5px]">
+                      <div className="text-brand-sub text-xs">
                         Hiệu lực đến
-                        <b className="text-brand-ink block text-[12.5px]">
+                        <b className="text-brand-ink block text-[13px]">
                           {quote.valid_until ? formatVnDate(quote.valid_until) : '—'}
                         </b>
                       </div>
-                      <div className="text-brand-sub text-[11.5px]">
+                      <div className="text-brand-sub text-xs">
                         Tổng giá trị
-                        <b className="text-brand-ink block text-[12.5px]">
+                        <b className="text-brand-ink block text-[13px]">
                           {formatVnd(totalValue)}
                         </b>
                       </div>
@@ -502,7 +502,7 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                     )}
 
                     {quote.status === 'accepted' ? (
-                      <div className="text-status-green flex items-center gap-1.5 text-[12.5px] font-bold">
+                      <div className="text-status-green flex items-center gap-1.5 text-[13px] font-bold">
                         ✅ Đã chấp nhận báo giá này
                       </div>
                     ) : quote.status === 'rejected' ? (
@@ -543,7 +543,7 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                     <div className="text-brand-sub text-[13px] font-bold">
                       {target.supplier_profiles?.shop_name ?? 'Xưởng'}
                     </div>
-                    <div className="text-brand-light mt-0.5 text-[11px]">
+                    <div className="text-brand-light mt-0.5 text-xs">
                       Chưa gửi báo giá
                       {deadline
                         ? ` · còn ${remaining !== null && remaining > 0 ? remaining : 0} ngày để phản hồi`
@@ -588,7 +588,7 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                       {step.label}
                     </div>
                     {step.time && (
-                      <div className="text-brand-light mt-0.5 text-[10.5px]">{step.time}</div>
+                      <div className="text-brand-light mt-0.5 text-xs">{step.time}</div>
                     )}
                   </div>
                 </div>
@@ -620,7 +620,7 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
 
           <div className="border-brand-border rounded-[10px] border bg-white p-4 text-center">
             <div className="mb-2 text-2xl">🙋</div>
-            <div className="text-brand-sub mb-2.5 text-[11.5px] leading-relaxed">
+            <div className="text-brand-sub mb-2.5 text-xs leading-relaxed">
               Cần hỗ trợ đàm phán hoặc so sánh báo giá?
             </div>
             <button

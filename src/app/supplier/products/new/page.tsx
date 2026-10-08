@@ -44,7 +44,7 @@ export default async function NewProductPage() {
       }}
       navGroups={buildSupplierNavGroups({ newRfqCount, unreadCount })}
     >
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/supplier/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -58,7 +58,7 @@ export default async function NewProductPage() {
 
       <div className="mb-[18px]">
         <div className="text-xl font-bold">Thêm sản phẩm mới</div>
-        <div className="text-brand-sub mt-1 text-[12.5px]">
+        <div className="text-brand-sub mt-1 text-[13px]">
           Điền đầy đủ thông tin để buyer dễ tìm thấy và tin tưởng đặt hàng.
         </div>
       </div>

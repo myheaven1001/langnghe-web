@@ -48,16 +48,16 @@ export function OrderTimeline({
               {meta.icon}
             </div>
             <div className="min-w-0 flex-1 pb-0.5">
-              <div className="text-brand-ink text-[12.5px] font-bold">{meta.label}</div>
+              <div className="text-brand-ink text-[13px] font-bold">{meta.label}</div>
               {docLabel && (
-                <div className="text-brand-sub mt-0.5 text-[11.5px] break-words">{docLabel}</div>
+                <div className="text-brand-sub mt-0.5 text-xs break-words">{docLabel}</div>
               )}
               {event.note && (
-                <div className="text-brand-sub mt-0.5 text-[11.5px] leading-relaxed break-words whitespace-pre-line">
+                <div className="text-brand-sub mt-0.5 text-xs leading-relaxed break-words whitespace-pre-line">
                   {event.note}
                 </div>
               )}
-              <div className="text-brand-light mt-0.5 text-[10.5px]">
+              <div className="text-brand-light mt-0.5 text-xs">
                 {formatVnDateTime(event.created_at)} · {orderEventActor(event, viewerId)}
               </div>
             </div>
@@ -77,8 +77,8 @@ export function OrderTimeline({
               {i + 1}
             </div>
             <div className="flex-1 pb-0.5">
-              <div className="text-brand-light text-[12.5px] font-bold">{meta.label}</div>
-              <div className="text-brand-light mt-0.5 text-[11.5px]">Chưa diễn ra</div>
+              <div className="text-brand-light text-[13px] font-bold">{meta.label}</div>
+              <div className="text-brand-light mt-0.5 text-xs">Chưa diễn ra</div>
             </div>
           </div>
         );

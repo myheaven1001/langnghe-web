@@ -36,7 +36,7 @@ export function OrderFilterBar({
           name="q"
           defaultValue={q}
           placeholder="Tìm theo tên xưởng, mã vận đơn..."
-          className="border-brand-border focus:border-brand-red w-full rounded-lg border py-2 pr-3 pl-8 text-[12.5px] outline-none"
+          className="border-brand-border focus:border-brand-red w-full rounded-lg border py-2 pr-3 pl-8 text-[13px] outline-none"
         />
       </div>
 
@@ -44,7 +44,7 @@ export function OrderFilterBar({
         name="range"
         defaultValue={range}
         onChange={() => formRef.current?.submit()}
-        className="border-brand-border focus:border-brand-red rounded-lg border bg-white px-3 py-2 text-[12.5px] outline-none"
+        className="border-brand-border focus:border-brand-red rounded-lg border bg-white px-3 py-2 text-[13px] outline-none"
       >
         <option value="30">30 ngày qua</option>
         <option value="90">90 ngày qua</option>
@@ -55,13 +55,13 @@ export function OrderFilterBar({
         name="sort"
         defaultValue={sort}
         onChange={() => formRef.current?.submit()}
-        className="border-brand-border focus:border-brand-red rounded-lg border bg-white px-3 py-2 text-[12.5px] outline-none"
+        className="border-brand-border focus:border-brand-red rounded-lg border bg-white px-3 py-2 text-[13px] outline-none"
       >
         <option value="newest">Mới nhất</option>
         <option value="value">Giá trị cao nhất</option>
       </select>
 
-      <button type="submit" className="text-brand-red text-[12.5px] font-semibold hover:underline">
+      <button type="submit" className="text-brand-red text-[13px] font-semibold hover:underline">
         Tìm
       </button>
     </form>

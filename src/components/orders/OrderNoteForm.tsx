@@ -36,9 +36,9 @@ export function OrderNoteForm({ orderId }: { orderId: string }) {
         rows={2}
         maxLength={1000}
         placeholder="Thêm ghi chú cho đơn này — các bên của đơn và sàn đều thấy"
-        className="border-brand-border focus:border-brand-red w-full resize-none rounded-lg border-[1.5px] px-3 py-2 text-[12.5px] outline-none"
+        className="border-brand-border focus:border-brand-red w-full resize-none rounded-lg border-[1.5px] px-3 py-2 text-[13px] outline-none"
       />
-      {error && <div className="text-brand-red mt-1 text-[11.5px]">{error}</div>}
+      {error && <div className="text-brand-red mt-1 text-xs">{error}</div>}
       <button
         type="button"
         disabled={busy || !note.trim()}

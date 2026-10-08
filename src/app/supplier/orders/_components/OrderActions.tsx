@@ -79,7 +79,7 @@ export function OrderActions({ orderId, status }: { orderId: string; status: str
         >
           🏭 Bắt đầu sản xuất
         </button>
-        {error && <div className="text-brand-red mt-1 text-[11px]">{error}</div>}
+        {error && <div className="text-brand-red mt-1 text-xs">{error}</div>}
       </div>
     );
   }
@@ -96,14 +96,14 @@ export function OrderActions({ orderId, status }: { orderId: string; status: str
         </button>
         <Modal open={shipModalOpen} onClose={busy ? undefined : () => setShipModalOpen(false)} maxWidth="400px">
           <ModalTitle>Nhập thông tin giao hàng</ModalTitle>
-          <div className="text-brand-sub mb-4 text-[11.5px]">Đơn hàng #{orderId.slice(0, 8).toUpperCase()}</div>
+          <div className="text-brand-sub mb-4 text-xs">Đơn hàng #{orderId.slice(0, 8).toUpperCase()}</div>
 
           <div className="mb-3.5">
             <div className="mb-1.5 text-xs font-semibold">Đơn vị vận chuyển</div>
             <select
               value={provider}
               onChange={(e) => setProvider(e.target.value)}
-              className="border-brand-border focus:border-brand-red w-full rounded-lg border-[1.5px] bg-white px-3 py-2.5 text-[12.5px] outline-none"
+              className="border-brand-border focus:border-brand-red w-full rounded-lg border-[1.5px] bg-white px-3 py-2.5 text-[13px] outline-none"
             >
               {LOGISTICS_PROVIDERS.map((p) => (
                 <option key={p}>{p}</option>
@@ -118,11 +118,11 @@ export function OrderActions({ orderId, status }: { orderId: string; status: str
               value={tracking}
               onChange={(e) => setTracking(e.target.value)}
               placeholder="VD: GHTK123456789"
-              className="border-brand-border focus:border-brand-red w-full rounded-lg border-[1.5px] px-3 py-2.5 text-[12.5px] outline-none"
+              className="border-brand-border focus:border-brand-red w-full rounded-lg border-[1.5px] px-3 py-2.5 text-[13px] outline-none"
             />
           </div>
 
-          {error && <div className="text-brand-red mt-2 text-[11.5px]">{error}</div>}
+          {error && <div className="text-brand-red mt-2 text-xs">{error}</div>}
 
           <ModalActions>
             <button

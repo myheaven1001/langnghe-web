@@ -148,7 +148,7 @@ export default async function SupplierProductsPage({
       }}
       navGroups={buildSupplierNavGroups({ newRfqCount, unreadCount })}
     >
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/supplier/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -159,7 +159,7 @@ export default async function SupplierProductsPage({
       <div className="mb-[18px] flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="text-xl font-bold">Quản lý sản phẩm</div>
-          <div className="text-brand-sub mt-1 text-[12.5px]">
+          <div className="text-brand-sub mt-1 text-[13px]">
             {allCount} sản phẩm · {activeCount} đang bán · {draftCount} nháp · {pausedCount} tạm ẩn
           </div>
         </div>
@@ -178,7 +178,7 @@ export default async function SupplierProductsPage({
             <Link
               key={tab.key}
               href={buildProductsUrl({ status: tab.key, q, category })}
-              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[12.5px] font-semibold whitespace-nowrap ${
+              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold whitespace-nowrap ${
                 isActive
                   ? 'border-brand-red text-brand-red'
                   : 'text-brand-sub hover:text-brand-red border-transparent'
@@ -186,7 +186,7 @@ export default async function SupplierProductsPage({
             >
               {tab.label}
               <span
-                className={`rounded-full px-1.5 py-px text-[10.5px] font-bold ${
+                className={`rounded-full px-1.5 py-px text-xs font-bold ${
                   isActive ? 'bg-status-red-soft text-brand-red' : 'bg-brand-bg text-brand-sub'
                 }`}
               >

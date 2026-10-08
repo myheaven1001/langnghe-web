@@ -91,7 +91,7 @@ export function AcceptQuoteButton({
           <div className="mb-1.5 flex items-center justify-between">
             <span className="text-xs font-semibold">📍 Giao hàng đến</span>
             {addresses.length > 0 && (
-              <Link href={addressBookHref} className="text-brand-red text-[11.5px] font-semibold">
+              <Link href={addressBookHref} className="text-brand-red text-xs font-semibold">
                 Sửa sổ địa chỉ
               </Link>
             )}
@@ -136,7 +136,7 @@ export function AcceptQuoteButton({
         </div>
 
         {error && (
-          <div className="border-status-red-soft bg-status-red-soft text-status-red mb-3 rounded-lg border px-3 py-2 text-left text-[11.5px]">
+          <div className="border-status-red-soft bg-status-red-soft text-status-red mb-3 rounded-lg border px-3 py-2 text-left text-xs">
             {error}
           </div>
         )}

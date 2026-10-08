@@ -140,7 +140,7 @@ export default async function SupplierProfilePage() {
       }}
       navGroups={buildSupplierNavGroups({ newRfqCount, unreadCount })}
     >
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/supplier/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -151,7 +151,7 @@ export default async function SupplierProfilePage() {
       <div className="mb-[18px] flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="text-xl font-bold">Hồ sơ & xác minh xưởng</div>
-          <div className="text-brand-sub mt-1 text-[12.5px]">
+          <div className="text-brand-sub mt-1 text-[13px]">
             Quản lý thông tin xưởng và trạng thái xác minh gian hàng của bạn.
           </div>
         </div>
@@ -162,7 +162,7 @@ export default async function SupplierProfilePage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_300px]">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
         {/* LEFT */}
         <div>
           <Card>
@@ -188,7 +188,7 @@ export default async function SupplierProfilePage() {
                 <div className="text-2xl">{statusInfo.icon}</div>
                 <div>
                   <div className={`text-[13.5px] font-bold ${toneClasses.title}`}>{statusInfo.title}</div>
-                  <div className="text-brand-sub mt-0.5 text-[11.5px] leading-relaxed">
+                  <div className="text-brand-sub mt-0.5 text-xs leading-relaxed">
                     {statusKey === 'none' &&
                       'Tải lên giấy phép kinh doanh để xác minh gian hàng và hiển thị huy hiệu "Đã xác minh" với buyer.'}
                     {statusKey === 'pending' &&
@@ -207,8 +207,8 @@ export default async function SupplierProfilePage() {
                     📄
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-[12.5px] font-semibold">{docName}</div>
-                    <div className="text-brand-light mt-0.5 text-[11px]">
+                    <div className="truncate text-[13px] font-semibold">{docName}</div>
+                    <div className="text-brand-light mt-0.5 text-xs">
                       Tải lên {formatVnDate(latest.created_at)}
                       {docSize ? ` · ${docSize}` : ''}
                     </div>
@@ -218,7 +218,7 @@ export default async function SupplierProfilePage() {
                       href={docSignedUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-brand-blue shrink-0 text-[11.5px] font-semibold"
+                      className="text-brand-blue shrink-0 text-xs font-semibold"
                     >
                       Xem file
                     </a>
@@ -227,7 +227,7 @@ export default async function SupplierProfilePage() {
               )}
 
               {statusKey === 'approved' && (
-                <div className="text-brand-light mb-3 text-[11px]">
+                <div className="text-brand-light mb-3 text-xs">
                   Nếu thông tin doanh nghiệp thay đổi, vui lòng tải lên giấy tờ mới để xác minh lại.
                 </div>
               )}
@@ -258,7 +258,7 @@ export default async function SupplierProfilePage() {
                         {v.status === 'approved' ? '✓' : v.status === 'rejected' ? '✕' : '…'}
                       </div>
                       <div className="flex-1">
-                        <div className="text-[12.5px] font-bold">
+                        <div className="text-[13px] font-bold">
                           Lần xác minh #{v.attempt_number} —{' '}
                           {v.status === 'approved'
                             ? 'Đã duyệt'
@@ -267,11 +267,11 @@ export default async function SupplierProfilePage() {
                               : 'Đang chờ duyệt'}
                         </div>
                         {v.rejection_reason && (
-                          <div className="text-brand-sub mt-0.5 text-[11.5px] leading-relaxed">
+                          <div className="text-brand-sub mt-0.5 text-xs leading-relaxed">
                             Lý do: {v.rejection_reason}
                           </div>
                         )}
-                        <div className="text-brand-light mt-0.5 text-[10.5px]">{formatVnDate(v.created_at)}</div>
+                        <div className="text-brand-light mt-0.5 text-xs">{formatVnDate(v.created_at)}</div>
                       </div>
                     </div>
                   ))}
@@ -310,7 +310,7 @@ export default async function SupplierProfilePage() {
                     {supplier.trust_score}
                   </div>
                 </div>
-                <div className="text-brand-sub text-left text-[11px] leading-relaxed">
+                <div className="text-brand-sub text-left text-xs leading-relaxed">
                   Điểm uy tín
                   <br />
                   <strong className="text-brand-ink">{trustLabel(supplier.trust_score)}</strong>
@@ -320,13 +320,13 @@ export default async function SupplierProfilePage() {
             <div className="grid grid-cols-2 gap-2.5">
               <div className="bg-brand-bg rounded-lg px-2.5 py-2">
                 <div className="font-tight text-[15px] font-bold">{totalOrdersCount ?? 0}</div>
-                <div className="text-brand-sub mt-0.5 text-[10px]">Tổng đơn hàng</div>
+                <div className="text-brand-sub mt-0.5 text-xs">Tổng đơn hàng</div>
               </div>
               <div className="bg-brand-bg rounded-lg px-2.5 py-2">
                 <div className="font-tight text-[15px] font-bold">
                   {responseRate === null ? '—' : `${responseRate}%`}
                 </div>
-                <div className="text-brand-sub mt-0.5 text-[10px]">Tỷ lệ phản hồi</div>
+                <div className="text-brand-sub mt-0.5 text-xs">Tỷ lệ phản hồi</div>
               </div>
             </div>
           </div>

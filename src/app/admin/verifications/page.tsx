@@ -222,7 +222,7 @@ export default async function AdminVerificationsPage({
       }}
       navGroups={buildAdminNavGroups({ pendingVerificationCount: tabCounts[0]?.count ?? 0 })}
     >
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/admin" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -232,7 +232,7 @@ export default async function AdminVerificationsPage({
 
       <div className="mb-[18px]">
         <div className="text-xl font-bold">Duyệt xác minh</div>
-        <div className="text-brand-sub mt-1 text-[12.5px]">
+        <div className="text-brand-sub mt-1 text-[13px]">
           {tabCounts[0]?.count ?? 0} hồ sơ đang chờ duyệt — GPKD, CCCD của buyer &amp; supplier
         </div>
       </div>
@@ -244,7 +244,7 @@ export default async function AdminVerificationsPage({
             <Link
               key={tab.key}
               href={buildVerificationsUrl({ type: tab.key })}
-              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[12.5px] font-semibold whitespace-nowrap ${
+              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold whitespace-nowrap ${
                 isActive
                   ? 'border-brand-forest text-brand-forest'
                   : 'text-brand-sub hover:text-brand-forest border-transparent'
@@ -252,7 +252,7 @@ export default async function AdminVerificationsPage({
             >
               {tab.label}
               <span
-                className={`rounded-full px-1.5 py-px text-[10.5px] font-bold ${
+                className={`rounded-full px-1.5 py-px text-xs font-bold ${
                   isActive ? 'bg-status-green-soft text-brand-forest' : 'bg-brand-bg text-brand-sub'
                 }`}
               >
@@ -290,10 +290,10 @@ export default async function AdminVerificationsPage({
                     {v.entity_type === 'supplier' ? '🏭' : '🛒'}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[12.5px] font-bold">
+                    <div className="text-[13px] font-bold">
                       {nameFor(v)}{' '}
                       <span
-                        className={`rounded px-1.5 py-px text-[9px] font-bold ${
+                        className={`rounded px-1.5 py-px text-xs font-bold ${
                           v.entity_type === 'supplier'
                             ? 'text-brand-clay bg-[#FDF1E9]'
                             : 'bg-status-blue-soft text-status-blue'
@@ -302,12 +302,12 @@ export default async function AdminVerificationsPage({
                         {v.entity_type === 'supplier' ? 'Supplier' : 'Buyer'}
                       </span>
                     </div>
-                    <div className="text-brand-light mt-0.5 text-[11px]">
+                    <div className="text-brand-light mt-0.5 text-xs">
                       {v.attempt_number > 1
                         ? 'Xác minh lại — bản cập nhật'
                         : `GPKD nộp ${formatVnDate(v.created_at)}`}
                     </div>
-                    <span className="text-brand-orange mt-0.5 block text-[9.5px] font-semibold">
+                    <span className="text-brand-orange mt-0.5 block text-xs font-semibold">
                       ⏳ Chờ {waited <= 0 ? '<1' : waited} ngày
                     </span>
                   </div>
@@ -328,7 +328,7 @@ export default async function AdminVerificationsPage({
                     <div className="flex items-center gap-2 text-base font-bold">
                       {nameFor(selected)}
                       <span
-                        className={`rounded px-1.5 py-px text-[9px] font-bold ${
+                        className={`rounded px-1.5 py-px text-xs font-bold ${
                           selected.entity_type === 'supplier'
                             ? 'text-brand-clay bg-[#FDF1E9]'
                             : 'bg-status-blue-soft text-status-blue'
@@ -338,7 +338,7 @@ export default async function AdminVerificationsPage({
                       </span>
                     </div>
                   </div>
-                  <div className="bg-brand-bg text-brand-sub shrink-0 rounded-full px-2.5 py-1 text-[11px]">
+                  <div className="bg-brand-bg text-brand-sub shrink-0 rounded-full px-2.5 py-1 text-xs">
                     Lần xác minh #{selected.attempt_number}
                   </div>
                 </div>
@@ -356,7 +356,7 @@ export default async function AdminVerificationsPage({
                 <div className="mb-[18px] grid grid-cols-2 gap-3.5">
                   {infoItems.map((item) => (
                     <div key={item.label} className="bg-brand-bg rounded-lg px-3.5 py-2.5">
-                      <div className="text-brand-light mb-0.5 text-[10.5px]">{item.label}</div>
+                      <div className="text-brand-light mb-0.5 text-xs">{item.label}</div>
                       <div className="text-[13px] font-bold">{item.value}</div>
                     </div>
                   ))}
@@ -377,8 +377,8 @@ export default async function AdminVerificationsPage({
                         {doc.icon}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-[12.5px] font-semibold">{doc.label}</div>
-                        <div className="text-brand-light truncate text-[11px]">
+                        <div className="truncate text-[13px] font-semibold">{doc.label}</div>
+                        <div className="text-brand-light truncate text-xs">
                           {doc.path.split('/').pop()}
                         </div>
                       </div>
@@ -387,12 +387,12 @@ export default async function AdminVerificationsPage({
                           href={doc.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-status-blue border-brand-border hover:border-status-blue shrink-0 rounded-md border-[1.5px] px-3 py-1.5 text-[11.5px] font-semibold"
+                          className="text-status-blue border-brand-border hover:border-status-blue shrink-0 rounded-md border-[1.5px] px-3 py-1.5 text-xs font-semibold"
                         >
                           👁 Xem
                         </a>
                       ) : (
-                        <span className="text-brand-light shrink-0 text-[11px]">
+                        <span className="text-brand-light shrink-0 text-xs">
                           Không thể tải file
                         </span>
                       )}

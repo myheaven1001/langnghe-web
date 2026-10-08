@@ -9,7 +9,7 @@ import { adminErrorMessage } from '../../../_lib/errors';
 const PAYMENT_METHODS = ['Chuyển khoản ngân hàng', 'Ví điện tử', 'Khác'];
 
 const INPUT =
-  'border-brand-border focus:border-brand-forest w-full rounded-lg border-[1.5px] px-3 py-2 text-[12.5px] outline-none';
+  'border-brand-border focus:border-brand-forest w-full rounded-lg border-[1.5px] px-3 py-2 text-[13px] outline-none';
 
 // Xác nhận đã nhận tiền qua RPC admin_confirm_payment() (kế hoạch 3.6): ghi
 // số tiền + thời điểm thực nhận, chuyển đơn sang confirmed, ghi
@@ -71,7 +71,7 @@ export function AdminConfirmPayment({
   return (
     <div>
       {!hasReceipt && (
-        <div className="bg-status-amber-soft text-status-amber mb-3 rounded-lg px-3 py-2 text-[11.5px] font-semibold">
+        <div className="bg-status-amber-soft text-status-amber mb-3 rounded-lg px-3 py-2 text-xs font-semibold">
           Buyer chưa tải biên lai. Chỉ xác nhận khi đã thấy tiền về tài khoản sàn.
         </div>
       )}
@@ -87,7 +87,7 @@ export function AdminConfirmPayment({
             onChange={(e) => setAmount(e.target.value)}
           />
           <span
-            className={`mt-1 block text-[11px] ${mismatch ? 'text-brand-red font-semibold' : 'text-brand-sub'}`}
+            className={`mt-1 block text-xs ${mismatch ? 'text-brand-red font-semibold' : 'text-brand-sub'}`}
           >
             Tổng đơn: {formatVnd(totalAmount)}
             {mismatch && ` — lệch ${formatVnd(Math.abs(amountNumber - totalAmount))}`}
@@ -101,7 +101,7 @@ export function AdminConfirmPayment({
             value={paidAt}
             onChange={(e) => setPaidAt(e.target.value)}
           />
-          <span className="text-brand-sub mt-1 block text-[11px]">Bỏ trống = bây giờ.</span>
+          <span className="text-brand-sub mt-1 block text-xs">Bỏ trống = bây giờ.</span>
         </label>
         <label className="block">
           <span className="mb-1 block text-xs font-semibold">Phương thức</span>
@@ -139,7 +139,7 @@ export function AdminConfirmPayment({
         </label>
       </div>
 
-      {error && <div className="text-brand-red mt-2 text-[11.5px]">{error}</div>}
+      {error && <div className="text-brand-red mt-2 text-xs">{error}</div>}
 
       <button
         type="button"

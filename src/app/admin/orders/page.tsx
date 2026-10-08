@@ -221,7 +221,7 @@ export default async function AdminOrdersPage({
       }}
       navGroups={buildAdminNavGroups({ pendingVerificationCount: pendingVerificationCount ?? 0 })}
     >
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/admin" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -231,7 +231,7 @@ export default async function AdminOrdersPage({
 
       <div className="mb-[18px]">
         <div className="text-xl font-bold">Quản lý đơn hàng</div>
-        <div className="text-brand-sub mt-1 text-[12.5px]">
+        <div className="text-brand-sub mt-1 text-[13px]">
           {allCount} đơn hàng · {pendingPaymentCount} chờ xác nhận thanh toán · {disputedCount}{' '}
           tranh chấp
         </div>
@@ -244,7 +244,7 @@ export default async function AdminOrdersPage({
             <Link
               key={tab.key}
               href={buildOrdersUrl({ status: tab.key, q, range })}
-              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[12.5px] font-semibold whitespace-nowrap ${
+              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold whitespace-nowrap ${
                 isActive
                   ? 'border-brand-forest text-brand-forest'
                   : 'text-brand-sub hover:text-brand-forest border-transparent'
@@ -252,7 +252,7 @@ export default async function AdminOrdersPage({
             >
               {tab.label}
               <span
-                className={`rounded-full px-1.5 py-px text-[10.5px] font-bold ${
+                className={`rounded-full px-1.5 py-px text-xs font-bold ${
                   isActive ? 'bg-status-green-soft text-brand-forest' : 'bg-brand-bg text-brand-sub'
                 }`}
               >
@@ -282,7 +282,7 @@ export default async function AdminOrdersPage({
                   (h) => (
                     <th
                       key={h}
-                      className="text-brand-light px-3.5 py-2.5 text-left text-[10.5px] font-bold tracking-[.05em] uppercase"
+                      className="text-brand-light px-3.5 py-2.5 text-left text-xs font-bold tracking-[.05em] uppercase"
                     >
                       {h}
                     </th>
@@ -299,7 +299,7 @@ export default async function AdminOrdersPage({
                     key={order.id}
                     className="border-b border-[#F2F0EC] last:border-b-0 hover:bg-[#FAFAF8]"
                   >
-                    <td className="px-3.5 py-3 text-[12.5px] font-bold">
+                    <td className="px-3.5 py-3 text-[13px] font-bold">
                       <Link href={`/admin/orders/${order.id}`} className="hover:text-brand-red">
                         #{order.id.slice(0, 8).toUpperCase()}
                       </Link>
@@ -309,13 +309,13 @@ export default async function AdminOrdersPage({
                         <span className="font-semibold">
                           {order.buyer_profiles?.company_name ?? 'Buyer'}
                         </span>
-                        <span className="text-brand-light text-[10px]">↓</span>
+                        <span className="text-brand-light text-xs">↓</span>
                         <span className="text-brand-sub">
                           {order.supplier_profiles?.shop_name ?? 'Xưởng'}
                         </span>
                       </div>
                     </td>
-                    <td className="px-3.5 py-3 text-[12.5px] font-bold">
+                    <td className="px-3.5 py-3 text-[13px] font-bold">
                       {formatVnd(order.total_amount)}
                     </td>
                     <td className="px-3.5 py-3 text-[12px]">{formatVnDate(order.created_at)}</td>

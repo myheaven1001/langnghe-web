@@ -208,36 +208,36 @@ export function NotificationPreferencesGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_280px]">
+    <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
       {/* LEFT */}
       <div>
         <div className="border-brand-border mb-4 overflow-hidden rounded-[10px] border bg-white">
           <div className="bg-brand-bg border-brand-border flex flex-wrap items-center gap-2.5 border-b px-[18px] py-3">
-            <span className="text-brand-sub text-[11.5px]">Thao tác nhanh:</span>
+            <span className="text-brand-sub text-xs">Thao tác nhanh:</span>
             <button
               type="button"
               onClick={() => setAll('in_app', true)}
-              className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] bg-white px-3 py-1.5 text-[11.5px] font-semibold"
+              className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] bg-white px-3 py-1.5 text-xs font-semibold"
             >
               Bật tất cả trong ứng dụng
             </button>
             <button
               type="button"
               onClick={() => setAll('email', true)}
-              className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] bg-white px-3 py-1.5 text-[11.5px] font-semibold"
+              className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] bg-white px-3 py-1.5 text-xs font-semibold"
             >
               Bật tất cả email
             </button>
             <button
               type="button"
               onClick={() => setAll('email', false)}
-              className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] bg-white px-3 py-1.5 text-[11.5px] font-semibold"
+              className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] bg-white px-3 py-1.5 text-xs font-semibold"
             >
               Tắt tất cả email
             </button>
           </div>
 
-          <div className="border-brand-border text-brand-light flex items-center border-b px-[18px] py-2.5 text-[10.5px] font-bold tracking-[.05em] uppercase">
+          <div className="border-brand-border text-brand-light flex items-center border-b px-[18px] py-2.5 text-xs font-bold tracking-[.05em] uppercase">
             <div className="flex-1">Loại thông báo</div>
             <div className="w-[74px] shrink-0 text-center">🔔 Ứng dụng</div>
             <div className="w-[74px] shrink-0 text-center">✉️ Email</div>
@@ -245,7 +245,7 @@ export function NotificationPreferencesGrid({
 
           {GROUPS.map((group) => (
             <div key={group.title}>
-              <div className="text-brand-clay px-[18px] pt-3 pb-1.5 text-[11.5px] font-bold tracking-[.04em] uppercase">
+              <div className="text-brand-clay px-[18px] pt-3 pb-1.5 text-xs font-bold tracking-[.04em] uppercase">
                 {group.title}
               </div>
               {group.items.map((item) => (
@@ -254,8 +254,8 @@ export function NotificationPreferencesGrid({
                   className="flex items-center border-b border-[#F2F0EC] px-[18px] py-3 last:border-b-0"
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="text-brand-ink text-[12.5px] font-semibold">{item.name}</div>
-                    <div className="text-brand-light mt-0.5 text-[11px]">{item.desc}</div>
+                    <div className="text-brand-ink text-[13px] font-semibold">{item.name}</div>
+                    <div className="text-brand-light mt-0.5 text-xs">{item.desc}</div>
                   </div>
                   <div className="flex w-[74px] shrink-0 justify-center">
                     <Switch
@@ -322,7 +322,7 @@ export function NotificationPreferencesGrid({
       </div>
 
       <div
-        className={`bg-brand-forest fixed bottom-6 left-1/2 z-[200] flex -translate-x-1/2 items-center gap-2 rounded-lg px-4 py-2.5 text-[12.5px] font-semibold text-white shadow-lg transition-transform duration-300 ${
+        className={`bg-brand-forest fixed bottom-6 left-1/2 z-[200] flex -translate-x-1/2 items-center gap-2 rounded-lg px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg transition-transform duration-300 ${
           toastVisible ? 'translate-y-0' : 'translate-y-[120px]'
         } ${toastError ? '!bg-brand-red' : ''}`}
       >

@@ -163,7 +163,7 @@ export default async function AdminOrderDetailPage({
     >
       <OrderRealtime orderId={order.id} />
 
-      <div className="text-brand-light mb-2 flex flex-wrap items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex flex-wrap items-center gap-1.5 text-xs">
         <Link href="/admin" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -200,13 +200,13 @@ export default async function AdminOrderDetailPage({
       </div>
 
       {order.status === 'cancelled' && (
-        <div className="border-status-red-soft bg-status-red-soft text-status-red mb-4 rounded-[10px] border px-4 py-3 text-[12.5px]">
+        <div className="border-status-red-soft bg-status-red-soft text-status-red mb-4 rounded-[10px] border px-4 py-3 text-[13px]">
           <strong>Đơn đã bị hủy.</strong>
           {order.cancel_reason ? ` Lý do: ${order.cancel_reason}` : ''}
         </div>
       )}
 
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         {/* LEFT */}
         <div className="min-w-0">
           <Card>
@@ -355,7 +355,7 @@ export default async function AdminOrderDetailPage({
             <div className="text-brand-sub mb-3 text-xs font-bold tracking-[.04em] uppercase">
               📍 Giao hàng đến
             </div>
-            <div className="text-brand-ink text-[12.5px] leading-relaxed whitespace-pre-line">
+            <div className="text-brand-ink text-[13px] leading-relaxed whitespace-pre-line">
               {order.shipping_address || 'Chưa có địa chỉ giao hàng.'}
             </div>
           </div>

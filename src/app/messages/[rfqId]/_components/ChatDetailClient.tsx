@@ -190,7 +190,7 @@ export function ChatDetailClient({
 
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 130px)' }}>
-      <div className="text-brand-light mb-2.5 flex shrink-0 items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2.5 flex shrink-0 items-center gap-1.5 text-xs">
         <Link href="/messages" className="text-brand-sub hover:text-brand-red">
           Nhắn tin
         </Link>
@@ -206,7 +206,7 @@ export function ChatDetailClient({
           </div>
           <div className="flex-1 overflow-y-auto">
             {conversations.length === 0 ? (
-              <div className="text-brand-light p-4 text-center text-[11.5px]">
+              <div className="text-brand-light p-4 text-center text-xs">
                 Chưa có hội thoại nào.
               </div>
             ) : (
@@ -231,14 +231,14 @@ export function ChatDetailClient({
                       {c.counterpartIcon}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-[12.5px] font-bold">{c.counterpartName}</div>
-                      <div className="text-brand-sub truncate text-[11px]">
+                      <div className="truncate text-[13px] font-bold">{c.counterpartName}</div>
+                      <div className="text-brand-sub truncate text-xs">
                         {c.lastMessageIsMine && <span className="text-brand-light">Bạn: </span>}
                         {c.lastMessage}
                       </div>
                     </div>
                     {c.unreadCount > 0 && !active && (
-                      <span className="bg-brand-red shrink-0 rounded-lg px-[5px] py-px text-[9px] font-bold text-white">
+                      <span className="bg-brand-red shrink-0 rounded-lg px-[5px] py-px text-xs font-bold text-white">
                         {c.unreadCount}
                       </span>
                     )}
@@ -259,7 +259,7 @@ export function ChatDetailClient({
               <div className="flex items-center gap-1.5 text-sm font-bold">
                 <span className="truncate">{counterpart.name}</span>
                 {counterpart.verified && (
-                  <span className="bg-status-green-soft text-status-green shrink-0 rounded-lg px-1.5 py-px text-[9px] font-bold">
+                  <span className="bg-status-green-soft text-status-green shrink-0 rounded-lg px-1.5 py-px text-xs font-bold">
                     ✓ Đã xác minh
                   </span>
                 )}
@@ -314,14 +314,14 @@ export function ChatDetailClient({
                 return (
                   <div key={m.id}>
                     {showSep && (
-                      <div className="text-brand-light my-3.5 text-center text-[10.5px]">
+                      <div className="text-brand-light my-3.5 text-center text-xs">
                         {dateSepLabel(m.createdAt)}
                       </div>
                     )}
                     <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[64%] ${mine ? 'text-right' : 'text-left'}`}>
                         <div
-                          className={`rounded-[14px] px-3.5 py-2.5 text-[12.5px] leading-relaxed ${
+                          className={`rounded-[14px] px-3.5 py-2.5 text-[13px] leading-relaxed ${
                             mine
                               ? 'bg-brand-red rounded-br-[4px] text-white'
                               : 'border-brand-border rounded-bl-[4px] border bg-white'
@@ -329,7 +329,7 @@ export function ChatDetailClient({
                         >
                           {m.content}
                         </div>
-                        <div className="text-brand-light mt-0.5 px-1 text-[9.5px]">
+                        <div className="text-brand-light mt-0.5 px-1 text-xs">
                           {formatMsgTime(m.createdAt)}
                         </div>
                       </div>
@@ -341,14 +341,14 @@ export function ChatDetailClient({
           </div>
 
           <div className="border-brand-border shrink-0 border-t bg-white p-3 px-4">
-            {error && <div className="text-status-red mb-2 text-[11.5px]">{error}</div>}
+            {error && <div className="text-status-red mb-2 text-xs">{error}</div>}
             <div className="mb-2 flex flex-wrap gap-1.5">
               {QUICK_REPLIES.map((qr) => (
                 <button
                   key={qr}
                   type="button"
                   onClick={() => setInput(qr)}
-                  className="border-brand-border text-brand-sub hover:border-brand-red hover:text-brand-red rounded-full border-[1.5px] bg-white px-2.5 py-1 text-[11px]"
+                  className="border-brand-border text-brand-sub hover:border-brand-red hover:text-brand-red rounded-full border-[1.5px] bg-white px-2.5 py-1 text-xs"
                 >
                   {qr}
                 </button>
@@ -365,7 +365,7 @@ export function ChatDetailClient({
                   📎
                 </button>
                 {attachNote && (
-                  <div className="text-brand-light border-brand-border absolute bottom-11 left-0 w-max max-w-[220px] rounded-lg border bg-white p-2 text-[10.5px] shadow-md">
+                  <div className="text-brand-light border-brand-border absolute bottom-11 left-0 w-max max-w-[220px] rounded-lg border bg-white p-2 text-xs shadow-md">
                     🚧 Đính kèm file chưa được hỗ trợ.
                   </div>
                 )}

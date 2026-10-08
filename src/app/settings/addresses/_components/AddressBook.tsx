@@ -135,7 +135,7 @@ export function AddressBook({
   return (
     <div className="max-w-[720px]">
       {nextHref && addresses.length > 0 && (
-        <div className="border-brand-green mb-4 flex flex-wrap items-center justify-between gap-2 rounded-[10px] border bg-[#F2FBF6] px-4 py-3 text-[12.5px]">
+        <div className="border-brand-green mb-4 flex flex-wrap items-center justify-between gap-2 rounded-[10px] border bg-[#F2FBF6] px-4 py-3 text-[13px]">
           <span>Đã có địa chỉ giao hàng — bạn có thể quay lại chấp nhận báo giá.</span>
           <Link
             href={nextHref}
@@ -170,7 +170,7 @@ export function AddressBook({
                   {a.recipient_name} — {a.phone}
                   {a.label && <span className="text-brand-sub font-normal"> · {a.label}</span>}
                   {a.is_default && (
-                    <span className="bg-status-green-soft text-status-green ml-2 rounded px-1.5 py-0.5 text-[10.5px] font-semibold">
+                    <span className="bg-status-green-soft text-status-green ml-2 rounded px-1.5 py-0.5 text-xs font-semibold">
                       Mặc định
                     </span>
                   )}
@@ -294,7 +294,7 @@ export function AddressBook({
           {/* Địa chỉ đang là mặc định không bỏ mặc định trực tiếp được (DB giữ nguyên). */}
           {!(editing !== 'new' && addresses.find((a) => a.id === editing)?.is_default) &&
             addresses.length > 0 && (
-              <label className="mt-3 flex items-center gap-2 text-[12.5px]">
+              <label className="mt-3 flex items-center gap-2 text-[13px]">
                 <input
                   type="checkbox"
                   checked={values.is_default}

@@ -96,7 +96,7 @@ export default async function NotificationSettingsPage() {
         },
       ]}
     >
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -106,7 +106,7 @@ export default async function NotificationSettingsPage() {
 
       <div className="mb-[18px]">
         <div className="text-xl font-bold">Cài đặt thông báo</div>
-        <div className="text-brand-sub mt-1 text-[12.5px]">
+        <div className="text-brand-sub mt-1 text-[13px]">
           Chọn cách bạn muốn nhận thông báo cho từng loại sự kiện — trong ứng dụng hoặc qua email.
         </div>
       </div>

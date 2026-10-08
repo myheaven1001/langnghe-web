@@ -242,7 +242,7 @@ export default async function OrdersPage({
         },
       ]}
     >
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -252,7 +252,7 @@ export default async function OrdersPage({
 
       <div className="mb-[18px]">
         <div className="text-xl font-bold">Đơn hàng của tôi</div>
-        <div className="text-brand-sub mt-1 text-[12.5px]">
+        <div className="text-brand-sub mt-1 text-[13px]">
           {allCount} đơn hàng · {pendingPaymentCount} chờ thanh toán · {processingCount} đang xử lý
         </div>
       </div>
@@ -264,7 +264,7 @@ export default async function OrdersPage({
             <Link
               key={tab.key}
               href={buildOrdersUrl({ status: tab.key, q, range, sort })}
-              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[12.5px] font-semibold whitespace-nowrap ${
+              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold whitespace-nowrap ${
                 isActive
                   ? 'border-brand-red text-brand-red'
                   : 'text-brand-sub hover:text-brand-red border-transparent'
@@ -272,7 +272,7 @@ export default async function OrdersPage({
             >
               {tab.label}
               <span
-                className={`rounded-full px-1.5 py-px text-[10.5px] font-bold ${
+                className={`rounded-full px-1.5 py-px text-xs font-bold ${
                   isActive ? 'bg-status-red-soft text-brand-red' : 'bg-brand-bg text-brand-sub'
                 }`}
               >
@@ -330,7 +330,7 @@ export default async function OrdersPage({
 
                   <div className="min-w-0 flex-1">
                     <div className="mb-0.5 flex items-center gap-2">
-                      <span className="text-brand-light shrink-0 text-[11.5px] font-semibold">
+                      <span className="text-brand-light shrink-0 text-xs font-semibold">
                         #{order.id.slice(0, 8).toUpperCase()}
                       </span>
                       <span className="text-brand-ink truncate text-[13.5px] font-bold">
@@ -338,7 +338,7 @@ export default async function OrdersPage({
                         {order.rfq_quotes?.rfq_requests?.title ?? 'Đơn hàng'}
                       </span>
                     </div>
-                    <div className="text-brand-light flex flex-wrap gap-3 text-[11.5px]">
+                    <div className="text-brand-light flex flex-wrap gap-3 text-xs">
                       <span>
                         <b className="text-brand-sub font-semibold">
                           {order.quantity.toLocaleString('vi-VN')}
@@ -353,7 +353,7 @@ export default async function OrdersPage({
                     <div className="font-tight text-[15px] font-bold">
                       {formatVnd(order.total_amount)}
                     </div>
-                    <div className="text-brand-light mt-px text-[10px]">tổng giá trị</div>
+                    <div className="text-brand-light mt-px text-xs">tổng giá trị</div>
                   </div>
 
                   <div className="min-w-[118px] shrink-0 text-right">
@@ -381,7 +381,7 @@ export default async function OrdersPage({
                 )}
 
                 {note && (
-                  <div className="text-brand-sub mt-2.5 border-t border-[#F2F0EC] pt-2.5 text-[11.5px]">
+                  <div className="text-brand-sub mt-2.5 border-t border-[#F2F0EC] pt-2.5 text-xs">
                     {note}
                   </div>
                 )}

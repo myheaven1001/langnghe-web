@@ -122,14 +122,14 @@ export function OrderDocuments({
                 <div className="font-semibold">{DOC_TYPE_LABEL[doc.doc_type] ?? doc.doc_type}</div>
                 <div className="text-brand-sub break-all">{doc.file_name}</div>
                 {doc.note && <div className="text-brand-sub mt-0.5">{doc.note}</div>}
-                <div className="text-brand-light mt-0.5 text-[10.5px]">
+                <div className="text-brand-light mt-0.5 text-xs">
                   {formatVnDateTime(doc.created_at)} · {ORDER_ROLE_LABEL[doc.uploader_role]}
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => open(doc)}
-                className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink shrink-0 rounded-md border-[1.5px] px-2.5 py-1 text-[11.5px] font-semibold"
+                className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink shrink-0 rounded-md border-[1.5px] px-2.5 py-1 text-xs font-semibold"
               >
                 Xem
               </button>
@@ -146,7 +146,7 @@ export function OrderDocuments({
               <select
                 value={docType}
                 onChange={(e) => setDocType(e.target.value)}
-                className="border-brand-border focus:border-brand-red w-full rounded-lg border-[1.5px] bg-white px-3 py-2 text-[12.5px] outline-none"
+                className="border-brand-border focus:border-brand-red w-full rounded-lg border-[1.5px] bg-white px-3 py-2 text-[13px] outline-none"
               >
                 {docTypes.map((t) => (
                   <option key={t} value={t}>
@@ -161,11 +161,11 @@ export function OrderDocuments({
               onChange={(e) => setNote(e.target.value)}
               maxLength={500}
               placeholder="Ghi chú (không bắt buộc)"
-              className="border-brand-border focus:border-brand-red w-full rounded-lg border-[1.5px] px-3 py-2 text-[12.5px] outline-none"
+              className="border-brand-border focus:border-brand-red w-full rounded-lg border-[1.5px] px-3 py-2 text-[13px] outline-none"
             />
-            <div className="text-brand-light text-[10.5px]">PDF, JPG, PNG, WEBP — tối đa 10MB.</div>
+            <div className="text-brand-light text-xs">PDF, JPG, PNG, WEBP — tối đa 10MB.</div>
           </div>
-          {error && <div className="text-brand-red mt-2 text-[11.5px]">{error}</div>}
+          {error && <div className="text-brand-red mt-2 text-xs">{error}</div>}
           <button
             type="button"
             disabled={busy}
@@ -176,7 +176,7 @@ export function OrderDocuments({
           </button>
         </div>
       )}
-      {!canUpload && error && <div className="text-brand-red mt-2 text-[11.5px]">{error}</div>}
+      {!canUpload && error && <div className="text-brand-red mt-2 text-xs">{error}</div>}
     </div>
   );
 }

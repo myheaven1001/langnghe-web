@@ -46,7 +46,7 @@ export default async function SupplierShopSettingsPage() {
       }}
       navGroups={buildSupplierNavGroups({ newRfqCount, unreadCount })}
     >
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/supplier/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -56,12 +56,12 @@ export default async function SupplierShopSettingsPage() {
 
       <div className="mb-[18px]">
         <div className="text-xl font-bold">Cài đặt gian hàng</div>
-        <div className="text-brand-sub mt-1 text-[12.5px]">
+        <div className="text-brand-sub mt-1 text-[13px]">
           Tùy chỉnh giao diện và thông tin công khai của gian hàng bạn trên LàngNghề.vn.
         </div>
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_300px]">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
         {/* LEFT */}
         <div>
           <Card>
@@ -122,12 +122,12 @@ export default async function SupplierShopSettingsPage() {
                 )}
               </div>
               <div className="flex items-center gap-1.5 text-[13.5px] font-bold">{supplier.shop_name}</div>
-              <div className="text-brand-light mt-0.5 text-[11px]">
+              <div className="text-brand-light mt-0.5 text-xs">
                 {supplier.village_origin ?? 'Chưa rõ làng nghề'}
                 {supplier.rating_avg ? ` · ${supplier.rating_avg.toFixed(1)}★` : ''}
               </div>
               {(supplier.contact_phone || supplier.contact_zalo || supplier.working_hours) && (
-                <div className="text-brand-sub mt-2.5 border-t border-[#F2F0EC] pt-2.5 text-[11.5px] leading-loose">
+                <div className="text-brand-sub mt-2.5 border-t border-[#F2F0EC] pt-2.5 text-xs leading-loose">
                   {supplier.contact_phone && <div>📞 {supplier.contact_phone}</div>}
                   {supplier.contact_zalo && <div>💬 Zalo: {supplier.contact_zalo}</div>}
                   {supplier.working_hours && <div>🕐 {supplier.working_hours}</div>}

@@ -78,7 +78,7 @@ export function ProductTable({ products }: { products: ProductListRow[] }) {
               type="button"
               disabled={busy}
               onClick={() => bulkSetStatus('active')}
-              className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] bg-white px-3 py-1.5 text-[11.5px] font-semibold disabled:opacity-60"
+              className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] bg-white px-3 py-1.5 text-xs font-semibold disabled:opacity-60"
             >
               👁 Hiện
             </button>
@@ -86,7 +86,7 @@ export function ProductTable({ products }: { products: ProductListRow[] }) {
               type="button"
               disabled={busy}
               onClick={() => bulkSetStatus('paused')}
-              className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] bg-white px-3 py-1.5 text-[11.5px] font-semibold disabled:opacity-60"
+              className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] bg-white px-3 py-1.5 text-xs font-semibold disabled:opacity-60"
             >
               🙈 Ẩn
             </button>
@@ -96,7 +96,7 @@ export function ProductTable({ products }: { products: ProductListRow[] }) {
               onClick={() => {
                 if (confirm(`Xóa ${selected.size} sản phẩm đã chọn?`)) bulkSetStatus('deleted');
               }}
-              className="text-brand-red rounded-md border-[1.5px] border-[#FFD0D0] bg-white px-3 py-1.5 text-[11.5px] font-semibold disabled:opacity-60"
+              className="text-brand-red rounded-md border-[1.5px] border-[#FFD0D0] bg-white px-3 py-1.5 text-xs font-semibold disabled:opacity-60"
             >
               🗑 Xóa
             </button>
@@ -116,16 +116,16 @@ export function ProductTable({ products }: { products: ProductListRow[] }) {
                   onChange={(e) => toggleAll(e.target.checked)}
                 />
               </th>
-              <th className="text-brand-light px-3.5 py-2.5 text-left text-[10.5px] font-bold tracking-[.05em] uppercase">
+              <th className="text-brand-light px-3.5 py-2.5 text-left text-xs font-bold tracking-[.05em] uppercase">
                 Sản phẩm
               </th>
-              <th className="text-brand-light px-3.5 py-2.5 text-left text-[10.5px] font-bold tracking-[.05em] uppercase">
+              <th className="text-brand-light px-3.5 py-2.5 text-left text-xs font-bold tracking-[.05em] uppercase">
                 Giá / MOQ
               </th>
-              <th className="text-brand-light px-3.5 py-2.5 text-left text-[10.5px] font-bold tracking-[.05em] uppercase">
+              <th className="text-brand-light px-3.5 py-2.5 text-left text-xs font-bold tracking-[.05em] uppercase">
                 Cập nhật
               </th>
-              <th className="text-brand-light px-3.5 py-2.5 text-left text-[10.5px] font-bold tracking-[.05em] uppercase">
+              <th className="text-brand-light px-3.5 py-2.5 text-left text-xs font-bold tracking-[.05em] uppercase">
                 Trạng thái
               </th>
               <th className="w-[70px]" />
@@ -153,7 +153,7 @@ export function ProductTable({ products }: { products: ProductListRow[] }) {
                     </div>
                     <div className="min-w-0">
                       <div className="text-brand-ink max-w-[260px] truncate font-semibold">{p.name}</div>
-                      <div className="text-brand-light mt-0.5 text-[11px]">
+                      <div className="text-brand-light mt-0.5 text-xs">
                         {p.categories?.name ?? 'Chưa phân loại'}
                       </div>
                     </div>
@@ -165,7 +165,7 @@ export function ProductTable({ products }: { products: ProductListRow[] }) {
                   ) : (
                     <div>
                       <div className="font-semibold">{formatVnd(p.minPrice)}</div>
-                      <div className="text-brand-light text-[10.5px]">
+                      <div className="text-brand-light text-xs">
                         MOQ {p.min_order_qty.toLocaleString('vi-VN')}
                       </div>
                     </div>

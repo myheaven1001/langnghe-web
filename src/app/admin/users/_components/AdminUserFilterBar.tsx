@@ -37,7 +37,7 @@ export function AdminUserFilterBar({
           name="q"
           defaultValue={q}
           placeholder="Tìm theo tên..."
-          className="border-brand-border focus:border-brand-forest w-full rounded-lg border py-2 pr-3 pl-8 text-[12.5px] outline-none"
+          className="border-brand-border focus:border-brand-forest w-full rounded-lg border py-2 pr-3 pl-8 text-[13px] outline-none"
         />
       </div>
 
@@ -45,7 +45,7 @@ export function AdminUserFilterBar({
         name="sort"
         defaultValue={sort}
         onChange={() => formRef.current?.submit()}
-        className="border-brand-border focus:border-brand-forest rounded-lg border bg-white px-3 py-2 text-[12.5px] outline-none"
+        className="border-brand-border focus:border-brand-forest rounded-lg border bg-white px-3 py-2 text-[13px] outline-none"
       >
         {sorts.map((s) => (
           <option key={s.key} value={s.key}>
@@ -56,7 +56,7 @@ export function AdminUserFilterBar({
 
       <button
         type="submit"
-        className="text-brand-forest text-[12.5px] font-semibold hover:underline"
+        className="text-brand-forest text-[13px] font-semibold hover:underline"
       >
         Tìm
       </button>

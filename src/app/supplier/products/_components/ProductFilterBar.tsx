@@ -34,7 +34,7 @@ export function ProductFilterBar({
           name="q"
           defaultValue={q}
           placeholder="Tìm theo tên sản phẩm..."
-          className="border-brand-border focus:border-brand-red w-full rounded-lg border py-2 pr-3 pl-8 text-[12.5px] outline-none"
+          className="border-brand-border focus:border-brand-red w-full rounded-lg border py-2 pr-3 pl-8 text-[13px] outline-none"
         />
       </div>
 
@@ -42,7 +42,7 @@ export function ProductFilterBar({
         name="category"
         defaultValue={category}
         onChange={() => formRef.current?.submit()}
-        className="border-brand-border focus:border-brand-red rounded-lg border bg-white px-3 py-2 text-[12.5px] outline-none"
+        className="border-brand-border focus:border-brand-red rounded-lg border bg-white px-3 py-2 text-[13px] outline-none"
       >
         <option value="">Tất cả ngành hàng</option>
         {categories.map((c) => (
@@ -52,7 +52,7 @@ export function ProductFilterBar({
         ))}
       </select>
 
-      <button type="submit" className="text-brand-red text-[12.5px] font-semibold hover:underline">
+      <button type="submit" className="text-brand-red text-[13px] font-semibold hover:underline">
         Tìm
       </button>
     </form>

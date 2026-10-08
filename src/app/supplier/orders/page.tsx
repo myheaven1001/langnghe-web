@@ -180,7 +180,7 @@ export default async function SupplierOrdersPage({
       }}
       navGroups={buildSupplierNavGroups({ newRfqCount, unreadCount })}
     >
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/supplier/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -190,7 +190,7 @@ export default async function SupplierOrdersPage({
 
       <div className="mb-[18px]">
         <div className="text-xl font-bold">Quản lý đơn hàng</div>
-        <div className="text-brand-sub mt-1 text-[12.5px]">
+        <div className="text-brand-sub mt-1 text-[13px]">
           {allCount} đơn hàng · {pendingPaymentCount} chờ thanh toán · {processingCount} đang xử lý
         </div>
       </div>
@@ -202,7 +202,7 @@ export default async function SupplierOrdersPage({
             <Link
               key={tab.key}
               href={buildOrdersUrl({ status: tab.key, q, range, sort })}
-              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[12.5px] font-semibold whitespace-nowrap ${
+              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold whitespace-nowrap ${
                 isActive
                   ? 'border-brand-red text-brand-red'
                   : 'text-brand-sub hover:text-brand-red border-transparent'
@@ -210,7 +210,7 @@ export default async function SupplierOrdersPage({
             >
               {tab.label}
               <span
-                className={`rounded-full px-1.5 py-px text-[10.5px] font-bold ${
+                className={`rounded-full px-1.5 py-px text-xs font-bold ${
                   isActive ? 'bg-status-red-soft text-brand-red' : 'bg-brand-bg text-brand-sub'
                 }`}
               >
@@ -257,7 +257,7 @@ export default async function SupplierOrdersPage({
                   </div>
                   <div className="min-w-0 flex-1 basis-[220px]">
                     <div className="mb-0.5 flex items-center gap-2">
-                      <span className="text-brand-light shrink-0 text-[11.5px] font-semibold">
+                      <span className="text-brand-light shrink-0 text-xs font-semibold">
                         #{order.id.slice(0, 8).toUpperCase()}
                       </span>
                       <span className="text-brand-ink truncate text-[13.5px] font-bold">
@@ -265,7 +265,7 @@ export default async function SupplierOrdersPage({
                         {order.rfq_quotes?.rfq_requests?.title ?? 'Đơn hàng'}
                       </span>
                     </div>
-                    <div className="text-brand-light flex flex-wrap gap-3 text-[11.5px]">
+                    <div className="text-brand-light flex flex-wrap gap-3 text-xs">
                       <span>
                         <b className="text-brand-sub font-semibold">{order.quantity.toLocaleString('vi-VN')}</b>{' '}
                         {order.rfq_quotes?.rfq_requests?.unit ?? ''}
@@ -275,7 +275,7 @@ export default async function SupplierOrdersPage({
                   </div>
                   <div className="shrink-0 sm:min-w-[120px] sm:text-right">
                     <div className="font-tight text-[15px] font-bold">{formatVnd(order.total_amount)}</div>
-                    <div className="text-brand-light mt-px text-[10px]">tổng giá trị</div>
+                    <div className="text-brand-light mt-px text-xs">tổng giá trị</div>
                   </div>
                   <div className="ml-auto shrink-0 sm:ml-0 sm:min-w-[118px] sm:text-right">
                     <StatusPill domain="order" status={order.status} />
@@ -300,11 +300,11 @@ export default async function SupplierOrdersPage({
                 )}
 
                 <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-[#F2F0EC] pt-2.5">
-                  {note && <div className="text-brand-sub text-[11.5px]">{note}</div>}
+                  {note && <div className="text-brand-sub text-xs">{note}</div>}
                   <div className="ml-auto flex items-center gap-3">
                     <Link
                       href={`/supplier/orders/${order.id}`}
-                      className="text-brand-blue text-[11.5px] font-semibold whitespace-nowrap"
+                      className="text-brand-blue text-xs font-semibold whitespace-nowrap"
                     >
                       Xem chi tiết →
                     </Link>

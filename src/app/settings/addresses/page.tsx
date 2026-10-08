@@ -103,7 +103,7 @@ export default async function AddressBookPage({
         },
       ]}
     >
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -113,7 +113,7 @@ export default async function AddressBookPage({
 
       <div className="mb-[18px]">
         <div className="text-xl font-bold">Sổ địa chỉ giao hàng</div>
-        <div className="text-brand-sub mt-1 text-[12.5px]">
+        <div className="text-brand-sub mt-1 text-[13px]">
           Địa chỉ bạn chọn khi chấp nhận báo giá sẽ được ghi vào đơn hàng để xưởng giao hàng.
         </div>
       </div>

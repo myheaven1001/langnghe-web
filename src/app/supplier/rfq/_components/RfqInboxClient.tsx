@@ -116,7 +116,7 @@ export function RfqInboxClient({ rfqs, myQuotes }: { rfqs: InboxRfqRow[]; myQuot
 
   return (
     <div>
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/supplier/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -126,7 +126,7 @@ export function RfqInboxClient({ rfqs, myQuotes }: { rfqs: InboxRfqRow[]; myQuot
 
       <div className="mb-[18px]">
         <div className="text-xl font-bold">RFQ nhận được</div>
-        <div className="text-brand-sub mt-1 text-[12.5px]">
+        <div className="text-brand-sub mt-1 text-[13px]">
           {rows.length} yêu cầu báo giá · {counts.new} cần phản hồi
           {responseRate !== null ? ` · tỷ lệ phản hồi ${responseRate}%` : ''}
         </div>
@@ -143,7 +143,7 @@ export function RfqInboxClient({ rfqs, myQuotes }: { rfqs: InboxRfqRow[]; myQuot
                 setTab(t.key);
                 setPage(1);
               }}
-              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[12.5px] font-semibold whitespace-nowrap ${
+              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold whitespace-nowrap ${
                 isActive
                   ? 'border-brand-red text-brand-red'
                   : 'text-brand-sub hover:text-brand-red border-transparent'
@@ -151,7 +151,7 @@ export function RfqInboxClient({ rfqs, myQuotes }: { rfqs: InboxRfqRow[]; myQuot
             >
               {t.label}
               <span
-                className={`rounded-full px-1.5 py-px text-[10.5px] font-bold ${
+                className={`rounded-full px-1.5 py-px text-xs font-bold ${
                   isActive ? 'bg-status-red-soft text-brand-red' : 'bg-brand-bg text-brand-sub'
                 }`}
               >
@@ -174,13 +174,13 @@ export function RfqInboxClient({ rfqs, myQuotes }: { rfqs: InboxRfqRow[]; myQuot
               setPage(1);
             }}
             placeholder="Tìm theo tên buyer, tiêu đề RFQ..."
-            className="border-brand-border focus:border-brand-red w-full rounded-lg border py-2 pr-3 pl-8 text-[12.5px] outline-none"
+            className="border-brand-border focus:border-brand-red w-full rounded-lg border py-2 pr-3 pl-8 text-[13px] outline-none"
           />
         </div>
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as 'newest' | 'deadline')}
-          className="border-brand-border focus:border-brand-red rounded-lg border bg-white px-3 py-2 text-[12.5px] outline-none"
+          className="border-brand-border focus:border-brand-red rounded-lg border bg-white px-3 py-2 text-[13px] outline-none"
         >
           <option value="newest">Mới nhất</option>
           <option value="deadline">Sắp hết hạn</option>
@@ -217,7 +217,7 @@ export function RfqInboxClient({ rfqs, myQuotes }: { rfqs: InboxRfqRow[]; myQuot
                   🏭
                 </div>
                 <div className="min-w-0 flex-1 basis-[220px]">
-                  <div className="text-brand-light mb-0.5 text-[11px]">
+                  <div className="text-brand-light mb-0.5 text-xs">
                     {rfq.buyerName}
                     {rfq.buyerVerified && <span className="text-status-green"> · ✓ Đã xác minh</span>}
                   </div>
@@ -227,7 +227,7 @@ export function RfqInboxClient({ rfqs, myQuotes }: { rfqs: InboxRfqRow[]; myQuot
                   >
                     {rfq.title}
                   </Link>
-                  <div className="text-brand-light mt-0.5 flex flex-wrap gap-2.5 text-[11px]">
+                  <div className="text-brand-light mt-0.5 flex flex-wrap gap-2.5 text-xs">
                     <span>
                       <b className="text-brand-sub font-semibold">{rfq.quantity.toLocaleString('vi-VN')}</b>{' '}
                       {rfq.unit ?? ''}
@@ -263,7 +263,7 @@ export function RfqInboxClient({ rfqs, myQuotes }: { rfqs: InboxRfqRow[]; myQuot
                       <div className="text-brand-light text-xs font-bold">
                         {bucket === 'won' ? 'Đã chốt' : 'Đã đóng'}
                       </div>
-                      <div className="text-brand-light mt-0.5 text-[10px]">{formatVnDate(rfq.createdAt)}</div>
+                      <div className="text-brand-light mt-0.5 text-xs">{formatVnDate(rfq.createdAt)}</div>
                     </>
                   ) : (
                     <>
@@ -280,7 +280,7 @@ export function RfqInboxClient({ rfqs, myQuotes }: { rfqs: InboxRfqRow[]; myQuot
                               ? `Còn ${hrs} giờ`
                               : `Còn ${daysUntil(dlSource!)} ngày`}
                       </div>
-                      <div className="text-brand-light mt-0.5 text-[10px]">
+                      <div className="text-brand-light mt-0.5 text-xs">
                         {bucket === 'quoted' ? 'hiệu lực báo giá' : 'hạn báo giá'}
                       </div>
                     </>
@@ -313,7 +313,7 @@ export function RfqInboxClient({ rfqs, myQuotes }: { rfqs: InboxRfqRow[]; myQuot
                     </Link>
                   )}
                   {bucket === 'lost' && (
-                    <span className="bg-status-gray-soft text-brand-sub rounded-full px-2.5 py-1 text-[10.5px] font-semibold">
+                    <span className="bg-status-gray-soft text-brand-sub rounded-full px-2.5 py-1 text-xs font-semibold">
                       {quote ? 'Không thắng' : 'Đã đóng'}
                     </span>
                   )}

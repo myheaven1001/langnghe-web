@@ -216,7 +216,7 @@ export default async function RfqListPage({
         },
       ]}
     >
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -227,7 +227,7 @@ export default async function RfqListPage({
       <div className="mb-[18px] flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="text-xl font-bold">RFQ của tôi</div>
-          <div className="text-brand-sub mt-1 text-[12.5px]">
+          <div className="text-brand-sub mt-1 text-[13px]">
             Quản lý toàn bộ yêu cầu báo giá đã gửi — {tabCounts[0]?.count ?? 0} yêu cầu,{' '}
             {activeRfqCount} đang hoạt động.
           </div>
@@ -247,7 +247,7 @@ export default async function RfqListPage({
             <Link
               key={tab.key}
               href={buildRfqUrl({ status: tab.key, q, category, sort })}
-              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[12.5px] font-semibold whitespace-nowrap ${
+              className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold whitespace-nowrap ${
                 isActive
                   ? 'border-brand-red text-brand-red'
                   : 'text-brand-sub hover:text-brand-red border-transparent'
@@ -255,7 +255,7 @@ export default async function RfqListPage({
             >
               {tab.label}
               <span
-                className={`rounded-full px-1.5 py-px text-[10.5px] font-bold ${
+                className={`rounded-full px-1.5 py-px text-xs font-bold ${
                   isActive ? 'bg-status-red-soft text-brand-red' : 'bg-brand-bg text-brand-sub'
                 }`}
               >
@@ -316,7 +316,7 @@ export default async function RfqListPage({
                       {rfq.title}
                     </span>
                     <span
-                      className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                      className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold ${
                         rfq.rfq_type === 'multi'
                           ? 'bg-[#F1EEFF] text-[#5B4CDB]'
                           : 'bg-brand-bg text-brand-sub'
@@ -325,7 +325,7 @@ export default async function RfqListPage({
                       {RFQ_TYPE_LABEL[rfq.rfq_type] ?? rfq.rfq_type}
                     </span>
                   </div>
-                  <div className="text-brand-light flex flex-wrap gap-3 text-[11.5px]">
+                  <div className="text-brand-light flex flex-wrap gap-3 text-xs">
                     <span>
                       <b className="text-brand-sub font-semibold">
                         {rfq.quantity.toLocaleString('vi-VN')}
@@ -344,7 +344,7 @@ export default async function RfqListPage({
                   >
                     {quoteCount}
                   </div>
-                  <div className="text-brand-light mt-px text-[10px]">báo giá</div>
+                  <div className="text-brand-light mt-px text-xs">báo giá</div>
                 </div>
 
                 <div className="min-w-[88px] shrink-0 text-center">
@@ -363,7 +363,7 @@ export default async function RfqListPage({
                           : `Còn ${remaining} ngày`}
                     </div>
                   )}
-                  <div className="text-brand-light mt-px text-[10px]">
+                  <div className="text-brand-light mt-px text-xs">
                     {deadline ? `hạn ${formatVnDate(deadline)}` : ''}
                   </div>
                 </div>

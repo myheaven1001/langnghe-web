@@ -658,7 +658,7 @@ export function ProductForm({
                   {/* eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL */}
                   <img src={m.url} alt="" className="h-full w-full object-cover" />
                   {i === 0 && (
-                    <div className="bg-brand-red absolute right-1 bottom-1 left-1 rounded px-1 py-0.5 text-center text-[10px] font-bold text-white">
+                    <div className="bg-brand-red absolute right-1 bottom-1 left-1 rounded px-1 py-0.5 text-center text-xs font-bold text-white">
                       Ảnh chính
                     </div>
                   )}
@@ -682,11 +682,11 @@ export function ProductForm({
                   {/* eslint-disable-next-line @next/next/no-img-element -- blob xem trước, chưa tải lên */}
                   <img src={p.url} alt="" className="h-full w-full object-cover" />
                   {existingMedia.length === 0 && i === 0 && (
-                    <div className="bg-brand-red absolute right-1 bottom-1 left-1 rounded px-1 py-0.5 text-center text-[10px] font-bold text-white">
+                    <div className="bg-brand-red absolute right-1 bottom-1 left-1 rounded px-1 py-0.5 text-center text-xs font-bold text-white">
                       Ảnh chính
                     </div>
                   )}
-                  <div className="absolute bottom-1 left-1 rounded bg-black/55 px-1 text-[10px] text-white">
+                  <div className="absolute bottom-1 left-1 rounded bg-black/55 px-1 text-xs text-white">
                     {Math.max(1, Math.round(p.file.size / 1024))}KB
                   </div>
                   <button

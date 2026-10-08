@@ -135,7 +135,7 @@ export default async function AdminDashboardPage() {
     >
       <div className="mb-5">
         <div className="text-xl font-bold">Admin Dashboard</div>
-        <div className="text-brand-sub mt-1 text-[12.5px]">Tổng quan vận hành sàn LàngNghề.vn.</div>
+        <div className="text-brand-sub mt-1 text-[13px]">Tổng quan vận hành sàn LàngNghề.vn.</div>
       </div>
 
       <div className="mb-[18px] grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -203,10 +203,10 @@ export default async function AdminDashboardPage() {
                         {v.entity_type === 'supplier' ? '🏭' : '🛒'}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="text-brand-ink truncate text-[12.5px] font-semibold">
+                        <div className="text-brand-ink truncate text-[13px] font-semibold">
                           {v.name} — {v.entity_type === 'supplier' ? 'Supplier' : 'Buyer'}
                         </div>
-                        <div className="text-brand-light mt-0.5 text-[11px]">
+                        <div className="text-brand-light mt-0.5 text-xs">
                           Nộp {formatVnDate(v.created_at)} · chờ {waited <= 0 ? '<1' : waited} ngày
                         </div>
                       </div>

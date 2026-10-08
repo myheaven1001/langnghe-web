@@ -70,7 +70,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
       }}
       navGroups={buildSupplierNavGroups({ newRfqCount, unreadCount })}
     >
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/supplier/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -84,7 +84,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
       <div className="mb-[18px]">
         <div className="text-xl font-bold">Sửa sản phẩm</div>
-        <div className="text-brand-sub mt-1 text-[12.5px]">
+        <div className="text-brand-sub mt-1 text-[13px]">
           Cập nhật thông tin — thay đổi hiển thị ngay cho buyer sau khi lưu.
         </div>
       </div>

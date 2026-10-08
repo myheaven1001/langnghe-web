@@ -59,7 +59,7 @@ export function CancelRfqButton({ rfqId }: { rfqId: string }) {
           thể hoàn tác thao tác này.
         </ModalSub>
         {error && (
-          <div className="border-status-red-soft bg-status-red-soft text-status-red mb-3 rounded-lg border px-3 py-2 text-left text-[11.5px]">
+          <div className="border-status-red-soft bg-status-red-soft text-status-red mb-3 rounded-lg border px-3 py-2 text-left text-xs">
             {error}
           </div>
         )}

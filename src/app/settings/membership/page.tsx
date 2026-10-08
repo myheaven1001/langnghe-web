@@ -198,7 +198,7 @@ export default async function MembershipPage() {
         },
       ]}
     >
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -208,12 +208,12 @@ export default async function MembershipPage() {
 
       <div className="mb-[18px]">
         <div className="text-xl font-bold">Membership & Credit</div>
-        <div className="text-brand-sub mt-1 text-[12.5px]">
+        <div className="text-brand-sub mt-1 text-[13px]">
           Quản lý gói thành viên và số credit RFQ của bạn.
         </div>
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_280px]">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
         {/* LEFT */}
         <div>
           <Card>
@@ -300,7 +300,7 @@ export default async function MembershipPage() {
                     >
                       {(isCurrent || isBasic) && (
                         <div
-                          className={`absolute top-0 right-3.5 -translate-y-full rounded-b-md px-2.5 py-1 text-[10px] font-bold text-white ${
+                          className={`absolute top-0 right-3.5 -translate-y-full rounded-b-md px-2.5 py-1 text-xs font-bold text-white ${
                             isCurrent ? 'bg-brand-green' : 'bg-brand-red'
                           }`}
                         >
@@ -313,10 +313,10 @@ export default async function MembershipPage() {
                       <div className="font-tight text-[22px] font-bold">
                         {plan.price_vnd === 0 ? '0đ' : formatVnd(monthlyEquivalent)}
                         {plan.price_vnd > 0 && (
-                          <span className="text-brand-light text-[11px] font-normal">/tháng</span>
+                          <span className="text-brand-light text-xs font-normal">/tháng</span>
                         )}
                       </div>
-                      <div className="text-brand-light mb-4 text-[11px]">
+                      <div className="text-brand-light mb-4 text-xs">
                         {plan.price_vnd === 0
                           ? 'mãi mãi'
                           : `${formatVnd(plan.price_vnd)} thanh toán ${plan.billing_cycle === 'yearly' ? 'theo năm' : 'theo tháng'}`}
@@ -380,9 +380,9 @@ export default async function MembershipPage() {
               <div className="bg-brand-bg mb-4 flex items-center gap-4 rounded-[10px] p-4">
                 <div>
                   <div className="font-tight text-[30px] font-bold">{buyer.credit_balance}</div>
-                  <div className="text-brand-sub text-[11.5px]">credit còn lại</div>
+                  <div className="text-brand-sub text-xs">credit còn lại</div>
                 </div>
-                <div className="text-brand-sub flex-1 text-[11.5px] leading-relaxed">
+                <div className="text-brand-sub flex-1 text-xs leading-relaxed">
                   Dùng credit để gửi thêm RFQ khi đã hết hạn mức tháng — mỗi credit tương ứng 1 RFQ.
                   Credit không hết hạn và có thể tích lũy.
                 </div>
@@ -397,19 +397,19 @@ export default async function MembershipPage() {
                     }`}
                   >
                     {pack.badge && (
-                      <div className="bg-brand-orange absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full px-2.5 py-0.5 text-[9.5px] font-bold whitespace-nowrap text-white">
+                      <div className="bg-brand-orange absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-white">
                         {pack.badge}
                       </div>
                     )}
                     <div className="font-tight text-xl font-bold">{pack.credits}</div>
-                    <div className="text-brand-light mb-2 text-[11px]">credit</div>
+                    <div className="text-brand-light mb-2 text-xs">credit</div>
                     <div className="text-brand-red text-sm font-bold">
                       {formatVnd(pack.priceVnd)}
                     </div>
-                    <div className="text-brand-light mt-0.5 text-[10.5px]">
+                    <div className="text-brand-light mt-0.5 text-xs">
                       {formatVnd(Math.round(pack.priceVnd / pack.credits))} / credit
                     </div>
-                    <ComingSoonButton className="border-brand-border text-brand-sub hover:border-brand-red hover:text-brand-red mt-2.5 w-full rounded-md border-[1.5px] bg-white py-2 text-[11.5px] font-semibold">
+                    <ComingSoonButton className="border-brand-border text-brand-sub hover:border-brand-red hover:text-brand-red mt-2.5 w-full rounded-md border-[1.5px] bg-white py-2 text-xs font-semibold">
                       Mua ngay
                     </ComingSoonButton>
                   </div>
@@ -440,10 +440,10 @@ export default async function MembershipPage() {
                         {meta.icon}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-[12.5px] font-semibold">
+                        <div className="truncate text-[13px] font-semibold">
                           {reasonLabel(tx)}
                         </div>
-                        <div className="text-brand-light mt-0.5 text-[10.5px]">
+                        <div className="text-brand-light mt-0.5 text-xs">
                           {formatVnDate(tx.created_at)} —{' '}
                           {new Date(tx.created_at).toLocaleTimeString('vi-VN', {
                             hour: '2-digit',
@@ -458,7 +458,7 @@ export default async function MembershipPage() {
                           {positive ? '+' : ''}
                           {tx.change_amount}
                         </div>
-                        <div className="text-brand-light mt-0.5 text-[10.5px]">
+                        <div className="text-brand-light mt-0.5 text-xs">
                           còn {tx.balance_after}
                         </div>
                       </div>
@@ -520,7 +520,7 @@ export default async function MembershipPage() {
             ].map(([q, a]) => (
               <div key={q} className="mb-3 last:mb-0">
                 <div className="mb-0.5 text-xs font-semibold">{q}</div>
-                <div className="text-brand-sub text-[11.5px] leading-relaxed">{a}</div>
+                <div className="text-brand-sub text-xs leading-relaxed">{a}</div>
               </div>
             ))}
           </div>

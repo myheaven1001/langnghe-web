@@ -77,7 +77,7 @@ export function VerificationUpload({
       <div className="border-brand-border rounded-lg border-[1.5px] border-dashed bg-[#FAFAF8] p-4 text-center">
         <div className="mb-1.5 text-[22px]">✅</div>
         <div className="text-brand-sub text-xs">Đã gửi giấy tờ mới — chờ duyệt lại</div>
-        <div className="text-brand-light mt-0.5 text-[11px]">
+        <div className="text-brand-light mt-0.5 text-xs">
           Đội kiểm duyệt sẽ xem xét trong 1–2 ngày làm việc
         </div>
       </div>
@@ -100,7 +100,7 @@ export function VerificationUpload({
               ? 'Cập nhật giấy phép kinh doanh mới'
               : 'Tải lên giấy phép kinh doanh'}
         </div>
-        <div className="text-brand-light mt-0.5 text-[11px]">PDF hoặc ảnh rõ nét · Tối đa 10MB</div>
+        <div className="text-brand-light mt-0.5 text-xs">PDF hoặc ảnh rõ nét · Tối đa 10MB</div>
       </button>
       <input
         ref={inputRef}
@@ -113,7 +113,7 @@ export function VerificationUpload({
           e.target.value = '';
         }}
       />
-      {error && <div className="text-brand-red mt-2 text-[11.5px]">{error}</div>}
+      {error && <div className="text-brand-red mt-2 text-xs">{error}</div>}
     </div>
   );
 }

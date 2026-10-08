@@ -65,7 +65,7 @@ export function MessagesInboxClient({ conversations }: { conversations: Conversa
 
   return (
     <div>
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/dashboard" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>
@@ -75,7 +75,7 @@ export function MessagesInboxClient({ conversations }: { conversations: Conversa
 
       <div className="mb-[18px]">
         <div className="text-xl font-bold">Nhắn tin</div>
-        <div className="text-brand-sub mt-1 text-[12.5px]">
+        <div className="text-brand-sub mt-1 text-[13px]">
           {conversations.length} cuộc hội thoại · {totalUnread} chưa đọc
         </div>
       </div>
@@ -84,7 +84,7 @@ export function MessagesInboxClient({ conversations }: { conversations: Conversa
         <button
           type="button"
           onClick={() => setTab('all')}
-          className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[12.5px] font-semibold whitespace-nowrap ${
+          className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold whitespace-nowrap ${
             tab === 'all'
               ? 'border-brand-red text-brand-red'
               : 'text-brand-sub hover:text-brand-red border-transparent'
@@ -92,7 +92,7 @@ export function MessagesInboxClient({ conversations }: { conversations: Conversa
         >
           Tất cả
           <span
-            className={`rounded-full px-1.5 py-px text-[10.5px] font-bold ${
+            className={`rounded-full px-1.5 py-px text-xs font-bold ${
               tab === 'all' ? 'bg-status-red-soft text-brand-red' : 'bg-brand-bg text-brand-sub'
             }`}
           >
@@ -102,7 +102,7 @@ export function MessagesInboxClient({ conversations }: { conversations: Conversa
         <button
           type="button"
           onClick={() => setTab('unread')}
-          className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[12.5px] font-semibold whitespace-nowrap ${
+          className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold whitespace-nowrap ${
             tab === 'unread'
               ? 'border-brand-red text-brand-red'
               : 'text-brand-sub hover:text-brand-red border-transparent'
@@ -110,7 +110,7 @@ export function MessagesInboxClient({ conversations }: { conversations: Conversa
         >
           Chưa đọc
           <span
-            className={`rounded-full px-1.5 py-px text-[10.5px] font-bold ${
+            className={`rounded-full px-1.5 py-px text-xs font-bold ${
               tab === 'unread' ? 'bg-status-red-soft text-brand-red' : 'bg-brand-bg text-brand-sub'
             }`}
           >
@@ -128,7 +128,7 @@ export function MessagesInboxClient({ conversations }: { conversations: Conversa
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Tìm theo tên xưởng, nội dung tin nhắn..."
-            className="border-brand-border focus:border-brand-red w-full rounded-lg border py-2 pr-3 pl-8 text-[12.5px] outline-none"
+            className="border-brand-border focus:border-brand-red w-full rounded-lg border py-2 pr-3 pl-8 text-[13px] outline-none"
           />
         </div>
         <button
@@ -176,7 +176,7 @@ export function MessagesInboxClient({ conversations }: { conversations: Conversa
                     >
                       {c.counterpartName}
                     </span>
-                    <span className="text-brand-clay shrink-0 rounded-[5px] bg-[#FDF1E9] px-1.5 py-px text-[9.5px] font-semibold">
+                    <span className="text-brand-clay shrink-0 rounded-[5px] bg-[#FDF1E9] px-1.5 py-px text-xs font-semibold">
                       {c.rfqTag}
                     </span>
                   </div>
@@ -189,7 +189,7 @@ export function MessagesInboxClient({ conversations }: { conversations: Conversa
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1.5 text-right">
                   <div
-                    className={`text-[10.5px] ${unread ? 'text-brand-red font-semibold' : 'text-brand-light'}`}
+                    className={`text-xs ${unread ? 'text-brand-red font-semibold' : 'text-brand-light'}`}
                   >
                     {convoTime(c.lastMessageAt)}
                   </div>

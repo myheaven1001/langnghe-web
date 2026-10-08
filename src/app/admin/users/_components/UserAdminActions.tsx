@@ -69,7 +69,7 @@ export function UserAdminActions({
         type="button"
         disabled={busy}
         onClick={unsuspend}
-        className="border-brand-green text-brand-green rounded-md border-[1.5px] bg-white px-3 py-1.5 text-[11.5px] font-semibold disabled:opacity-60"
+        className="border-brand-green text-brand-green rounded-md border-[1.5px] bg-white px-3 py-1.5 text-xs font-semibold disabled:opacity-60"
       >
         {busy ? 'Đang xử lý...' : 'Mở khóa'}
       </button>
@@ -81,7 +81,7 @@ export function UserAdminActions({
       <button
         type="button"
         onClick={() => setSuspendOpen(true)}
-        className="border-brand-red text-brand-red rounded-md border-[1.5px] bg-white px-3 py-1.5 text-[11.5px] font-semibold hover:bg-[#FFF0F0]"
+        className="border-brand-red text-brand-red rounded-md border-[1.5px] bg-white px-3 py-1.5 text-xs font-semibold hover:bg-[#FFF0F0]"
       >
         Khóa
       </button>
@@ -92,7 +92,7 @@ export function UserAdminActions({
         maxWidth="420px"
       >
         <ModalTitle>Tạm khóa tài khoản</ModalTitle>
-        <div className="text-brand-sub mb-4 text-[11.5px]">Người dùng: {name}</div>
+        <div className="text-brand-sub mb-4 text-xs">Người dùng: {name}</div>
 
         <div className="mb-1">
           <div className="mb-1.5 text-xs font-semibold">Lý do khóa</div>
@@ -101,11 +101,11 @@ export function UserAdminActions({
             onChange={(e) => setReason(e.target.value)}
             rows={3}
             placeholder="VD: Vi phạm điều khoản dịch vụ, gian lận đơn hàng..."
-            className="border-brand-border focus:border-brand-red w-full resize-none rounded-lg border-[1.5px] px-3 py-2.5 text-[12.5px] outline-none"
+            className="border-brand-border focus:border-brand-red w-full resize-none rounded-lg border-[1.5px] px-3 py-2.5 text-[13px] outline-none"
           />
         </div>
 
-        {error && <div className="text-brand-red mt-2 text-[11.5px]">{error}</div>}
+        {error && <div className="text-brand-red mt-2 text-xs">{error}</div>}
 
         <ModalActions>
           <button

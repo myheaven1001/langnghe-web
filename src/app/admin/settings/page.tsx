@@ -59,7 +59,7 @@ export default async function AdminSettingsPage() {
       }}
       navGroups={buildAdminNavGroups({ pendingVerificationCount: pendingVerificationCount ?? 0 })}
     >
-      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-[11.5px]">
+      <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/admin" className="text-brand-sub hover:text-brand-red">
           Dashboard
         </Link>

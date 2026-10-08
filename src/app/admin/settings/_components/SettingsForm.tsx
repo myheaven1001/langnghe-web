@@ -29,7 +29,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
     <label className="block">
       <span className="mb-1 block text-xs font-semibold">{label}</span>
       {children}
-      {hint && <span className="text-brand-sub mt-1 block text-[11px]">{hint}</span>}
+      {hint && <span className="text-brand-sub mt-1 block text-xs">{hint}</span>}
     </label>
   );
 }

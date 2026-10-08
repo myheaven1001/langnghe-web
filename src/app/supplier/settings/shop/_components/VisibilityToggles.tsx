@@ -84,13 +84,13 @@ export function VisibilityToggles({
       {TOGGLES.map((t) => (
         <div key={t.key} className="flex items-center justify-between border-b border-[#F2F0EC] py-3 last:border-b-0">
           <div>
-            <div className="text-[12.5px] font-semibold">{t.label}</div>
-            <div className="text-brand-light mt-0.5 text-[11px]">{t.sub}</div>
+            <div className="text-[13px] font-semibold">{t.label}</div>
+            <div className="text-brand-light mt-0.5 text-xs">{t.sub}</div>
           </div>
           <Switch checked={values[t.key]} onChange={(next) => toggle(t.key, next)} />
         </div>
       ))}
-      {error && <div className="text-brand-red mt-2 text-[11.5px]">{error}</div>}
+      {error && <div className="text-brand-red mt-2 text-xs">{error}</div>}
     </div>
   );
 }

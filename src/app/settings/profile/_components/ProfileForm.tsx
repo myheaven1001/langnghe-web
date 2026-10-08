@@ -118,13 +118,13 @@ export function ProfileForm({
         />
       </div>
 
-      {error && <div className="text-brand-red mb-3 text-[11.5px]">{error}</div>}
+      {error && <div className="text-brand-red mb-3 text-xs">{error}</div>}
 
       <div className="flex justify-end pt-1">
         <button
           type="submit"
           disabled={saving}
-          className={`rounded-lg px-4 py-2.5 text-[12.5px] font-semibold text-white disabled:opacity-60 ${
+          className={`rounded-lg px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-60 ${
             saved ? 'bg-brand-green' : 'bg-brand-red hover:bg-brand-red-dark'
           }`}
         >
