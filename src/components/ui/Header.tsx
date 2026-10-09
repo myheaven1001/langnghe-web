@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { features } from '@/lib/features';
 
 export interface HeaderIcon {
   icon: string;
@@ -150,6 +151,13 @@ export function Header({
         >
           🔍
         </Link>
+
+        {/* Giỏ hàng (5.5): chỉ ở khu buyer, khi cờ tính năng bật. */}
+        {features.cart && userRole === 'Buyer' && (
+          <Link href="/cart" aria-label="Giỏ hàng" title="Giỏ hàng" className={ICON_CLASS}>
+            🛒
+          </Link>
+        )}
 
         {icons.map((ic) => {
           const href = ic.href ?? ICON_HREF[ic.title];

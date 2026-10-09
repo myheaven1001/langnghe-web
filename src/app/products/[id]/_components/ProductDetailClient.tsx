@@ -67,6 +67,7 @@ export function ProductDetailClient({
     tierIndex,
     unitPrice,
     qty,
+    variantId,
     onQtyChange: (next: number) => setQty(Math.max(product.moq, next)),
     onOpenRfq: () => setRfqOpen(true),
   };

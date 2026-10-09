@@ -40,6 +40,7 @@ export const ORDER_FORWARD_CHAIN = [
 // Cùng danh sách với CHECK của order_events.event_type (20261005091900).
 export const ORDER_EVENT_LABEL: Record<string, { icon: string; label: string }> = {
   order_created: { icon: '🎉', label: 'Đơn hàng được tạo' },
+  order_accepted: { icon: '🤝', label: 'Xưởng nhận đơn' },
   payment_confirmed: { icon: '💳', label: 'Đã xác nhận thanh toán' },
   producing_started: { icon: '🧵', label: 'Xưởng bắt đầu sản xuất' },
   shipped: { icon: '🚚', label: 'Đã bàn giao vận chuyển' },
@@ -79,6 +80,7 @@ export function orderEventActor(event: OrderEventRow, viewerId: string): string 
   if (event.metadata?.actor_role) return ORDER_ROLE_LABEL[event.metadata.actor_role];
   if (!event.actor_id) return 'Hệ thống';
   switch (event.event_type) {
+    case 'order_accepted':
     case 'producing_started':
     case 'shipped':
       return ORDER_ROLE_LABEL.supplier;
@@ -108,6 +110,10 @@ export function orderErrorMessage(message: string, fallback: string): string {
   if (message.includes('ORDER_DOCUMENT_LIMIT'))
     return 'Đơn đã đủ 30 chứng từ, không thêm được nữa.';
   if (message.includes('INVALID_NOTE')) return 'Ghi chú dài 1–1000 ký tự.';
+  if (message.includes('ORDER_NOT_PENDING_CONFIRMATION')) {
+    return 'Đơn này đã được xử lý trước đó. Vui lòng tải lại trang.';
+  }
+  if (message.includes('REASON_REQUIRED')) return 'Vui lòng ghi lý do.';
   if (message.includes('ORDER_NOT_FOUND')) return 'Không tìm thấy đơn hàng.';
   return fallback;
 }

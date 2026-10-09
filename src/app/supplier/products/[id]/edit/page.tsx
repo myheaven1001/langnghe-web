@@ -31,7 +31,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const { data: product } = await supabase
     .from('products')
     .select(
-      'id, name, category_id, description, accept_oem, accept_custom, min_order_qty, lead_time_days, status, price_tiers(min_qty, max_qty, unit_price), product_variants(id, color, size, material, stock_qty, price_adjustment, sku, is_active), product_media(id, r2_key, cdn_url, thumbnail_url, is_primary, sort_order, variant_id)',
+      'id, name, category_id, description, accept_oem, accept_custom, min_order_qty, lead_time_days, status, is_ready_stock, stock_qty, price_tiers(min_qty, max_qty, unit_price), product_variants(id, color, size, material, stock_qty, price_adjustment, sku, is_active), product_media(id, r2_key, cdn_url, thumbnail_url, is_primary, sort_order, variant_id)',
     )
     .eq('id', id)
     .eq('supplier_id', supplier.id)
@@ -102,6 +102,8 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           acceptCustom: product.accept_custom,
           minOrderQty: String(product.min_order_qty),
           leadTimeDays: product.lead_time_days != null ? String(product.lead_time_days) : '',
+          isReadyStock: product.is_ready_stock,
+          stockQty: String(product.stock_qty ?? 0),
           status: product.status,
           priceTiers: (product.price_tiers ?? []).map((t) => ({
             minQty: String(t.min_qty),

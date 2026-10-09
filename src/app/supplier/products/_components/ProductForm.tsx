@@ -69,6 +69,8 @@ interface ProductFormInitial {
   acceptCustom: boolean;
   minOrderQty: string;
   leadTimeDays: string;
+  isReadyStock?: boolean;
+  stockQty?: string;
   status: string;
   priceTiers: PriceTierInput[];
   variants: VariantInput[];
@@ -162,6 +164,10 @@ export function ProductForm({
   const [acceptCustom, setAcceptCustom] = useState(initial?.acceptCustom ?? false);
   const [minOrderQty, setMinOrderQty] = useState(initial?.minOrderQty ?? '');
   const [leadTimeDays, setLeadTimeDays] = useState(initial?.leadTimeDays ?? '');
+  // Hàng có sẵn: đặt qua giỏ hàng thì bị kiểm tra và trừ kho (5.4). Sản phẩm
+  // có biến thể dùng ô "Tồn kho" của từng biến thể; không có thì dùng stockQty.
+  const [isReadyStock, setIsReadyStock] = useState(initial?.isReadyStock ?? false);
+  const [stockQty, setStockQty] = useState(initial?.stockQty ?? '');
   const [tiers, setTiers] = useState<PriceTierInput[]>(
     initial?.priceTiers.length ? initial.priceTiers : [EMPTY_TIER],
   );
@@ -409,6 +415,8 @@ export function ProductForm({
           accept_oem: acceptOem,
           accept_custom: acceptCustom,
           min_order_qty: Number(minOrderQty),
+          is_ready_stock: isReadyStock,
+          stock_qty: Math.max(0, Number(stockQty) || 0),
           lead_time_days: Number(leadTimeDays),
           status: targetStatus,
         },
@@ -967,6 +975,37 @@ export function ProductForm({
                 />
               </Field>
             </div>
+
+            <label className="mt-4 flex min-h-10 items-start gap-2.5 text-sm">
+              <input
+                type="checkbox"
+                checked={isReadyStock}
+                onChange={(e) => setIsReadyStock(e.target.checked)}
+                className="accent-brand-red mt-0.5 h-5 w-5 shrink-0"
+              />
+              <span className="text-brand-sub">
+                <strong className="text-brand-ink">Hàng có sẵn</strong> — buyer đặt qua giỏ hàng sẽ bị
+                giới hạn theo tồn kho và kho tự trừ khi có đơn. Bỏ chọn nếu xưởng làm theo đơn.
+              </span>
+            </label>
+            {isReadyStock &&
+              (variants.some((v) => variantLabel(v)) ? (
+                <div className="text-brand-sub mt-2 text-xs">
+                  Sản phẩm có biến thể: nhập tồn kho cho từng biến thể ở bước 3.
+                </div>
+              ) : (
+                <div className="mt-3 max-w-[220px]">
+                  <Field label="Tồn kho hiện có">
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      value={stockQty}
+                      onChange={(e) => setStockQty(e.target.value)}
+                    />
+                  </Field>
+                </div>
+              ))}
           </section>
 
           <section className={sectionClass}>

@@ -2,6 +2,8 @@ import { AppShell, Card, CardBody, CardHeader, CardLink, Pill, StatCard } from '
 import { buildSupplierNavGroups } from '@/app/supplier/_lib/nav';
 import { ProductForm } from '@/app/supplier/products/_components/ProductForm';
 import { AccountSecurity } from '@/components/account/AccountSecurity';
+import { CartClient } from '@/app/cart/_components/CartClient';
+import type { Cart } from '@/lib/cart';
 
 // Temporary visual check for the shared components extracted from the
 // *_page.html prototypes — mirrors a slice of dashboard_buyer_page.html so
@@ -52,7 +54,9 @@ export default async function UiPreviewPage({
             ]
       }
     >
-      {sp.view === 'account' ? (
+      {sp.view === 'cart' ? (
+        <CartClient cart={MOCK_CART} />
+      ) : sp.view === 'account' ? (
         <AccountSecurity email="lan@example.com" />
       ) : showProductForm ? (
         <ProductForm
@@ -153,3 +157,85 @@ export default async function UiPreviewPage({
     </AppShell>
   );
 }
+
+// Giỏ hàng giả cho ?view=cart: 2 xưởng, có dòng lỗi (dưới MOQ, hết hàng).
+const MOCK_LINE = {
+  productId: 'p1',
+  variantId: null,
+  imageUrl: null,
+  moq: 100,
+  stock: null,
+  problem: null,
+} as const;
+const MOCK_CART: Cart = {
+  lineCount: 4,
+  total: 2540000,
+  hasProblems: true,
+  groups: [
+    {
+      supplierId: 's1',
+      supplierName: 'Gốm Bát Tràng Minh Long — xưởng sản xuất tên rất dài để thử xuống dòng',
+      subtotal: 2040000,
+      lines: [
+        {
+          ...MOCK_LINE,
+          id: 'l1',
+          name: 'Bát gốm men rạn Bát Tràng — bộ 6 món cao cấp',
+          variantLabel: 'Xanh · 20cm',
+          quantity: 60,
+          productQty: 100,
+          unitPrice: 20000,
+          lineTotal: 1200000,
+          supplierId: 's1',
+        },
+        {
+          ...MOCK_LINE,
+          id: 'l2',
+          name: 'Bát gốm men rạn Bát Tràng — bộ 6 món cao cấp',
+          variantLabel: 'Trắng · 20cm',
+          quantity: 40,
+          productQty: 100,
+          unitPrice: 21000,
+          lineTotal: 840000,
+          supplierId: 's1',
+          stock: 30,
+          problem: 'out_of_stock',
+        },
+      ],
+    },
+    {
+      supplierId: 's2',
+      supplierName: 'Mây tre đan Phú Vinh',
+      subtotal: 500000,
+      lines: [
+        {
+          ...MOCK_LINE,
+          id: 'l3',
+          productId: 'p2',
+          name: 'Giỏ mây đan quai da size M',
+          variantLabel: null,
+          quantity: 10,
+          productQty: 10,
+          moq: 10,
+          unitPrice: 50000,
+          lineTotal: 500000,
+          supplierId: 's2',
+        },
+        {
+          ...MOCK_LINE,
+          id: 'l4',
+          productId: 'p3',
+          name: 'Khay mây chữ nhật',
+          variantLabel: null,
+          quantity: 5,
+          productQty: 5,
+          moq: 20,
+          unitPrice: null,
+          lineTotal: null,
+          supplierId: 's2',
+          problem: 'below_moq',
+        },
+      ],
+    },
+  ],
+};

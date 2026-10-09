@@ -23,6 +23,7 @@ export const metadata: Metadata = {
 };
 
 const PAYMENT_STATUS: Record<string, { icon: string; text: string; tone: 'pending' | 'paid' }> = {
+  pending_confirmation: { icon: '🛒', text: 'Chờ xưởng xác nhận — chưa cần chuyển tiền', tone: 'pending' },
   pending_payment: { icon: '⏳', text: 'Chờ thanh toán', tone: 'pending' },
   confirmed: { icon: '✓', text: 'Sàn đã xác nhận thanh toán', tone: 'paid' },
   producing: { icon: '✓', text: 'Sàn đã xác nhận thanh toán', tone: 'paid' },

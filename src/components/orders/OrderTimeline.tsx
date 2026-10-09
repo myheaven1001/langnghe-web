@@ -19,9 +19,14 @@ export function OrderTimeline({
   viewerId: string;
 }) {
   const doneTypes = new Set(events.map((e) => e.event_type));
-  const nextIndex =
-    status === 'cancelled' ? -1 : ORDER_FORWARD_CHAIN.findIndex((t) => !doneTypes.has(t));
-  const ghostSteps = nextIndex === -1 ? [] : ORDER_FORWARD_CHAIN.slice(nextIndex);
+  // Đơn đặt thẳng (đang chờ xưởng xác nhận hoặc đã có event nhận đơn) có thêm
+  // bước "Xưởng nhận đơn" ngay sau khi tạo.
+  const chain: string[] =
+    status === 'pending_confirmation' || doneTypes.has('order_accepted')
+      ? ['order_created', 'order_accepted', ...ORDER_FORWARD_CHAIN.slice(1)]
+      : [...ORDER_FORWARD_CHAIN];
+  const nextIndex = status === 'cancelled' ? -1 : chain.findIndex((t) => !doneTypes.has(t));
+  const ghostSteps = nextIndex === -1 ? [] : chain.slice(nextIndex);
 
   return (
     <div className="flex flex-col">

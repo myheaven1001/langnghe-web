@@ -52,6 +52,7 @@ export const RFQ_STATUS = {
 } satisfies Record<string, StatusEntry>;
 
 export const ORDER_STATUS = {
+  pending_confirmation: { label: 'Chờ xưởng xác nhận', tone: 'amber' },
   pending_payment: { label: 'Chờ thanh toán', tone: 'amber' },
   confirmed: { label: 'Đã xác nhận', tone: 'blue' },
   producing: { label: 'Đang sản xuất', tone: 'purple' },

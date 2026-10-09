@@ -166,6 +166,7 @@ export default async function SupplierDashboardPage() {
 
   const [
     { data: statsData },
+    { count: pendingConfirmationCount },
     quotedRfqIds,
     unreadCount,
     { data: membership },
@@ -174,6 +175,12 @@ export default async function SupplierDashboardPage() {
     { data: recentNotificationsData },
   ] = await Promise.all([
     supabase.rpc('supplier_dashboard_stats'),
+    // Đơn đặt thẳng chờ xưởng nhận / từ chối (5.6) — hàm thống kê chưa có số này.
+    supabase
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('supplier_id', supplier.id)
+      .eq('status', 'pending_confirmation'),
     getQuotedRfqIds(supabase, supplier.id),
     getUnreadNotificationCount(supabase, user.id),
     supabase
@@ -271,7 +278,13 @@ export default async function SupplierDashboardPage() {
       </div>
 
       {/* VIỆC CẦN LÀM */}
-      <div className="mb-4 grid grid-cols-1 gap-2.5 md:grid-cols-3">
+      <div className="mb-4 grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-4">
+        <TodoTile
+          href="/supplier/orders?status=pending_confirmation&range=all"
+          icon="🛒"
+          count={pendingConfirmationCount ?? 0}
+          label="Đơn đặt thẳng chờ bạn xác nhận"
+        />
         <TodoTile
           href="/supplier/rfq"
           icon="📥"

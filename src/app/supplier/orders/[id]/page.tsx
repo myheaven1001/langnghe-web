@@ -26,6 +26,10 @@ export const metadata: Metadata = {
 
 // Việc xưởng cần làm ở từng trạng thái.
 const NEXT_STEP: Record<string, { title: string; body: string }> = {
+  pending_confirmation: {
+    title: '🛒 Đơn đặt thẳng — chờ bạn xác nhận',
+    body: 'Buyer đặt từ giỏ hàng và chưa chuyển tiền. Nhận đơn nếu xưởng làm được đúng số lượng và giá; nếu không hãy từ chối kèm lý do.',
+  },
   pending_payment: {
     title: '⏳ Chờ buyer thanh toán',
     body: 'Buyer chuyển khoản cho sàn; sàn xác nhận xong bạn sẽ nhận thông báo. Chưa cần sản xuất.',
@@ -139,7 +143,7 @@ export default async function SupplierOrderDetailPage({
   const rfq = order.rfq_quotes?.rfq_requests ?? null;
   const code = orderCode(order.id);
   const nextStep = NEXT_STEP[order.status];
-  const isPaid = order.status !== 'pending_payment' && order.status !== 'cancelled';
+  const isPaid = !['pending_confirmation', 'pending_payment', 'cancelled'].includes(order.status);
 
   return (
     <AppShell

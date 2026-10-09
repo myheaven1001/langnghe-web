@@ -18,6 +18,7 @@ const PAGE_SIZE = 10;
 
 const STATUS_TABS = [
   { key: 'all', label: 'Tất cả', statuses: null },
+  { key: 'pending_confirmation', label: 'Chờ bạn xác nhận', statuses: ['pending_confirmation'] },
   { key: 'pending_payment', label: 'Chờ thanh toán', statuses: ['pending_payment'] },
   { key: 'confirmed', label: 'Đã xác nhận', statuses: ['confirmed'] },
   { key: 'producing', label: 'Đang sản xuất', statuses: ['producing'] },
@@ -32,6 +33,7 @@ type StatusKey = (typeof STATUS_TABS)[number]['key'];
 const PROGRESS_STATUSES = ['pending_payment', 'confirmed', 'producing', 'shipped', 'delivered'];
 
 const STATUS_NOTE: Record<string, string> = {
+  pending_confirmation: '🛒 Đơn đặt thẳng — nhận hoặc từ chối',
   pending_payment: '⏳ Đang chờ buyer thanh toán',
   confirmed: '✓ Đã thanh toán — sẵn sàng bắt đầu sản xuất',
   producing: '🧵 Đang sản xuất',

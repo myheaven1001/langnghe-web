@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { features } from '@/lib/features';
 import { formatVnd } from '@/lib/format';
+import { AddToCartButtons } from './AddToCartButtons';
 import {
   qtyRangeLabel,
   type ProductView,
@@ -18,12 +20,15 @@ interface OrderProps {
   tierIndex: number;
   unitPrice: number | null;
   qty: number;
+  /** Biến thể buyer đang chọn (null nếu sản phẩm không có biến thể). */
+  variantId: string | null;
   onQtyChange: (qty: number) => void;
   onOpenRfq: () => void;
 }
 
-// Nút hành động theo người xem. "Đặt hàng ngay" và "Nhắn tin" tạm ẩn tới
-// bước 5 (giỏ hàng, mô hình tin nhắn mới).
+// Nút hành động theo người xem. Giỏ hàng (5.5) hiện thêm phía trên với buyer
+// khi cờ NEXT_PUBLIC_FEATURE_CART bật và sản phẩm có bảng giá; "Nhắn tin" chờ
+// mô hình tin nhắn mới (5.9).
 function PrimaryAction({
   viewer,
   onOpenRfq,
@@ -64,8 +69,19 @@ function PrimaryAction({
 // Khối bên phải (xl) / dưới cùng (lg trở xuống): xưởng, đơn giá theo bậc +
 // biến thể, số lượng (không dưới MOQ, tự áp bậc giá), tổng tiền ước tính.
 export function OrderPanel(props: OrderProps) {
-  const { product, supplier, viewer, tiers, tierIndex, unitPrice, qty, onQtyChange, onOpenRfq } =
-    props;
+  const {
+    product,
+    supplier,
+    viewer,
+    tiers,
+    tierIndex,
+    unitPrice,
+    qty,
+    variantId,
+    onQtyChange,
+    onOpenRfq,
+  } = props;
+  const canUseCart = features.cart && viewer.kind === 'buyer' && unitPrice != null;
   const shopHref = supplier.slug ? `/shops/${supplier.slug}` : null;
   const nextTier = tiers[tierIndex + 1];
 
@@ -167,6 +183,8 @@ export function OrderPanel(props: OrderProps) {
           )}
         </div>
       )}
+
+      {canUseCart && <AddToCartButtons productId={product.id} variantId={variantId} qty={qty} />}
 
       <div className="mb-3">
         <PrimaryAction viewer={viewer} onOpenRfq={onOpenRfq} />
