@@ -14,13 +14,15 @@ export const metadata: Metadata = {
 
 const PAGE_SIZE = 20;
 
-// product_status có 4 giá trị (draft/active/paused/deleted) — 'deleted' là
+// product_status: draft/active/paused/blocked/deleted — 'deleted' là
 // soft-delete, không có tab riêng, luôn bị loại khỏi mọi tab kể cả "Tất cả".
+// 'blocked' = sàn khoá (4.11): xưởng vẫn thấy kèm lý do, không sửa được.
 const STATUS_TABS = [
-  { key: 'all', label: 'Tất cả', statuses: ['draft', 'active', 'paused'] },
+  { key: 'all', label: 'Tất cả', statuses: ['draft', 'active', 'paused', 'blocked'] },
   { key: 'active', label: 'Đang bán', statuses: ['active'] },
   { key: 'draft', label: 'Nháp', statuses: ['draft'] },
   { key: 'paused', label: 'Tạm ẩn', statuses: ['paused'] },
+  { key: 'blocked', label: 'Bị sàn khoá', statuses: ['blocked'] },
 ] as const;
 
 type StatusKey = (typeof STATUS_TABS)[number]['key'];
@@ -32,6 +34,7 @@ interface ProductRow {
   name: string;
   min_order_qty: number;
   status: string;
+  moderation_note: string | null;
   updated_at: string;
   categories: { name: string } | null;
   price_tiers: { unit_price: number }[] | null;
@@ -96,7 +99,7 @@ export default async function SupplierProductsPage({
   let listQuery = supabase
     .from('products')
     .select(
-      'id, name, min_order_qty, status, updated_at, categories(name), price_tiers(unit_price), product_media(cdn_url, thumbnail_url, is_primary)',
+      'id, name, min_order_qty, status, moderation_note, updated_at, categories(name), price_tiers(unit_price), product_media(cdn_url, thumbnail_url, is_primary)',
     )
     .eq('supplier_id', supplier.id)
     .in('status', [...activeTab.statuses]);
@@ -121,6 +124,7 @@ export default async function SupplierProductsPage({
       name: p.name,
       min_order_qty: p.min_order_qty,
       status: p.status,
+      moderationNote: p.moderation_note,
       updated_at: p.updated_at,
       categories: p.categories,
       minPrice: prices.length ? Math.min(...prices) : null,

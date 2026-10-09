@@ -12,6 +12,8 @@ export interface ProductListRow {
   name: string;
   min_order_qty: number;
   status: string;
+  /** Lý do sàn khoá sản phẩm (status = 'blocked'). */
+  moderationNote?: string | null;
   updated_at: string;
   categories: { name: string } | null;
   minPrice: number | null;
@@ -58,7 +60,9 @@ export function ProductTable({ products }: { products: ProductListRow[] }) {
     const { error } = await supabase
       .from('products')
       .update({ status })
-      .in('id', Array.from(selected));
+      .in('id', Array.from(selected))
+      // Sản phẩm bị sàn khoá không đổi trạng thái được — bỏ qua thay vì lỗi cả lô.
+      .neq('status', 'blocked');
     setBusy(false);
     if (!error) {
       setSelected(new Set());
@@ -156,6 +160,11 @@ export function ProductTable({ products }: { products: ProductListRow[] }) {
                       <div className="text-brand-light mt-0.5 text-xs">
                         {p.categories?.name ?? 'Chưa phân loại'}
                       </div>
+                      {p.status === 'blocked' && (
+                        <div className="text-status-red mt-1 max-w-[260px] text-xs break-words whitespace-normal">
+                          Sàn đã khoá: {p.moderationNote ?? 'liên hệ sàn để biết lý do'}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </td>
@@ -177,13 +186,15 @@ export function ProductTable({ products }: { products: ProductListRow[] }) {
                 </td>
                 <td className="px-3.5 py-3">
                   <div className="flex justify-end gap-1.5">
-                    <Link
-                      href={`/supplier/products/${p.id}/edit`}
-                      title="Sửa"
-                      className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink flex h-7 w-7 items-center justify-center rounded-md border-[1.5px] text-xs"
-                    >
-                      ✏️
-                    </Link>
+                    {p.status !== 'blocked' && (
+                      <Link
+                        href={`/supplier/products/${p.id}/edit`}
+                        title="Sửa"
+                        className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink flex h-7 w-7 items-center justify-center rounded-md border-[1.5px] text-xs"
+                      >
+                        ✏️
+                      </Link>
+                    )}
                     {/* Trang sản phẩm cho chủ xưởng xem cả hàng nháp/tạm dừng (2.3). */}
                     {p.status !== 'deleted' && (
                       <Link

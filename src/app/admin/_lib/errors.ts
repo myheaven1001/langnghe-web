@@ -14,6 +14,12 @@ const ADMIN_ERRORS: Record<string, string> = {
   DISPUTE_ALREADY_OPEN: 'Đơn này đang có tranh chấp chưa giải quyết.',
   INVALID_REPORTER: 'Vui lòng chọn bên báo tranh chấp.',
   INVALID_INPUT: 'Giá trị nhập không hợp lệ.',
+  PRODUCT_NOT_FOUND: 'Không tìm thấy sản phẩm.',
+  PRODUCT_BLOCKED: 'Sản phẩm đang bị khoá — dùng nút Mở khoá.',
+  CATEGORY_NOT_FOUND: 'Không tìm thấy danh mục.',
+  INVALID_PARENT:
+    'Danh mục cha phải là danh mục gốc; danh mục đang có danh mục con không chuyển thành con được.',
+  CATEGORY_NAME_TAKEN: 'Đã có danh mục cùng tên ở cùng cấp.',
   PROFILE_NOT_FOUND: 'Không tìm thấy hồ sơ.',
   INSUFFICIENT_CREDIT: 'Buyer không đủ credit để trừ.',
   DISPUTE_NOT_FOUND: 'Không tìm thấy tranh chấp.',

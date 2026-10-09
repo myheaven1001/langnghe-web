@@ -20,11 +20,16 @@ export function buildAdminNavGroups({
         },
         { icon: '📦', label: 'Quản lý đơn hàng', href: '/admin/orders' },
         { icon: '👥', label: 'Quản lý user', href: '/admin/users' },
+        { icon: '🗂️', label: 'Kiểm duyệt sản phẩm', href: '/admin/products' },
       ],
     },
     {
       label: 'Hệ thống',
-      items: [{ icon: '⚙️', label: 'Cài đặt sàn', href: '/admin/settings' }],
+      items: [
+        { icon: '🏷️', label: 'Danh mục ngành hàng', href: '/admin/categories' },
+        { icon: '🧾', label: 'Nhật ký hoạt động', href: '/admin/audit' },
+        { icon: '⚙️', label: 'Cài đặt sàn', href: '/admin/settings' },
+      ],
     },
   ];
 }

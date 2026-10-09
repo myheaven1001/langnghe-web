@@ -74,6 +74,7 @@ export const PRODUCT_STATUS = {
   active: { label: 'Đang bán', tone: 'green' },
   draft: { label: 'Nháp', tone: 'gray' },
   paused: { label: 'Tạm dừng', tone: 'amber' },
+  blocked: { label: 'Bị sàn khoá', tone: 'red' },
 } satisfies Record<string, StatusEntry>;
 
 export const USER_STATUS = {
