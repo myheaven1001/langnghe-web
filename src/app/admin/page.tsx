@@ -2,13 +2,49 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { AppShell, Card, CardHeader, CardBody, StatCard } from '@/components/ui';
-import { formatVnd, formatVnDate, monthStartIso } from '@/lib/format';
+import { AppShell, Card, CardHeader, CardBody, StatTile, TodoTile } from '@/components/ui';
+import { formatVnd, formatVnDate } from '@/lib/format';
 import { buildAdminNavGroups } from './_lib/nav';
 
 export const metadata: Metadata = {
   title: 'Admin Dashboard — LàngNghề.vn',
 };
+
+// Kết quả của RPC admin_queue_counts() (20261005092900). Thiếu hàm (chưa chạy
+// migration) thì mọi số hiện 0.
+interface QueueCounts {
+  pending_verifications: number;
+  oldest_verification_days: number;
+  orders_pending_payment: number;
+  orders_with_receipt: number;
+  open_disputes: number;
+  suspended_users: number;
+  pending_users: number;
+  buyers: number;
+  suppliers: number;
+  new_profiles_month: number;
+  paid_amount_month: number;
+}
+
+const EMPTY_COUNTS: QueueCounts = {
+  pending_verifications: 0,
+  oldest_verification_days: 0,
+  orders_pending_payment: 0,
+  orders_with_receipt: 0,
+  open_disputes: 0,
+  suspended_users: 0,
+  pending_users: 0,
+  buyers: 0,
+  suppliers: 0,
+  new_profiles_month: 0,
+  paid_amount_month: 0,
+};
+
+function formatCompactVnd(n: number) {
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1).replace('.0', '')} tỷ`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace('.0', '')} tr`;
+  return formatVnd(n);
+}
 
 interface PendingVerificationRow {
   id: string;
@@ -36,52 +72,14 @@ export default async function AdminDashboardPage() {
   const { data: me } = await supabase.from('users').select('role').eq('id', user.id).single();
   if (me?.role !== 'admin') redirect('/');
 
-  const monthStart = monthStartIso();
-
-  const [
-    { count: unreadCount },
-    { count: pendingVerificationCount },
-    { count: suspendedUserCount },
-    { count: pendingUserCount },
-    { count: buyerCount },
-    { count: supplierCount },
-    { count: newBuyerProfilesCount },
-    { count: newSupplierProfilesCount },
-    { data: monthOrdersData },
-    { data: pendingVerificationsData },
-  ] = await Promise.all([
+  const [{ count: unreadCount }, { data: countsData }, { data: pendingVerificationsData }] =
+    await Promise.all([
     supabase
       .from('notifications')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .eq('is_read', false),
-    supabase
-      .from('verifications')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending'),
-    supabase.from('users').select('id', { count: 'exact', head: true }).eq('status', 'suspended'),
-    supabase.from('users').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-    supabase
-      .from('users')
-      .select('id', { count: 'exact', head: true })
-      .in('role', ['buyer', 'both']),
-    supabase
-      .from('users')
-      .select('id', { count: 'exact', head: true })
-      .in('role', ['supplier', 'both']),
-    supabase
-      .from('buyer_profiles')
-      .select('id', { count: 'exact', head: true })
-      .gte('created_at', monthStart),
-    supabase
-      .from('supplier_profiles')
-      .select('id', { count: 'exact', head: true })
-      .gte('created_at', monthStart),
-    supabase
-      .from('orders')
-      .select('total_amount')
-      .neq('status', 'cancelled')
-      .gte('created_at', monthStart),
+    supabase.rpc('admin_queue_counts'),
     supabase
       .from('verifications')
       .select('id, entity_id, entity_type, created_at')
@@ -90,8 +88,8 @@ export default async function AdminDashboardPage() {
       .limit(5),
   ]);
 
-  const gmvThisMonth = (monthOrdersData ?? []).reduce((sum, o) => sum + (o.total_amount ?? 0), 0);
-  const newProfilesThisMonth = (newBuyerProfilesCount ?? 0) + (newSupplierProfilesCount ?? 0);
+  const counts = { ...EMPTY_COUNTS, ...((countsData ?? {}) as Partial<QueueCounts>) };
+  const pendingVerificationCount = counts.pending_verifications;
 
   const pendingVerifications = pendingVerificationsData ?? [];
   const buyerIds = pendingVerifications
@@ -138,37 +136,52 @@ export default async function AdminDashboardPage() {
         <div className="text-brand-sub mt-1 text-[13px]">Tổng quan vận hành sàn LàngNghề.vn.</div>
       </div>
 
-      <div className="mb-[18px] grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard
-          icon="💰"
-          iconTone="green"
-          value={
-            gmvThisMonth >= 1_000_000
-              ? `${(gmvThisMonth / 1_000_000).toFixed(0)}tr`
-              : formatVnd(gmvThisMonth)
+      {/* HÀNG ĐỢI — việc đang chờ admin xử lý (kế hoạch 4.10) */}
+      <div className="mb-4 grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-4">
+        <TodoTile
+          href="/admin/orders?status=pending_payment&range=all"
+          icon="💳"
+          count={counts.orders_pending_payment}
+          label="Đơn chờ xác nhận tiền"
+          hint={
+            counts.orders_with_receipt > 0
+              ? `${counts.orders_with_receipt} đơn đã có biên lai`
+              : undefined
           }
-          label="GMV tháng này"
         />
-        <StatCard
-          icon="👥"
-          iconTone="blue"
-          value={newProfilesThisMonth}
-          label="Hồ sơ mới tháng này"
-        />
-        <StatCard
+        <TodoTile
+          href="/admin/verifications"
           icon="🛡️"
-          iconTone="amber"
-          value={pendingVerificationCount ?? 0}
+          count={counts.pending_verifications}
           label="Hồ sơ chờ xác minh"
-          delta={pendingVerificationCount ? `${pendingVerificationCount} chờ` : undefined}
-          deltaTone="new"
+          hint={
+            counts.pending_verifications > 0 && counts.oldest_verification_days >= 2
+              ? `lâu nhất ${counts.oldest_verification_days} ngày`
+              : undefined
+          }
         />
-        <StatCard
+        <TodoTile
+          href="/admin/orders?status=disputed&range=all"
+          icon="⚠️"
+          count={counts.open_disputes}
+          label="Tranh chấp đang mở"
+        />
+        <TodoTile
+          href="/admin/users?tab=suspended"
           icon="🔒"
-          iconTone="red"
-          value={suspendedUserCount ?? 0}
-          label="Tài khoản bị khóa"
+          count={counts.suspended_users}
+          label="Tài khoản đang bị khoá"
         />
+      </div>
+
+      <div className="mb-4 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+        <StatTile
+          value={formatCompactVnd(counts.paid_amount_month)}
+          label="Tiền đã xác nhận tháng này"
+        />
+        <StatTile value={String(counts.new_profiles_month)} label="Hồ sơ mới tháng này" />
+        <StatTile value={String(counts.buyers)} label="Buyer" />
+        <StatTile value={String(counts.suppliers)} label="Nhà bán" />
       </div>
 
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -229,28 +242,28 @@ export default async function AdminDashboardPage() {
                 <span className="h-2 w-2 rounded-sm bg-[#1D9E75]" />
                 Buyer
               </div>
-              <div className="text-sm font-bold">{buyerCount ?? 0}</div>
+              <div className="text-sm font-bold">{counts.buyers}</div>
             </div>
             <div className="flex justify-between border-b border-[#F2F0EC] py-2.5 text-xs">
               <div className="text-brand-sub flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-sm bg-[#C4622D]" />
                 Supplier
               </div>
-              <div className="text-sm font-bold">{supplierCount ?? 0}</div>
+              <div className="text-sm font-bold">{counts.suppliers}</div>
             </div>
             <div className="flex justify-between border-b border-[#F2F0EC] py-2.5 text-xs">
               <div className="text-brand-sub flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-sm bg-[#888780]" />
                 Chờ xác minh
               </div>
-              <div className="text-sm font-bold">{pendingUserCount ?? 0}</div>
+              <div className="text-sm font-bold">{counts.pending_users}</div>
             </div>
             <div className="flex justify-between py-2.5 text-xs">
               <div className="text-brand-sub flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-sm bg-[#C62828]" />
                 Tạm khóa
               </div>
-              <div className="text-sm font-bold">{suspendedUserCount ?? 0}</div>
+              <div className="text-sm font-bold">{counts.suspended_users}</div>
             </div>
           </div>
         </div>

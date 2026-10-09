@@ -274,7 +274,12 @@ export default async function AdminUsersPage({
                         <div className="bg-brand-bg flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-base">
                           {u.icon}
                         </div>
-                        <span className="text-[13px] font-semibold">{u.name}</span>
+                        <Link
+                          href={`/admin/users/${u.id}`}
+                          className="hover:text-brand-red text-[13px] font-semibold"
+                        >
+                          {u.name}
+                        </Link>
                       </div>
                     </td>
                     <td className="px-3.5 py-3">

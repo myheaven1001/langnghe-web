@@ -133,13 +133,14 @@ BEGIN
     RAISE NOTICE 'PASS  admin duyệt xác minh vẫn đặt verified_at';
 END $$;
 
--- ── Admin sửa trực tiếp cột hệ thống → được ────────────────────────────
+-- ── Admin chỉnh cột hệ thống: qua hàm (từ 20261005092900 không sửa thẳng) ──
 DO $$
 BEGIN
-    UPDATE buyer_profiles SET trust_score = 90
-    WHERE id = current_setting('test.buyer_b_profile')::UUID;
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'FAIL  admin sửa trust_score — không cập nhật được dòng nào';
+    PERFORM public.admin_adjust_score('buyer', current_setting('test.buyer_b_profile')::UUID,
+                                      90, NULL, 'Test 1.1');
+    IF (SELECT trust_score FROM buyer_profiles
+        WHERE id = current_setting('test.buyer_b_profile')::UUID) <> 90 THEN
+        RAISE EXCEPTION 'FAIL  admin chỉnh trust_score qua admin_adjust_score — không đổi';
     END IF;
     RAISE NOTICE 'PASS  admin vẫn sửa được trust_score';
 END $$;
