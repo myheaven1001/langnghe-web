@@ -13,6 +13,7 @@ import {
   TodoTile,
 } from '@/components/ui';
 import { formatVnd } from '@/lib/format';
+import { ORDER_ITEMS_BRIEF, summarizeOrderItems, type OrderItemRow } from '@/lib/orders';
 
 export const metadata: Metadata = {
   title: 'Dashboard — LàngNghề.vn',
@@ -70,13 +71,12 @@ interface RfqRow {
 
 interface OrderRow {
   id: string;
-  quantity: number;
   total_amount: number;
+  order_items: OrderItemRow[] | null;
   status: string;
   created_at: string;
   tracking_number: string | null;
   supplier_profiles: { shop_name: string } | null;
-  rfq_quotes: { rfq_requests: { title: string } | null } | null;
 }
 
 interface NotificationRow {
@@ -149,7 +149,7 @@ export default async function DashboardPage() {
     supabase
       .from('orders')
       .select(
-        'id, quantity, total_amount, status, created_at, tracking_number, supplier_profiles(shop_name), rfq_quotes(rfq_requests(title))',
+        `id, total_amount:total, ${ORDER_ITEMS_BRIEF}, status, created_at, tracking_number, supplier_profiles(shop_name)`,
       )
       .eq('buyer_id', buyer.id)
       .order('created_at', { ascending: false })
@@ -357,8 +357,8 @@ export default async function DashboardPage() {
                         {order.id.slice(0, 8).toUpperCase()}
                       </div>
                       <div className="text-brand-light mt-0.5 text-xs">
-                        {order.quantity.toLocaleString('vi-VN')} ·{' '}
-                        {order.rfq_quotes?.rfq_requests?.title ?? 'Đơn hàng'}
+                        {summarizeOrderItems(order.order_items).quantityLabel} ·{' '}
+                        {summarizeOrderItems(order.order_items).title}
                         {order.tracking_number ? ` · ${order.tracking_number}` : ''}
                       </div>
                     </div>

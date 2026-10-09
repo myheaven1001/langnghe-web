@@ -111,3 +111,47 @@ export function orderErrorMessage(message: string, fallback: string): string {
   if (message.includes('ORDER_NOT_FOUND')) return 'Không tìm thấy đơn hàng.';
   return fallback;
 }
+
+// ── Dòng hàng của đơn (bảng order_items — kế hoạch 5.2/5.3) ──────────────
+export interface OrderItemRow {
+  id?: string;
+  product_id?: string | null;
+  product_name: string;
+  variant_label: string | null;
+  unit: string | null;
+  quantity: number;
+  unit_price?: number;
+  line_total?: number;
+  sort_order?: number;
+}
+
+/** Cột order_items cho trang chi tiết đơn. */
+export const ORDER_ITEMS_DETAIL =
+  'order_items(id, product_id, product_name, variant_label, unit, quantity, unit_price, line_total, sort_order)';
+/** Cột order_items đủ để tóm tắt đơn ở danh sách. */
+export const ORDER_ITEMS_BRIEF =
+  'order_items(product_name, variant_label, unit, quantity, sort_order)';
+
+export function sortOrderItems<T extends OrderItemRow>(items: T[] | null | undefined): T[] {
+  return [...(items ?? [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+}
+
+// Một dòng tóm tắt đơn cho danh sách: "Bát gốm và 2 mặt hàng khác", "100 cái".
+// Đơn từ báo giá có đúng 1 dòng hàng; đơn đặt thẳng có thể nhiều dòng.
+export function summarizeOrderItems(items: OrderItemRow[] | null | undefined): {
+  title: string;
+  quantityLabel: string;
+} {
+  const sorted = sortOrderItems(items);
+  if (sorted.length === 0) return { title: 'Đơn hàng', quantityLabel: '' };
+  const first = sorted[0];
+  const names = new Set(sorted.map((i) => i.product_name));
+  const title =
+    names.size > 1
+      ? `${first.product_name} và ${names.size - 1} mặt hàng khác`
+      : first.product_name;
+  const totalQty = sorted.reduce((sum, i) => sum + i.quantity, 0);
+  const units = new Set(sorted.map((i) => i.unit ?? ''));
+  const unit = units.size === 1 ? (first.unit ?? '') : '';
+  return { title, quantityLabel: `${totalQty.toLocaleString('vi-VN')} ${unit}`.trim() };
+}

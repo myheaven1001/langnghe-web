@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { ORDER_ITEMS_BRIEF, summarizeOrderItems, type OrderItemRow } from '@/lib/orders';
 import { AppShell, StatusPill } from '@/components/ui';
 import { daysAgoIso, formatVnDate, formatVnd } from '@/lib/format';
 import { OrderFilterBar } from './_components/OrderFilterBar';
@@ -48,9 +49,8 @@ type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
 interface OrderRow {
   id: string;
-  quantity: number;
-  unit_price: number;
   total_amount: number;
+  order_items: OrderItemRow[] | null;
   status: string;
   tracking_number: string | null;
   logistics_provider: string | null;
@@ -149,7 +149,7 @@ export default async function OrdersPage({
   let listQuery = supabase
     .from('orders')
     .select(
-      'id, quantity, unit_price, total_amount, status, tracking_number, logistics_provider, created_at, supplier_profiles(shop_name), rfq_quotes(rfq_requests(title, unit))',
+      `id, total_amount:total, ${ORDER_ITEMS_BRIEF}, status, tracking_number, logistics_provider, created_at, supplier_profiles(shop_name)`,
     )
     .eq('buyer_id', buyer.id);
   if (activeTab.statuses) listQuery = listQuery.in('status', [...activeTab.statuses]);
@@ -164,7 +164,7 @@ export default async function OrdersPage({
   }
   listQuery =
     sort === 'value'
-      ? listQuery.order('total_amount', { ascending: false })
+      ? listQuery.order('total', { ascending: false })
       : listQuery.order('created_at', { ascending: false });
   listQuery = listQuery.range(from, from + PAGE_SIZE - 1);
 
@@ -336,15 +336,14 @@ export default async function OrdersPage({
                       </span>
                       <span className="text-brand-ink truncate text-[13.5px] font-bold">
                         {order.supplier_profiles?.shop_name ?? 'Xưởng'} —{' '}
-                        {order.rfq_quotes?.rfq_requests?.title ?? 'Đơn hàng'}
+                        {summarizeOrderItems(order.order_items).title}
                       </span>
                     </div>
                     <div className="text-brand-light flex flex-wrap gap-3 text-xs">
                       <span>
                         <b className="text-brand-sub font-semibold">
-                          {order.quantity.toLocaleString('vi-VN')}
-                        </b>{' '}
-                        {order.rfq_quotes?.rfq_requests?.unit ?? ''}
+                          {summarizeOrderItems(order.order_items).quantityLabel}
+                        </b>
                       </span>
                       <span>Đặt ngày {formatVnDate(order.created_at)}</span>
                     </div>

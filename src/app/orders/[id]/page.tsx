@@ -8,7 +8,14 @@ import { OrderNoteForm } from '@/components/orders/OrderNoteForm';
 import { OrderRealtime } from '@/components/orders/OrderRealtime';
 import { OrderTimeline } from '@/components/orders/OrderTimeline';
 import { formatVnDate, formatVnd, formatVnDateTime } from '@/lib/format';
-import { orderCode, type OrderDocumentRow, type OrderEventRow } from '@/lib/orders';
+import {
+  ORDER_ITEMS_DETAIL,
+  orderCode,
+  type OrderDocumentRow,
+  type OrderEventRow,
+  type OrderItemRow,
+} from '@/lib/orders';
+import { OrderItemsTable } from '@/components/orders/OrderItemsTable';
 import { BuyerOrderActions } from './_components/BuyerOrderActions';
 
 export const metadata: Metadata = {
@@ -27,9 +34,8 @@ const PAYMENT_STATUS: Record<string, { icon: string; text: string; tone: 'pendin
 
 interface OrderDetail {
   id: string;
-  quantity: number;
-  unit_price: number;
   total_amount: number;
+  order_items: OrderItemRow[] | null;
   currency: string;
   status: string;
   payment_note: string | null;
@@ -99,7 +105,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const { data: orderData } = await supabase
     .from('orders')
     .select(
-      'id, quantity, unit_price, total_amount, currency, status, payment_note, paid_amount, paid_at, cancel_reason, shipping_address, logistics_provider, tracking_number, confirmed_at, created_at, supplier_profiles(id, shop_name, village_origin, rating_avg), rfq_quotes(rfq_requests(id, title, unit))',
+      `id, total_amount:total, ${ORDER_ITEMS_DETAIL}, currency, status, payment_note, paid_amount, paid_at, cancel_reason, shipping_address, logistics_provider, tracking_number, confirmed_at, created_at, supplier_profiles(id, shop_name, village_origin, rating_avg), rfq_quotes(rfq_requests(id, title, unit))`,
     )
     .eq('id', id)
     .eq('buyer_id', buyer.id)
@@ -273,41 +279,16 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <Card>
             <CardHeader title={<>📦 Sản phẩm đặt hàng</>} />
             <CardBody padded>
-              <div className="mb-3.5 flex items-center gap-3 border-b border-[#F2F0EC] pb-3.5">
-                <div className="bg-brand-bg flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[9px] text-[22px]">
-                  📦
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[13px] font-bold">{rfq?.title ?? 'Đơn hàng'}</div>
-                  <div className="text-brand-light mt-0.5 text-xs">
-                    {order.quantity.toLocaleString('vi-VN')} {rfq?.unit ?? ''}
-                  </div>
-                  {rfq && (
-                    <Link
-                      href={`/rfq/${rfq.id}`}
-                      className="text-brand-blue mt-0.5 block text-xs"
-                    >
-                      Xem lại RFQ gốc →
-                    </Link>
-                  )}
-                </div>
-              </div>
-              <div className="text-brand-sub flex justify-between py-1.5 text-[13px]">
-                <span>Đơn giá</span>
-                <span>
-                  {formatVnd(order.unit_price)} / {rfq?.unit ?? 'đơn vị'}
-                </span>
-              </div>
-              <div className="text-brand-sub flex justify-between py-1.5 text-[13px]">
-                <span>Số lượng</span>
-                <span>
-                  {order.quantity.toLocaleString('vi-VN')} {rfq?.unit ?? ''}
-                </span>
-              </div>
-              <div className="text-brand-ink border-brand-border mt-1.5 flex justify-between border-t-[1.5px] pt-3 text-sm font-bold">
-                <span>Tổng cộng</span>
-                <span>{formatVnd(order.total_amount)}</span>
-              </div>
+              <OrderItemsTable
+                items={order.order_items ?? []}
+                total={order.total_amount}
+                linkProducts
+              />
+              {rfq && (
+                <Link href={`/rfq/${rfq.id}`} className="text-brand-blue mt-2 block text-xs">
+                  Xem lại RFQ gốc →
+                </Link>
+              )}
             </CardBody>
           </Card>
 

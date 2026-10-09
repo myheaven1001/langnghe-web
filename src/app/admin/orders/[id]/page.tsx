@@ -8,7 +8,14 @@ import { OrderNoteForm } from '@/components/orders/OrderNoteForm';
 import { OrderRealtime } from '@/components/orders/OrderRealtime';
 import { OrderTimeline } from '@/components/orders/OrderTimeline';
 import { formatVnd, formatVnDateTime } from '@/lib/format';
-import { orderCode, type OrderDocumentRow, type OrderEventRow } from '@/lib/orders';
+import {
+  ORDER_ITEMS_DETAIL,
+  orderCode,
+  type OrderDocumentRow,
+  type OrderEventRow,
+  type OrderItemRow,
+} from '@/lib/orders';
+import { OrderItemsTable } from '@/components/orders/OrderItemsTable';
 import { buildAdminNavGroups } from '../../_lib/nav';
 import { OrderAdminActions } from '../_components/OrderAdminActions';
 import { AdminConfirmPayment } from './_components/AdminConfirmPayment';
@@ -26,9 +33,9 @@ const AUDIT_LABEL: Record<string, string> = {
 
 interface OrderDetail {
   id: string;
-  quantity: number;
-  unit_price: number;
   total_amount: number;
+  source: string;
+  order_items: OrderItemRow[] | null;
   status: string;
   payment_note: string | null;
   paid_amount: number | null;
@@ -93,7 +100,7 @@ export default async function AdminOrderDetailPage({
   const { data: orderData } = await supabase
     .from('orders')
     .select(
-      'id, quantity, unit_price, total_amount, status, payment_note, paid_amount, paid_at, cancel_reason, shipping_address, logistics_provider, tracking_number, confirmed_at, created_at, buyer_profiles(id, company_name, city), supplier_profiles(id, shop_name, village_origin), rfq_quotes(rfq_requests(id, title, unit))',
+      `id, total_amount:total, source, ${ORDER_ITEMS_DETAIL}, status, payment_note, paid_amount, paid_at, cancel_reason, shipping_address, logistics_provider, tracking_number, confirmed_at, created_at, buyer_profiles(id, company_name, city), supplier_profiles(id, shop_name, village_origin), rfq_quotes(rfq_requests(id, title, unit))`,
     )
     .eq('id', id)
     .maybeSingle();
@@ -148,7 +155,6 @@ export default async function AdminOrderDetailPage({
   const receipts = documents.filter((d) => d.doc_type === 'payment_receipt');
   const otherDocuments = documents.filter((d) => d.doc_type !== 'payment_receipt');
   const activeDispute = disputes.find((d) => d.status !== 'resolved') ?? null;
-  const rfq = order.rfq_quotes?.rfq_requests ?? null;
   const code = orderCode(order.id);
 
   return (
@@ -313,13 +319,16 @@ export default async function AdminOrderDetailPage({
             <div className="text-brand-sub mb-3 text-xs font-bold tracking-[.04em] uppercase">
               Đơn hàng
             </div>
-            <InfoRow label="Sản phẩm" value={rfq?.title ?? '—'} />
-            <InfoRow
-              label="Số lượng"
-              value={`${order.quantity.toLocaleString('vi-VN')} ${rfq?.unit ?? ''}`}
+            <OrderItemsTable
+              items={order.order_items ?? []}
+              total={order.total_amount}
+              linkProducts
             />
-            <InfoRow label="Đơn giá" value={formatVnd(order.unit_price)} />
-            <InfoRow label="Tổng cộng" value={formatVnd(order.total_amount)} />
+            <div className="mt-2" />
+            <InfoRow
+              label="Nguồn đơn"
+              value={order.source === 'direct' ? 'Đặt thẳng (giỏ hàng)' : 'Từ báo giá'}
+            />
             {order.logistics_provider && (
               <InfoRow label="Vận chuyển" value={order.logistics_provider} />
             )}

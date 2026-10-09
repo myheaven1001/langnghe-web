@@ -149,7 +149,7 @@ export default async function AdminOrdersPage({
   let listQuery = supabase
     .from('orders')
     .select(
-      'id, total_amount, status, created_at, tracking_number, buyer_profiles(company_name, user_id), supplier_profiles(shop_name, user_id)',
+      'id, total_amount:total, status, created_at, tracking_number, buyer_profiles(company_name, user_id), supplier_profiles(shop_name, user_id)',
     );
   if (activeTab.key === 'disputed') {
     listQuery = listQuery.in('id', disputedOrderIds.length > 0 ? disputedOrderIds : [NO_MATCH_ID]);

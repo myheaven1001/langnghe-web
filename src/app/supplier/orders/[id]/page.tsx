@@ -7,8 +7,15 @@ import { OrderDocuments } from '@/components/orders/OrderDocuments';
 import { OrderNoteForm } from '@/components/orders/OrderNoteForm';
 import { OrderRealtime } from '@/components/orders/OrderRealtime';
 import { OrderTimeline } from '@/components/orders/OrderTimeline';
-import { formatVnDate, formatVnd, formatVnDateTime } from '@/lib/format';
-import { orderCode, type OrderDocumentRow, type OrderEventRow } from '@/lib/orders';
+import { formatVnDate, formatVnDateTime } from '@/lib/format';
+import {
+  ORDER_ITEMS_DETAIL,
+  orderCode,
+  type OrderDocumentRow,
+  type OrderEventRow,
+  type OrderItemRow,
+} from '@/lib/orders';
+import { OrderItemsTable } from '@/components/orders/OrderItemsTable';
 import { buildSupplierNavGroups } from '../../_lib/nav';
 import { getNewRfqCount, getUnreadNotificationCount } from '../../_lib/counts';
 import { OrderActions } from '../_components/OrderActions';
@@ -44,9 +51,8 @@ const NEXT_STEP: Record<string, { title: string; body: string }> = {
 
 interface OrderDetail {
   id: string;
-  quantity: number;
-  unit_price: number;
   total_amount: number;
+  order_items: OrderItemRow[] | null;
   status: string;
   cancel_reason: string | null;
   shipping_address: string | null;
@@ -102,7 +108,7 @@ export default async function SupplierOrderDetailPage({
   const { data: orderData } = await supabase
     .from('orders')
     .select(
-      'id, quantity, unit_price, total_amount, status, cancel_reason, shipping_address, logistics_provider, tracking_number, confirmed_at, shipped_at, created_at, buyer_profiles(company_name, city), rfq_quotes(lead_time_days, rfq_requests(id, title, unit, requirements))',
+      `id, total_amount:total, ${ORDER_ITEMS_DETAIL}, status, cancel_reason, shipping_address, logistics_provider, tracking_number, confirmed_at, shipped_at, created_at, buyer_profiles(company_name, city), rfq_quotes(lead_time_days, rfq_requests(id, title, unit, requirements))`,
     )
     .eq('id', id)
     .eq('supplier_id', supplier.id)
@@ -193,34 +199,22 @@ export default async function SupplierOrderDetailPage({
           <Card>
             <CardHeader title={<>📦 Hàng cần làm</>} />
             <CardBody padded>
-              <div className="text-[13px] font-bold">{rfq?.title ?? 'Đơn hàng'}</div>
+              <OrderItemsTable items={order.order_items ?? []} total={order.total_amount} />
               {rfq?.requirements && (
                 <div className="text-brand-sub mt-1 text-xs leading-relaxed whitespace-pre-line">
                   {rfq.requirements}
                 </div>
               )}
               <div className="mt-3">
-                <InfoRow
-                  label="Số lượng"
-                  value={`${order.quantity.toLocaleString('vi-VN')} ${rfq?.unit ?? ''}`}
-                />
-                <InfoRow
-                  label="Đơn giá"
-                  value={`${formatVnd(order.unit_price)} / ${rfq?.unit ?? 'đơn vị'}`}
-                />
                 {order.rfq_quotes?.lead_time_days != null && (
                   <InfoRow
                     label="Thời gian sản xuất đã báo"
                     value={`${order.rfq_quotes.lead_time_days} ngày`}
                   />
                 )}
-                <InfoRow label="Tổng giá trị" value={formatVnd(order.total_amount)} />
               </div>
               {rfq && (
-                <Link
-                  href={`/messages/${rfq.id}`}
-                  className="text-brand-blue mt-2.5 block text-xs"
-                >
+                <Link href={`/messages/${rfq.id}`} className="text-brand-blue mt-2.5 block text-xs">
                   💬 Nhắn tin với buyer về đơn này →
                 </Link>
               )}

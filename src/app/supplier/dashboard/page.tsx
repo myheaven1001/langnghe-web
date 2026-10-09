@@ -6,7 +6,7 @@ import { AppShell, ButtonLink, Card, CardBody, CardHeader, StatusPill } from '@/
 import { daysUntil, formatVnDate, formatVnd, hoursUntil } from '@/lib/format';
 import { effectiveDeadline } from '@/lib/rfq';
 import { PLAN_LABEL } from '@/lib/constants';
-import { orderCode } from '@/lib/orders';
+import { ORDER_ITEMS_BRIEF, orderCode, summarizeOrderItems, type OrderItemRow } from '@/lib/orders';
 import { RFQ_OPEN_STATUSES } from '@/lib/quotes';
 import { buildSupplierNavGroups } from '../_lib/nav';
 import { getQuotedRfqIds, getUnreadNotificationCount } from '../_lib/counts';
@@ -71,7 +71,7 @@ interface SupplierOrderRow {
   tracking_number: string | null;
   created_at: string;
   buyer_profiles: { company_name: string } | null;
-  rfq_quotes: { rfq_requests: { title: string; quantity: number } | null } | null;
+  order_items: OrderItemRow[] | null;
 }
 
 interface NotificationRow {
@@ -195,7 +195,7 @@ export default async function SupplierDashboardPage() {
     supabase
       .from('orders')
       .select(
-        'id, total_amount, status, tracking_number, created_at, buyer_profiles(company_name), rfq_quotes(rfq_requests(title, quantity))',
+        `id, total_amount:total, ${ORDER_ITEMS_BRIEF}, status, tracking_number, created_at, buyer_profiles(company_name)`,
       )
       .eq('supplier_id', supplier.id)
       .order('created_at', { ascending: false })
@@ -394,7 +394,7 @@ export default async function SupplierDashboardPage() {
                   >
                     <div className="min-w-0 flex-1">
                       <div className="text-brand-ink line-clamp-2 text-[13px] font-semibold">
-                        {order.rfq_quotes?.rfq_requests?.title ?? 'Đơn hàng'}
+                        {summarizeOrderItems(order.order_items).title}
                       </div>
                       <div className="text-brand-sub mt-0.5 truncate text-xs">
                         {orderCode(order.id)} · {order.buyer_profiles?.company_name ?? 'Buyer'} ·{' '}
