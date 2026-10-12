@@ -26,6 +26,7 @@ import {
 import { PublicReviews, ReviewCard } from '@/components/reviews/ReviewViews';
 import type { PublicReview } from '@/lib/reviews';
 import { ReportButton, SaveProductButton } from '@/components/engagement/ProductEngagement';
+import { ImportClient } from '@/app/supplier/products/import/_components/ImportClient';
 import { CartClient } from '@/app/cart/_components/CartClient';
 import type { Cart } from '@/lib/cart';
 
@@ -192,6 +193,13 @@ export default async function UiPreviewPage({
             />
           </div>
         </div>
+      ) : sp.view === 'import' ? (
+        <ImportClient
+          categories={[
+            { slug: 'gom-su', name: 'Gốm sứ' },
+            { slug: 'may-tre-dan', name: 'Mây tre đan' },
+          ]}
+        />
       ) : sp.view === 'account' ? (
         <AccountSecurity email="lan@example.com" />
       ) : showProductForm ? (

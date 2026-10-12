@@ -167,12 +167,20 @@ export default async function SupplierProductsPage({
             {allCount} sản phẩm · {activeCount} đang bán · {draftCount} nháp · {pausedCount} tạm ẩn
           </div>
         </div>
-        <Link
-          href="/supplier/products/new"
-          className="bg-brand-red hover:bg-brand-red-dark rounded-md px-[18px] py-2.5 text-sm font-semibold whitespace-nowrap text-white"
-        >
-          + Thêm sản phẩm
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/supplier/products/import"
+            className="border-brand-border text-brand-ink hover:border-brand-ink rounded-md border-[1.5px] bg-white px-[18px] py-2.5 text-sm font-semibold whitespace-nowrap"
+          >
+            ⬆ Nhập hàng loạt
+          </Link>
+          <Link
+            href="/supplier/products/new"
+            className="bg-brand-red hover:bg-brand-red-dark rounded-md px-[18px] py-2.5 text-sm font-semibold whitespace-nowrap text-white"
+          >
+            + Thêm sản phẩm
+          </Link>
+        </div>
       </div>
 
       <div className="border-brand-border mb-4 flex gap-1 overflow-x-auto border-b">

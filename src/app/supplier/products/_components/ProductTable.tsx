@@ -20,6 +20,17 @@ export interface ProductListRow {
   thumbUrl: string | null;
 }
 
+type BulkAction = 'adjust_price' | 'set_lead_time' | 'set_moq';
+
+const BULK_PLACEHOLDER: Record<BulkAction, string> = {
+  adjust_price: 'VD: 5 hoặc -10',
+  set_lead_time: 'VD: 14',
+  set_moq: 'VD: 50',
+};
+
+const BULK_CONFIRM = (percent: number, count: number) =>
+  `${percent > 0 ? 'Tăng' : 'Giảm'} ${Math.abs(percent)}% mọi bậc giá của ${count} sản phẩm đã chọn? Giá mới được làm tròn tới 100đ.`;
+
 function formatRelativeTime(iso: string) {
   const minutes = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
   if (minutes < 1) return 'Vừa xong';
@@ -39,6 +50,9 @@ export function ProductTable({ products }: { products: ProductListRow[] }) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
+  const [bulkAction, setBulkAction] = useState<BulkAction>('adjust_price');
+  const [bulkValue, setBulkValue] = useState('');
+  const [bulkMessage, setBulkMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
   const allChecked = products.length > 0 && selected.size === products.length;
 
@@ -70,10 +84,87 @@ export function ProductTable({ products }: { products: ProductListRow[] }) {
     }
   }
 
+  // Sửa hàng loạt qua RPC bulk_update_products(): chỉ đụng sản phẩm của chính
+  // xưởng, bỏ qua hàng bị sàn khoá; trả số sản phẩm đã đổi.
+  async function bulkApply() {
+    const value = Number(bulkValue.replace(',', '.'));
+    if (bulkValue.trim() === '' || !Number.isFinite(value)) {
+      setBulkMessage({ ok: false, text: 'Nhập một số.' });
+      return;
+    }
+    if (bulkAction === 'adjust_price' && !confirm(BULK_CONFIRM(value, selected.size))) return;
+    setBusy(true);
+    setBulkMessage(null);
+    const { data, error } = await supabase.rpc('bulk_update_products', {
+      p_ids: Array.from(selected),
+      p_action: bulkAction,
+      p_value: value,
+    });
+    setBusy(false);
+    if (error) {
+      setBulkMessage({
+        ok: false,
+        text: error.message.includes('INVALID_INPUT')
+          ? (error.details ?? 'Giá trị không hợp lệ.')
+          : 'Không sửa được. Vui lòng thử lại.',
+      });
+      return;
+    }
+    const changed = Number(data ?? 0);
+    setBulkMessage({
+      ok: true,
+      text:
+        changed === selected.size
+          ? `Đã sửa ${changed} sản phẩm.`
+          : `Đã sửa ${changed}/${selected.size} sản phẩm — số còn lại bị bỏ qua (chưa có bảng giá, bị sàn khoá, hoặc MOQ mới nằm ngoài bảng giá).`,
+    });
+    setBulkValue('');
+    router.refresh();
+  }
+
   return (
     <div>
       {selected.size > 0 && (
-        <div className="mb-3 flex items-center gap-2.5 rounded-lg border border-[#FFD0D0] bg-[#FFF0F0] px-3.5 py-2.5 text-xs">
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-[#E5DDD1] bg-white px-3.5 py-2.5 text-xs">
+          <span className="font-semibold">Sửa hàng loạt:</span>
+          <select
+            value={bulkAction}
+            aria-label="Thao tác"
+            onChange={(e) => {
+              setBulkAction(e.target.value as BulkAction);
+              setBulkMessage(null);
+            }}
+            className="border-brand-border min-h-9 rounded-md border-[1.5px] bg-white px-2 text-xs outline-none"
+          >
+            <option value="adjust_price">Tăng / giảm giá (%)</option>
+            <option value="set_lead_time">Đặt thời gian sản xuất (ngày)</option>
+            <option value="set_moq">Đặt số lượng tối thiểu</option>
+          </select>
+          <input
+            value={bulkValue}
+            inputMode="decimal"
+            aria-label="Giá trị"
+            onChange={(e) => setBulkValue(e.target.value)}
+            placeholder={BULK_PLACEHOLDER[bulkAction]}
+            className="border-brand-border focus:border-brand-red min-h-9 w-[130px] rounded-md border-[1.5px] px-2 text-xs outline-none"
+          />
+          <button
+            type="button"
+            disabled={busy}
+            onClick={bulkApply}
+            className="bg-brand-red hover:bg-brand-red-dark min-h-9 rounded-md px-3 text-xs font-semibold text-white disabled:opacity-60"
+          >
+            Áp dụng
+          </button>
+          {bulkMessage && (
+            <span className={`w-full ${bulkMessage.ok ? 'text-brand-green' : 'text-brand-red'}`}>
+              {bulkMessage.text}
+            </span>
+          )}
+        </div>
+      )}
+      {selected.size > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2.5 rounded-lg border border-[#FFD0D0] bg-[#FFF0F0] px-3.5 py-2.5 text-xs">
           <span>
             Đã chọn <strong className="text-brand-red">{selected.size}</strong> sản phẩm
           </span>
