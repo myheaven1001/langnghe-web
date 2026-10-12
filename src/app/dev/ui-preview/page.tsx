@@ -3,6 +3,13 @@ import { buildSupplierNavGroups } from '@/app/supplier/_lib/nav';
 import { ProductForm } from '@/app/supplier/products/_components/ProductForm';
 import { AccountSecurity } from '@/components/account/AccountSecurity';
 import { BuyerCancelOrder } from '@/app/orders/[id]/_components/BuyerCancelOrder';
+import { QuoteHistory } from '@/components/quotes/QuoteHistory';
+import {
+  CounterQuoteButton,
+  RejectQuoteButton,
+  WithdrawQuoteButton,
+} from '@/components/quotes/QuoteNegotiation';
+import type { QuoteRevision } from '@/lib/quotes';
 import { CartClient } from '@/app/cart/_components/CartClient';
 import type { Cart } from '@/lib/cart';
 
@@ -65,6 +72,40 @@ export default async function UiPreviewPage({
             />
           </div>
         </>
+      ) : sp.view === 'quote' ? (
+        <div className="flex max-w-[420px] flex-col gap-4">
+          <div className="border-brand-border rounded-[10px] border bg-white p-4">
+            <div className="mb-2 text-[13px] font-bold">Buyer xem báo giá</div>
+            <QuoteHistory revisions={MOCK_REVISIONS} viewer="buyer" unit="cái" />
+            <div className="flex flex-wrap gap-2">
+              <CounterQuoteButton
+                quoteId={MOCK_ID}
+                viewer="buyer"
+                unit="cái"
+                quantity={500}
+                currentPrice={46000}
+                currentLeadTime={10}
+              />
+              <RejectQuoteButton quoteId={MOCK_ID} supplierName="Gốm Bát Tràng Minh Long" />
+            </div>
+          </div>
+          <div className="border-brand-border rounded-[10px] border bg-white p-4">
+            <div className="mb-2 text-[13px] font-bold">Xưởng trả lời đề nghị</div>
+            <QuoteHistory revisions={MOCK_REVISIONS.slice(0, 3)} viewer="supplier" unit="cái" />
+            <div className="flex flex-wrap gap-2">
+              <CounterQuoteButton
+                quoteId={MOCK_ID}
+                viewer="supplier"
+                unit="cái"
+                quantity={500}
+                currentPrice={45000}
+                currentLeadTime={10}
+                agree={{ price: 45000, leadTime: 8 }}
+              />
+              <WithdrawQuoteButton quoteId={MOCK_ID} />
+            </div>
+          </div>
+        </div>
       ) : sp.view === 'account' ? (
         <AccountSecurity email="lan@example.com" />
       ) : showProductForm ? (
@@ -248,3 +289,43 @@ const MOCK_CART: Cart = {
     },
   ],
 };
+
+const MOCK_ID = '00000000-0000-0000-0000-000000000000';
+const MOCK_REVISIONS: QuoteRevision[] = [
+  {
+    id: 'r1',
+    quote_id: MOCK_ID,
+    proposed_by: 'supplier',
+    unit_price: 50000,
+    lead_time_days: 10,
+    note: null,
+    created_at: '2026-10-10T02:00:00Z',
+  },
+  {
+    id: 'r2',
+    quote_id: MOCK_ID,
+    proposed_by: 'supplier',
+    unit_price: 48000,
+    lead_time_days: 10,
+    note: null,
+    created_at: '2026-10-10T03:00:00Z',
+  },
+  {
+    id: 'r3',
+    quote_id: MOCK_ID,
+    proposed_by: 'buyer',
+    unit_price: 45000,
+    lead_time_days: 8,
+    note: 'Lấy đủ 500 cái, thanh toán ngay khi chốt',
+    created_at: '2026-10-11T04:30:00Z',
+  },
+  {
+    id: 'r4',
+    quote_id: MOCK_ID,
+    proposed_by: 'supplier',
+    unit_price: 46000,
+    lead_time_days: null,
+    note: null,
+    created_at: '2026-10-11T08:15:00Z',
+  },
+];

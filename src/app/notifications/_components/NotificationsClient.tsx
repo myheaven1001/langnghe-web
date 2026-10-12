@@ -39,6 +39,7 @@ const NOTIFICATION_META: Record<string, { icon: string; bg: string; category: Ca
   quote_received: { icon: '💰', bg: '#FFF0E0', category: 'rfq' },
   quote_accepted: { icon: '🤝', bg: '#E1F5EE', category: 'rfq' },
   quote_rejected: { icon: '✕', bg: '#FDECEC', category: 'rfq' },
+  quote_countered: { icon: '↩', bg: '#FFF4E0', category: 'rfq' },
   rfq_expired: { icon: '⏰', bg: '#F0EFEC', category: 'rfq' },
   order_placed: { icon: '🛒', bg: '#E8F1FF', category: 'order' },
   order_declined: { icon: '✕', bg: '#FDECEC', category: 'order' },
@@ -81,6 +82,7 @@ function resolveHref(n: NotificationRow, role: 'buyer' | 'supplier'): string | n
       if (role === 'supplier') return orderId ? orderHref : supplierRfqHref;
       return rfqId ? `/rfq/${rfqId}` : '/rfq';
     case 'quote_rejected':
+    case 'quote_countered':
       return role === 'supplier' ? supplierRfqHref : rfqId ? `/rfq/${rfqId}` : '/rfq';
     case 'order_placed':
     case 'order_declined':

@@ -5,6 +5,15 @@ import { createClient } from '@/lib/supabase/server';
 import { AppShell, Card, CardBody, CardHeader, StatusPill } from '@/components/ui';
 import { daysUntil, effectiveDeadline, formatVnDate, formatVnd } from '@/lib/rfq';
 import type { BuyerAddress } from '@/lib/addresses';
+import { QuoteHistory } from '@/components/quotes/QuoteHistory';
+import { CounterQuoteButton, RejectQuoteButton } from '@/components/quotes/QuoteNegotiation';
+import {
+  MAX_QUOTE_ROUNDS,
+  QUOTE_REVISION_COLUMNS,
+  groupRevisions,
+  lastRevision,
+  type QuoteRevision,
+} from '@/lib/quotes';
 import { AcceptQuoteButton } from './_components/AcceptQuoteButton';
 import { CancelRfqButton } from './_components/CancelRfqButton';
 
@@ -153,7 +162,9 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
   ] = await Promise.all([
     supabase
       .from('buyer_addresses')
-      .select('id, label, recipient_name, phone, address_line, ward, district, province, is_default')
+      .select(
+        'id, label, recipient_name, phone, address_line, ward, district, province, is_default',
+      )
       .eq('buyer_id', buyer.id)
       .order('is_default', { ascending: false })
       .order('created_at', { ascending: false })
@@ -188,6 +199,19 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
     (t) => !quotes.some((q) => q.supplier_id === t.supplier_id),
   );
   const targetCount = targets.length || quotes.length || 1;
+
+  // Lịch sử trả giá của các báo giá (5.7) — RLS: buyer của RFQ đọc được.
+  const { data: revisionsData } = quotes.length
+    ? await supabase
+        .from('rfq_quote_revisions')
+        .select(QUOTE_REVISION_COLUMNS)
+        .in(
+          'quote_id',
+          quotes.map((q) => q.id),
+        )
+        .order('created_at', { ascending: true })
+    : { data: [] as QuoteRevision[] };
+  const revisionsByQuote = groupRevisions(revisionsData as QuoteRevision[] | null);
 
   const supplierIds = quotes.map((q) => q.supplier_id);
   const { data: verifiedRows } = supplierIds.length
@@ -422,6 +446,10 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                 const isVerified = verifiedSupplierIds.has(quote.supplier_id);
                 const canAccept = !isSettled && ACTIVE_QUOTE_STATUSES.includes(quote.status);
                 const totalValue = quote.unit_price * rfq.quantity;
+                const revisions = revisionsByQuote.get(quote.id) ?? [];
+                const last = lastRevision(revisions);
+                const waitingSupplier = last?.proposed_by === 'buyer';
+                const supplierName = quote.supplier_profiles?.shop_name ?? 'xưởng này';
 
                 return (
                   <div
@@ -461,9 +489,7 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                         <div className="font-tight text-lg font-bold">
                           {formatVnd(quote.unit_price)}
                         </div>
-                        <div className="text-brand-light text-xs">
-                          / {rfq.unit ?? 'đơn vị'}
-                        </div>
+                        <div className="text-brand-light text-xs">/ {rfq.unit ?? 'đơn vị'}</div>
                       </div>
                     </div>
 
@@ -490,15 +516,23 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                       </div>
                       <div className="text-brand-sub text-xs">
                         Tổng giá trị
-                        <b className="text-brand-ink block text-[13px]">
-                          {formatVnd(totalValue)}
-                        </b>
+                        <b className="text-brand-ink block text-[13px]">{formatVnd(totalValue)}</b>
                       </div>
                     </div>
 
                     {quote.note && (
                       <div className="bg-brand-bg text-brand-sub mb-2.5 rounded-lg px-2.5 py-2 text-xs leading-relaxed">
                         &ldquo;{quote.note}&rdquo;
+                      </div>
+                    )}
+
+                    <QuoteHistory revisions={revisions} viewer="buyer" unit={rfq.unit} />
+
+                    {canAccept && waitingSupplier && last && (
+                      <div className="bg-status-amber-soft text-status-amber mb-2.5 rounded-lg px-3 py-2 text-xs font-semibold">
+                        ⏳ Đang chờ xưởng trả lời đề nghị {formatVnd(Number(last.unit_price))} của
+                        bạn. Bạn vẫn chốt ngay được với giá xưởng đang báo (
+                        {formatVnd(quote.unit_price)}).
                       </div>
                     )}
 
@@ -516,10 +550,21 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                       <div className="flex flex-wrap gap-2">
                         <AcceptQuoteButton
                           quoteId={quote.id}
-                          supplierName={quote.supplier_profiles?.shop_name ?? 'xưởng này'}
+                          supplierName={supplierName}
                           addresses={addressesData}
                           rfqId={rfq.id}
                         />
+                        {!waitingSupplier && revisions.length < MAX_QUOTE_ROUNDS && (
+                          <CounterQuoteButton
+                            quoteId={quote.id}
+                            viewer="buyer"
+                            unit={rfq.unit}
+                            quantity={rfq.quantity}
+                            currentPrice={quote.unit_price}
+                            currentLeadTime={quote.lead_time_days}
+                          />
+                        )}
+                        <RejectQuoteButton quoteId={quote.id} supplierName={supplierName} />
                         <Link
                           href={`/messages/${rfq.id}?quote=${quote.id}`}
                           className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] px-3.5 py-2 text-xs font-semibold"

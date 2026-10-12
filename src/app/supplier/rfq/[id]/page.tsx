@@ -12,7 +12,17 @@ import {
   StatusPill,
 } from '@/components/ui';
 import { daysUntil, formatVnd, formatVnDateTime, hoursUntil } from '@/lib/format';
-import { RFQ_OPEN_STATUSES, SUPPLIER_QUOTE_STATUS, type SupplierQuote } from '@/lib/quotes';
+import { QuoteHistory } from '@/components/quotes/QuoteHistory';
+import { CounterQuoteButton, WithdrawQuoteButton } from '@/components/quotes/QuoteNegotiation';
+import {
+  MAX_QUOTE_ROUNDS,
+  QUOTE_REVISION_COLUMNS,
+  RFQ_OPEN_STATUSES,
+  SUPPLIER_QUOTE_STATUS,
+  lastRevision,
+  type QuoteRevision,
+  type SupplierQuote,
+} from '@/lib/quotes';
 import { effectiveDeadline } from '@/lib/rfq';
 import { buildSupplierNavGroups } from '../../_lib/nav';
 import { getNewRfqCount, getUnreadNotificationCount } from '../../_lib/counts';
@@ -119,7 +129,20 @@ export default async function SupplierRfqDetailPage({
   const current = quotes.find((q) => q.status !== 'withdrawn' && q.status !== 'rejected') ?? null;
   const pending = current?.status === 'pending' ? current : null;
   const accepted = current?.status === 'accepted' ? current : null;
+  const negotiating = current?.status === 'counter_offered' ? current : null;
   const history = quotes.filter((q) => q.id !== current?.id);
+
+  // Lịch sử trả giá của báo giá hiện tại (5.7).
+  const { data: revisionsData } = current
+    ? await supabase
+        .from('rfq_quote_revisions')
+        .select(QUOTE_REVISION_COLUMNS)
+        .eq('quote_id', current.id)
+        .order('created_at', { ascending: true })
+    : { data: [] as QuoteRevision[] };
+  const revisions = (revisionsData ?? []) as QuoteRevision[];
+  const lastOffer = lastRevision(revisions);
+  const buyerOffer = lastOffer?.proposed_by === 'buyer' ? lastOffer : null;
 
   const { data: order } = accepted
     ? await supabase.from('orders').select('id').eq('rfq_quote_id', accepted.id).maybeSingle()
@@ -249,9 +272,11 @@ export default async function SupplierRfqDetailPage({
                   💰{' '}
                   {accepted
                     ? 'Báo giá đã được chấp nhận'
-                    : pending
-                      ? 'Báo giá của bạn'
-                      : 'Gửi báo giá'}
+                    : negotiating
+                      ? 'Đang thương lượng'
+                      : pending
+                        ? 'Báo giá của bạn'
+                        : 'Gửi báo giá'}
                 </>
               }
             />
@@ -273,6 +298,56 @@ export default async function SupplierRfqDetailPage({
                   >
                     📦 Mở đơn hàng
                   </ButtonLink>
+                </>
+              ) : negotiating && isOpen ? (
+                <>
+                  <InfoRow label="Giá bạn đang báo" value={formatVnd(negotiating.unit_price)} />
+                  {negotiating.lead_time_days != null && (
+                    <InfoRow
+                      label="Thời gian sản xuất"
+                      value={`${negotiating.lead_time_days} ngày`}
+                    />
+                  )}
+                  <div className="mt-3">
+                    <QuoteHistory revisions={revisions} viewer="supplier" unit={rfq.unit} />
+                  </div>
+                  {buyerOffer ? (
+                    <>
+                      <div className="bg-status-amber-soft text-status-amber mb-3 rounded-lg px-3 py-2 text-xs font-semibold">
+                        Buyer đề nghị {formatVnd(Number(buyerOffer.unit_price))} /{' '}
+                        {rfq.unit ?? 'đơn vị'}
+                        {buyerOffer.lead_time_days != null
+                          ? ` · ${buyerOffer.lead_time_days} ngày sản xuất`
+                          : ''}{' '}
+                        — tổng {formatVnd(Number(buyerOffer.unit_price) * rfq.quantity)}. Đồng ý, đề
+                        nghị giá khác, hoặc rút báo giá.
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {revisions.length < MAX_QUOTE_ROUNDS && (
+                          <CounterQuoteButton
+                            quoteId={negotiating.id}
+                            viewer="supplier"
+                            unit={rfq.unit}
+                            quantity={rfq.quantity}
+                            currentPrice={Number(buyerOffer.unit_price)}
+                            currentLeadTime={negotiating.lead_time_days}
+                            agree={{
+                              price: Number(buyerOffer.unit_price),
+                              leadTime: buyerOffer.lead_time_days,
+                            }}
+                          />
+                        )}
+                        <WithdrawQuoteButton quoteId={negotiating.id} />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-brand-sub mb-3 text-[13px] leading-relaxed">
+                        Đã gửi đề nghị của bạn — đang chờ buyer chốt hoặc trả giá tiếp.
+                      </div>
+                      <WithdrawQuoteButton quoteId={negotiating.id} />
+                    </>
+                  )}
                 </>
               ) : current ? (
                 pending && isOpen ? (
