@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/server';
 import { PublicHeader, Breadcrumb } from '@/components/ui';
 import { CatalogFilters } from '@/components/catalog/CatalogFilters';
 import { CatalogResults } from '@/components/catalog/CatalogResults';
+import { PublicReviews } from '@/components/reviews/ReviewViews';
+import type { PublicReview, ReviewSummary } from '@/lib/reviews';
 import { parseCatalogFilters, runCatalogSearch, type SearchParamsRecord } from '@/lib/catalog';
 
 // Trang gian hàng (kế hoạch 2.6): /shops/<id> hoặc /shops/<slug>. Hồ sơ từ
@@ -91,9 +93,13 @@ export default async function ShopPage({
   const filters = parseCatalogFilters(sp);
   const basePath = `/shops/${shop.slug}`;
   const supabase = await createClient();
-  const { products, total, facets, failed } = await runCatalogSearch(supabase, filters, {
-    supplierId: shop.id,
-  });
+  const [{ products, total, facets, failed }, { data: summaryData }, { data: reviewsData }] =
+    await Promise.all([
+      runCatalogSearch(supabase, filters, { supplierId: shop.id }),
+      supabase.rpc('supplier_review_summary', { p_supplier_id: shop.id }),
+      supabase.rpc('supplier_reviews', { p_supplier_id: shop.id, p_limit: 10, p_offset: 0 }),
+    ]);
+  const reviewSummary = (summaryData ?? null) as ReviewSummary | null;
 
   const facts = [
     shop.founding_year && `Thành lập ${shop.founding_year}`,
@@ -148,9 +154,12 @@ export default async function ShopPage({
                   </span>
                 )}
                 {shop.rating_avg != null && Number(shop.rating_avg) > 0 && (
-                  <span className="text-xs">
+                  <a href="#reviews" className="text-xs hover:underline">
                     <span className="text-[#FFB800]">★</span> {Number(shop.rating_avg).toFixed(1)}
-                  </span>
+                    {reviewSummary && reviewSummary.count > 0
+                      ? ` (${reviewSummary.count} đánh giá)`
+                      : ''}
+                  </a>
                 )}
               </div>
               <div className="text-brand-sub mt-0.5 text-xs">
@@ -218,6 +227,15 @@ export default async function ShopPage({
             }
           />
         </div>
+
+        {reviewSummary && reviewSummary.count > 0 && (
+          <div className="mt-3">
+            <PublicReviews
+              summary={reviewSummary}
+              reviews={(reviewsData ?? []) as PublicReview[]}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

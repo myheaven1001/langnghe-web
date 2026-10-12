@@ -54,6 +54,7 @@ export async function updateSession(request: NextRequest) {
     '/cart',
     '/checkout',
     '/disputes',
+    '/reviews',
     '/settings',
     '/supplier',
     '/messages',
@@ -121,7 +122,7 @@ export async function updateSession(request: NextRequest) {
     // Phân quyền theo khu (kế hoạch 4.3). Mỗi vai trò có một "nhà"; vào nhầm
     // khu của vai trò khác thì được đưa về nhà mình thay vì thấy trang trống
     // hoặc bị đẩy ra trang chủ. /messages và /notifications dùng chung.
-    //   buyer     /dashboard, /rfq, /orders, /cart, /checkout, /disputes, /settings
+    //   buyer     /dashboard, /rfq, /orders, /cart, /checkout, /disputes, /reviews, /settings
     //   supplier  /supplier/*
     //   admin     /admin/* (role admin không bao giờ tự gán — handle_new_user())
     //   both      khu buyer + khu supplier
@@ -131,7 +132,7 @@ export async function updateSession(request: NextRequest) {
       ? 'admin'
       : inArea(['/supplier'])
         ? 'supplier'
-        : inArea(['/dashboard', '/rfq', '/orders', '/cart', '/checkout', '/disputes', '/settings'])
+        : inArea(['/dashboard', '/rfq', '/orders', '/cart', '/checkout', '/disputes', '/reviews', '/settings'])
           ? 'buyer'
           : 'shared';
     const role = profile.role as string;

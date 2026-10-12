@@ -50,6 +50,8 @@ const NOTIFICATION_META: Record<string, { icon: string; bg: string; category: Ca
   dispute_opened: { icon: '⚠️', bg: '#FDECEC', category: 'order' },
   dispute_resolved: { icon: '⚖️', bg: '#E1F5EE', category: 'order' },
   dispute_reply: { icon: '💬', bg: '#FFF4E0', category: 'order' },
+  review_received: { icon: '⭐', bg: '#FFF4E0', category: 'order' },
+  review_replied: { icon: '⭐', bg: '#FFF4E0', category: 'order' },
   verification_approved: { icon: '✅', bg: '#E1F5EE', category: 'account' },
   verification_rejected: { icon: '⚠️', bg: '#FDECEC', category: 'account' },
   account_suspended: { icon: '🚫', bg: '#FDECEC', category: 'account' },
@@ -102,6 +104,10 @@ function resolveHref(n: NotificationRow, role: 'buyer' | 'supplier'): string | n
       }
       return orderHref;
     }
+    case 'review_received':
+      return '/supplier/reviews';
+    case 'review_replied':
+      return '/reviews';
     case 'verification_approved':
     case 'verification_rejected':
       return role === 'buyer' ? '/settings/profile' : '/supplier/settings/profile';

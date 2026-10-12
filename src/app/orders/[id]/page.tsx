@@ -19,7 +19,10 @@ import {
   type OrderItemRow,
 } from '@/lib/orders';
 import { OrderItemsTable } from '@/components/orders/OrderItemsTable';
+import { ReviewForm } from '@/components/reviews/ReviewActions';
+import { ReviewCard } from '@/components/reviews/ReviewViews';
 import { loadOrderDisputes } from '@/lib/disputes';
+import { REVIEW_COLUMNS, type ReviewRow } from '@/lib/reviews';
 import { features } from '@/lib/features';
 import { BuyerCancelOrder } from './_components/BuyerCancelOrder';
 import { BuyerOrderActions } from './_components/BuyerOrderActions';
@@ -175,6 +178,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   ]);
 
   const orderDisputes = features.disputes ? await loadOrderDisputes(supabase, order.id) : [];
+  // Đánh giá của đơn (bước 6): chỉ đơn đã hoàn tất mới có / mới gửi được.
+  const { data: reviewData } =
+    order.status === 'completed'
+      ? await supabase.from('reviews').select(REVIEW_COLUMNS).eq('order_id', order.id).maybeSingle()
+      : { data: null };
+  const review = reviewData as ReviewRow | null;
   const events = (eventsData ?? []) as OrderEventRow[];
   const documents = (documentsData ?? []) as OrderDocumentRow[];
   const settings = new Map((settingsData ?? []).map((s) => [s.key as string, s.value]));
@@ -289,6 +298,26 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         {/* LEFT */}
         <div className="min-w-0">
+          {order.status === 'completed' && (
+            <Card>
+              <CardHeader title={<>⭐ {review ? 'Đánh giá của bạn' : 'Đánh giá xưởng'}</>} />
+              <CardBody padded>
+                {review ? (
+                  <ReviewCard
+                    rating={review.rating}
+                    author="Bạn"
+                    createdAt={review.created_at}
+                    comment={review.comment}
+                    reply={review.supplier_reply}
+                    repliedAt={review.replied_at}
+                    hiddenReason={review.hidden_at ? (review.hidden_reason ?? '') : undefined}
+                  />
+                ) : (
+                  <ReviewForm orderId={order.id} />
+                )}
+              </CardBody>
+            </Card>
+          )}
           <Card>
             <CardHeader title={<>🕒 Lịch sử đơn hàng</>} />
             <CardBody padded>

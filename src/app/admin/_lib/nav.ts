@@ -22,6 +22,7 @@ export function buildAdminNavGroups({
         { icon: '⚖️', label: 'Tranh chấp & hoàn tiền', href: '/admin/disputes' },
         { icon: '👥', label: 'Quản lý user', href: '/admin/users' },
         { icon: '🗂️', label: 'Kiểm duyệt sản phẩm', href: '/admin/products' },
+        { icon: '⭐', label: 'Kiểm duyệt đánh giá', href: '/admin/reviews' },
       ],
     },
     {

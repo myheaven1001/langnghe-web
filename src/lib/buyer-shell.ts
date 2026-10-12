@@ -21,6 +21,7 @@ export function buildBuyerNavGroups({
         { icon: '📋', label: 'RFQ của tôi', href: '/rfq', count: activeRfqCount || undefined },
         ...(features.cart ? [{ icon: '🛒', label: 'Giỏ hàng', href: '/cart' }] : []),
         { icon: '📦', label: 'Đơn hàng', href: '/orders' },
+        { icon: '⭐', label: 'Đánh giá của tôi', href: '/reviews' },
         ...(features.disputes ? [{ icon: '⚖️', label: 'Tranh chấp', href: '/disputes' }] : []),
       ],
     },

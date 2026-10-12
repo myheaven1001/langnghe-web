@@ -18,6 +18,13 @@ import {
 import type { DisputeMessageRow, DisputeRow, RefundRow } from '@/lib/disputes';
 import { ChatClient } from '@/app/messages/[id]/_components/ChatClient';
 import type { ChatMessage, ConversationRow } from '@/app/messages/_lib/conversations';
+import {
+  ReviewForm,
+  ReviewModerateButton,
+  ReviewReplyForm,
+} from '@/components/reviews/ReviewActions';
+import { PublicReviews, ReviewCard } from '@/components/reviews/ReviewViews';
+import type { PublicReview } from '@/lib/reviews';
 import { CartClient } from '@/app/cart/_components/CartClient';
 import type { Cart } from '@/lib/cart';
 
@@ -143,6 +150,36 @@ export default async function UiPreviewPage({
           conversations={MOCK_CONVERSATIONS}
           pendingContext={{ type: 'order', id: 'a1b2c3d4-0000-0000-0000-000000000000' }}
         />
+      ) : sp.view === 'reviews' ? (
+        <div className="flex max-w-[640px] flex-col gap-4">
+          <div className="border-brand-border rounded-[10px] border bg-white p-4">
+            <div className="mb-2 text-[13px] font-bold">Buyer đánh giá đơn</div>
+            <ReviewForm orderId={MOCK_ID} />
+          </div>
+          <PublicReviews
+            summary={{ count: 12, average: 4.3, stars: { '5': 7, '4': 3, '3': 1, '2': 1, '1': 0 } }}
+            reviews={MOCK_REVIEWS}
+          />
+          <div className="border-brand-border rounded-[10px] border bg-white p-4">
+            <ReviewCard
+              rating={2}
+              author="Decor Hà Nội · Đơn #A1B2C3D4"
+              createdAt="2026-10-09T03:00:00Z"
+              comment="Sứt mẻ vài cái, đóng gói mỏng."
+              reply={null}
+              hiddenReason="Lời lẽ xúc phạm"
+              footer={<ReviewModerateButton reviewId={MOCK_ID} hidden />}
+            />
+            <ReviewCard
+              rating={4}
+              author="Decor Hà Nội · Đơn #E5F6A7B8"
+              createdAt="2026-10-10T03:00:00Z"
+              comment="Hàng ổn, giao hơi chậm."
+              reply={null}
+              footer={<ReviewReplyForm reviewId={MOCK_ID} currentReply={null} />}
+            />
+          </div>
+        </div>
       ) : sp.view === 'account' ? (
         <AccountSecurity email="lan@example.com" />
       ) : showProductForm ? (
@@ -474,5 +511,26 @@ const MOCK_CONVERSATIONS: ConversationRow[] = [
     lastMessageIsMine: false,
     lastMessageAt: '2026-10-11T01:00:00Z',
     unreadCount: 2,
+  },
+];
+
+const MOCK_REVIEWS: PublicReview[] = [
+  {
+    id: 'v1',
+    rating: 5,
+    comment: 'Hàng đẹp, men đều, giao đúng hẹn. Sẽ đặt tiếp lô sau.',
+    supplier_reply: 'Cảm ơn anh chị đã tin tưởng xưởng.',
+    replied_at: '2026-10-11T02:00:00Z',
+    created_at: '2026-10-10T02:00:00Z',
+    buyer_name: 'D**** H* N**',
+  },
+  {
+    id: 'v2',
+    rating: 3,
+    comment: 'Chất lượng ổn nhưng đóng gói cần chắc hơn, vỡ 3 cái trong 200.',
+    supplier_reply: null,
+    replied_at: null,
+    created_at: '2026-10-05T02:00:00Z',
+    buyer_name: 'C*** T* H*** P****',
   },
 ];
