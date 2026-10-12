@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AppShell, Card, CardBody, CardHeader, StatusPill } from '@/components/ui';
+import { StartChatButton } from '@/components/messages/StartChatButton';
 import { OrderDisputeCard } from '@/components/disputes/DisputeViews';
 import { OrderDocuments } from '@/components/orders/OrderDocuments';
 import { OrderNoteForm } from '@/components/orders/OrderNoteForm';
@@ -69,7 +70,7 @@ interface OrderDetail {
   confirmed_at: string | null;
   shipped_at: string | null;
   created_at: string;
-  buyer_profiles: { company_name: string; city: string | null } | null;
+  buyer_profiles: { id: string; company_name: string; city: string | null } | null;
   rfq_quotes: {
     lead_time_days: number | null;
     rfq_requests: {
@@ -116,7 +117,7 @@ export default async function SupplierOrderDetailPage({
   const { data: orderData } = await supabase
     .from('orders')
     .select(
-      `id, total_amount:total, ${ORDER_ITEMS_DETAIL}, status, cancel_reason, shipping_address, logistics_provider, tracking_number, confirmed_at, shipped_at, created_at, buyer_profiles(company_name, city), rfq_quotes(lead_time_days, rfq_requests(id, title, unit, requirements))`,
+      `id, total_amount:total, ${ORDER_ITEMS_DETAIL}, status, cancel_reason, shipping_address, logistics_provider, tracking_number, confirmed_at, shipped_at, created_at, buyer_profiles(id, company_name, city), rfq_quotes(lead_time_days, rfq_requests(id, title, unit, requirements))`,
     )
     .eq('id', id)
     .eq('supplier_id', supplier.id)
@@ -236,10 +237,14 @@ export default async function SupplierOrderDetailPage({
                   />
                 )}
               </div>
-              {rfq && (
-                <Link href={`/messages/${rfq.id}`} className="text-brand-blue mt-2.5 block text-xs">
+              {order.buyer_profiles && (
+                <StartChatButton
+                  buyerId={order.buyer_profiles.id}
+                  context={{ type: 'order', id: order.id }}
+                  className="text-brand-blue mt-2.5 block min-h-8 text-left text-xs"
+                >
                   💬 Nhắn tin với buyer về đơn này →
-                </Link>
+                </StartChatButton>
               )}
             </CardBody>
           </Card>

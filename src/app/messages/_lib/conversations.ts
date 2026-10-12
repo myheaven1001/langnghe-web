@@ -1,162 +1,129 @@
 import type { createClient } from '@/lib/supabase/server';
 
-// Dùng chung giữa /messages (5.1 — danh sách hội thoại) và /messages/[rfqId]
-// (5.2 — cột hội thoại bên trái trong chat chi tiết) để không lặp lại cùng
-// 1 logic group-by-thread ở 2 nơi.
+// Tin nhắn theo cặp buyer ↔ xưởng (kế hoạch 5.9): bảng conversations +
+// conversation_messages, ghi qua RPC start_conversation / send_message /
+// mark_conversation_read. Danh sách lấy qua list_conversations() vì buyer và
+// xưởng không đọc thẳng hồ sơ của nhau được (RLS) — hàm trả sẵn tên bên kia.
 export type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
+export type ChatRole = 'buyer' | 'supplier';
+export type MessageContextType = 'rfq' | 'product' | 'order';
+
 export interface ConversationRow {
-  rfqId: string;
-  quoteId: string | null;
-  rfqTag: string;
+  id: string;
+  myRole: ChatRole;
+  counterpartId: string;
   counterpartName: string;
   counterpartIcon: string;
   lastMessage: string;
   lastMessageIsMine: boolean;
-  lastMessageAt: string;
+  /** null = hội thoại vừa mở, chưa có tin nào. */
+  lastMessageAt: string | null;
   unreadCount: number;
 }
 
-interface MessageRow {
+export interface ChatMessage {
   id: string;
-  rfq_id: string;
-  quote_id: string | null;
-  sender_role: 'buyer' | 'supplier';
-  content: string;
+  senderRole: ChatRole;
+  body: string;
+  contextType: MessageContextType | null;
+  contextId: string | null;
+  createdAt: string;
+}
+
+export const MESSAGE_COLUMNS = 'id, sender_role, body, context_type, context_id, created_at';
+
+export interface MessageDbRow {
+  id: string;
+  sender_role: ChatRole;
+  body: string;
+  context_type: MessageContextType | null;
+  context_id: string | null;
   created_at: string;
-  read_at: string | null;
 }
 
-// Gộp danh sách tin nhắn phẳng thành 1 dòng/hội thoại: khoá nhóm là
-// quote_id (1 supplier ↔ 1 rfq, do uq_quote_active_per_supplier), hoặc
-// `rfq_id` khi tin broadcast (quote_id NULL) chưa gắn vào 1 supplier cụ
-// thể nào — vẫn đúng tinh thần "group theo rfq_id" của roadmap (RFQ vẫn
-// là ngữ cảnh hiển thị qua rfqTag) nhưng không gộp nhầm 2 xưởng khác
-// nhau vào chung 1 dòng khi RFQ multi-target có nhiều xưởng đã báo giá.
-function buildConversations(
-  messages: MessageRow[],
-  counterpartOf: (rfqId: string, quoteId: string | null) => { name: string; icon: string } | null,
-  rfqTagOf: (rfqId: string) => string,
-  myRole: 'buyer' | 'supplier',
-): ConversationRow[] {
-  const byThread = new Map<string, MessageRow[]>();
-  for (const m of messages) {
-    const key = m.quote_id ?? `rfq:${m.rfq_id}`;
-    const list = byThread.get(key);
-    if (list) list.push(m);
-    else byThread.set(key, [m]);
-  }
-
-  const rows: ConversationRow[] = [];
-  for (const [, list] of byThread) {
-    list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    const last = list[0];
-    const counterpart = counterpartOf(last.rfq_id, last.quote_id);
-    if (!counterpart) continue; // không xác định được đối phương -> bỏ qua, tránh hiển thị sai người
-    rows.push({
-      rfqId: last.rfq_id,
-      quoteId: last.quote_id,
-      rfqTag: rfqTagOf(last.rfq_id),
-      counterpartName: counterpart.name,
-      counterpartIcon: counterpart.icon,
-      lastMessage: last.content,
-      lastMessageIsMine: last.sender_role === myRole,
-      lastMessageAt: last.created_at,
-      unreadCount: list.filter((m) => m.sender_role !== myRole && !m.read_at).length,
-    });
-  }
-
-  rows.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
-  return rows;
+export function toChatMessage(row: MessageDbRow): ChatMessage {
+  return {
+    id: row.id,
+    senderRole: row.sender_role,
+    body: row.body,
+    contextType: row.context_type,
+    contextId: row.context_id,
+    createdAt: row.created_at,
+  };
 }
 
-export async function loadBuyerConversations(supabase: SupabaseServerClient, buyerId: string) {
-  const { data: rfqsData } = await supabase
-    .from('rfq_requests')
-    .select('id, title')
-    .eq('buyer_id', buyerId);
-  const rfqs = rfqsData ?? [];
-  if (rfqs.length === 0) return [];
-
-  const rfqIds = rfqs.map((r) => r.id);
-  const rfqTitleById = new Map(rfqs.map((r) => [r.id as string, r.title as string]));
-
-  const [{ data: quotesData }, { data: messagesData }] = await Promise.all([
-    supabase
-      .from('rfq_quotes')
-      .select('id, rfq_id, supplier_profiles(shop_name)')
-      .in('rfq_id', rfqIds),
-    supabase
-      .from('rfq_messages')
-      .select('id, rfq_id, quote_id, sender_role, content, created_at, read_at')
-      .in('rfq_id', rfqIds),
-  ]);
-
-  const quotes = (quotesData ?? []) as unknown as {
-    id: string;
-    rfq_id: string;
-    supplier_profiles: { shop_name: string } | null;
-  }[];
-  const shopNameByQuoteId = new Map(
-    quotes.map((q) => [q.id, q.supplier_profiles?.shop_name ?? 'Xưởng']),
-  );
-
-  return buildConversations(
-    (messagesData ?? []) as MessageRow[],
-    (rfqId, quoteId) => {
-      if (quoteId) return { name: shopNameByQuoteId.get(quoteId) ?? 'Xưởng', icon: '🏭' };
-      // Broadcast (quote_id NULL): RFQ single-target chỉ có tối đa 1 xưởng,
-      // lấy luôn tên xưởng đó nếu đã có báo giá.
-      const soleQuote = quotes.find((q) => q.rfq_id === rfqId);
-      return { name: soleQuote?.supplier_profiles?.shop_name ?? 'Xưởng', icon: '🏭' };
-    },
-    (rfqId) => rfqTitleById.get(rfqId) ?? 'RFQ',
-    'buyer',
-  );
+interface ListRow {
+  id: string;
+  my_role: ChatRole;
+  counterpart_id: string;
+  counterpart_name: string;
+  last_message_at: string | null;
+  last_message_preview: string | null;
+  last_sender_role: ChatRole | null;
+  unread: number;
 }
 
-export async function loadSupplierConversations(
+// Mọi hội thoại của người đang đăng nhập, mới nhất trước. Tài khoản vừa là
+// buyer vừa là xưởng (role 'both') nhận cả hai phía.
+export async function loadConversations(
   supabase: SupabaseServerClient,
-  supplierId: string,
-) {
-  const { data: quotesData } = await supabase
-    .from('rfq_quotes')
-    .select('id, rfq_id, rfq_requests(id, title, buyer_profiles(company_name))')
-    .eq('supplier_id', supplierId);
+): Promise<ConversationRow[]> {
+  const { data } = await supabase.rpc('list_conversations');
+  return ((data ?? []) as ListRow[]).map((row) => ({
+    id: row.id,
+    myRole: row.my_role,
+    counterpartId: row.counterpart_id,
+    counterpartName: row.counterpart_name,
+    counterpartIcon: row.my_role === 'buyer' ? '🏭' : '🏢',
+    lastMessage: row.last_message_preview ?? '',
+    lastMessageIsMine: row.last_sender_role === row.my_role,
+    lastMessageAt: row.last_message_at,
+    unreadCount: row.unread,
+  }));
+}
 
-  const quotes = (quotesData ?? []) as unknown as {
-    id: string;
-    rfq_id: string;
-    rfq_requests: {
-      id: string;
-      title: string;
-      buyer_profiles: { company_name: string } | null;
-    } | null;
-  }[];
-  if (quotes.length === 0) return [];
+/** Trang xem ngữ cảnh của một tin theo vai trò người xem. */
+export function contextHref(
+  type: MessageContextType,
+  id: string,
+  role: ChatRole,
+): { href: string; label: string } {
+  if (type === 'product') return { href: `/products/${id}`, label: 'Sản phẩm' };
+  if (type === 'order') {
+    return {
+      href: role === 'buyer' ? `/orders/${id}` : `/supplier/orders/${id}`,
+      label: `Đơn #${id.slice(0, 8).toUpperCase()}`,
+    };
+  }
+  return {
+    href: role === 'buyer' ? `/rfq/${id}` : `/supplier/rfq/${id}`,
+    label: `RFQ #${id.slice(0, 8).toUpperCase()}`,
+  };
+}
 
-  const rfqIds = [...new Set(quotes.map((q) => q.rfq_id))];
-  const rfqTitleById = new Map(quotes.map((q) => [q.rfq_id, q.rfq_requests?.title ?? 'RFQ']));
-  const buyerNameByRfqId = new Map(
-    quotes.map((q) => [q.rfq_id, q.rfq_requests?.buyer_profiles?.company_name ?? 'Buyer']),
-  );
-  const quoteIdByRfqId = new Map(quotes.map((q) => [q.rfq_id, q.id]));
+/** `?ctx=rfq:<uuid>` → ngữ cảnh gắn vào tin đầu tiên gửi đi. */
+export function parseContextParam(
+  value: string | undefined,
+): { type: MessageContextType; id: string } | null {
+  const match = /^(rfq|product|order):([0-9a-f-]{36})$/i.exec(value ?? '');
+  return match ? { type: match[1] as MessageContextType, id: match[2] } : null;
+}
 
-  // Không cần lọc quote_id ở query — rfq_messages_select (RLS) đã tự giới
-  // hạn đúng tin nhắn của quote mình + broadcast của rfq mình đã báo giá.
-  const { data: messagesData } = await supabase
-    .from('rfq_messages')
-    .select('id, rfq_id, quote_id, sender_role, content, created_at, read_at')
-    .in('rfq_id', rfqIds);
-
-  return buildConversations(
-    (messagesData ?? []) as MessageRow[],
-    (rfqId, quoteId) => {
-      // Chỉ nhận tin nếu đúng quote của mình hoặc broadcast của rfq mình đã báo giá
-      if (quoteId && quoteId !== quoteIdByRfqId.get(rfqId)) return null;
-      return { name: buyerNameByRfqId.get(rfqId) ?? 'Buyer', icon: '🏢' };
-    },
-    (rfqId) => rfqTitleById.get(rfqId) ?? 'RFQ',
-    'supplier',
-  );
+// Mã lỗi từ start_conversation() / send_message() → câu tiếng Việt.
+export function messageErrorMessage(message: string, fallback: string): string {
+  if (message.includes('DIRECT_MESSAGE_DISABLED')) {
+    return 'Xưởng này chỉ nhận tin từ buyer đã gửi yêu cầu báo giá hoặc có đơn. Hãy gửi yêu cầu báo giá trước.';
+  }
+  if (message.includes('NO_RELATIONSHIP')) {
+    return 'Chỉ nhắn được cho buyer đã mời bạn báo giá hoặc có đơn chung.';
+  }
+  if (message.includes('MESSAGE_RATE_LIMIT')) return 'Bạn gửi quá nhanh. Chờ một phút rồi thử lại.';
+  if (message.includes('INVALID_MESSAGE')) return 'Tin nhắn dài 1–4000 ký tự.';
+  if (message.includes('COUNTERPART_NOT_FOUND')) return 'Không tìm thấy người nhận.';
+  if (message.includes('CONVERSATION_NOT_FOUND')) return 'Không tìm thấy hội thoại. Tải lại trang.';
+  if (message.includes('NOT_A_PARTICIPANT')) return 'Tài khoản này không nhắn tin ở đây được.';
+  if (message.includes('ACCOUNT_SUSPENDED')) return 'Tài khoản của bạn đang bị tạm khóa.';
+  if (message.includes('NOT_AUTHENTICATED')) return 'Vui lòng đăng nhập lại.';
+  return fallback;
 }

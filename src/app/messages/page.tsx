@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AppShell } from '@/components/ui';
 import { getUnreadNotificationCount, getNewRfqCount } from '../supplier/_lib/counts';
-import { loadBuyerConversations, loadSupplierConversations } from './_lib/conversations';
+import { loadConversations } from './_lib/conversations';
 import { buildMessagesShell } from './_lib/shell';
 import { MessagesInboxClient } from './_components/MessagesInboxClient';
 
@@ -28,9 +28,7 @@ export default async function MessagesInboxPage() {
   const [unreadCount, newRfqCount, conversations] = await Promise.all([
     getUnreadNotificationCount(supabase, user.id),
     supplier ? getNewRfqCount(supabase, supplier.id) : Promise.resolve(0),
-    buyer
-      ? loadBuyerConversations(supabase, buyer.id)
-      : loadSupplierConversations(supabase, supplier!.id),
+    loadConversations(supabase),
   ]);
 
   const unreadThreadCount = conversations.filter((c) => c.unreadCount > 0).length;

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AppShell, Card, CardBody, CardHeader, StatusPill } from '@/components/ui';
+import { StartChatButton } from '@/components/messages/StartChatButton';
 import { OrderDisputeCard } from '@/components/disputes/DisputeViews';
 import { OrderDocuments } from '@/components/orders/OrderDocuments';
 import { OrderNoteForm } from '@/components/orders/OrderNoteForm';
@@ -456,12 +457,13 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 >
                   🏪 Xem gian hàng
                 </Link>
-                <Link
-                  href={rfq ? `/messages/${rfq.id}` : '/messages'}
+                <StartChatButton
+                  supplierId={order.supplier_profiles.id}
+                  context={{ type: 'order', id: order.id }}
                   className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink flex-1 rounded-md border-[1.5px] py-2 text-center text-xs font-semibold"
                 >
                   💬 Nhắn tin
-                </Link>
+                </StartChatButton>
               </div>
             </div>
           )}

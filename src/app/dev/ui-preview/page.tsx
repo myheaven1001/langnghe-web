@@ -16,6 +16,8 @@ import {
   OrderDisputeCard,
 } from '@/components/disputes/DisputeViews';
 import type { DisputeMessageRow, DisputeRow, RefundRow } from '@/lib/disputes';
+import { ChatClient } from '@/app/messages/[id]/_components/ChatClient';
+import type { ChatMessage, ConversationRow } from '@/app/messages/_lib/conversations';
 import { CartClient } from '@/app/cart/_components/CartClient';
 import type { Cart } from '@/lib/cart';
 
@@ -132,6 +134,15 @@ export default async function UiPreviewPage({
             />
           </div>
         </>
+      ) : sp.view === 'chat' ? (
+        <ChatClient
+          conversationId={MOCK_ID}
+          myRole="buyer"
+          counterpart={{ name: 'Gốm Bát Tràng Minh Long', icon: '🏭', shopHref: '/shops/x' }}
+          initialMessages={MOCK_CHAT}
+          conversations={MOCK_CONVERSATIONS}
+          pendingContext={{ type: 'order', id: 'a1b2c3d4-0000-0000-0000-000000000000' }}
+        />
       ) : sp.view === 'account' ? (
         <AccountSecurity email="lan@example.com" />
       ) : showProductForm ? (
@@ -412,5 +423,56 @@ const MOCK_REFUNDS: RefundRow[] = [
     bank_ref: null,
     created_at: '2026-10-11T09:00:00Z',
     paid_at: null,
+  },
+];
+
+const MOCK_CHAT: ChatMessage[] = [
+  {
+    id: 'c1',
+    senderRole: 'buyer',
+    body: 'Xưởng còn mẫu bát men lam không ạ?',
+    contextType: 'product',
+    contextId: MOCK_ID,
+    createdAt: '2026-10-10T02:00:00Z',
+  },
+  {
+    id: 'c2',
+    senderRole: 'supplier',
+    body: 'Còn 200 cái, giao được ngay. Bên mình gửi ảnh thực tế qua Zalo nhé.',
+    contextType: null,
+    contextId: null,
+    createdAt: '2026-10-10T02:10:00Z',
+  },
+  {
+    id: 'c3',
+    senderRole: 'buyer',
+    body: 'Mình đã đặt RFQ 500 cái, xưởng xem giúp.',
+    contextType: 'rfq',
+    contextId: 'a1b2c3d4-0000-0000-0000-000000000000',
+    createdAt: '2026-10-11T04:00:00Z',
+  },
+];
+const MOCK_CONVERSATIONS: ConversationRow[] = [
+  {
+    id: MOCK_ID,
+    myRole: 'buyer',
+    counterpartId: 's1',
+    counterpartName: 'Gốm Bát Tràng Minh Long',
+    counterpartIcon: '🏭',
+    lastMessage: 'Mình đã đặt RFQ 500 cái, xưởng xem giúp.',
+    lastMessageIsMine: true,
+    lastMessageAt: '2026-10-11T04:00:00Z',
+    unreadCount: 0,
+  },
+  {
+    id: 'c-2',
+    myRole: 'buyer',
+    counterpartId: 's2',
+    counterpartName: 'Mây tre đan Phú Vinh',
+    counterpartIcon: '🏭',
+    lastMessage: 'Dạ xưởng báo giá trong hôm nay ạ',
+    lastMessageIsMine: false,
+    lastMessageAt: '2026-10-11T01:00:00Z',
+    unreadCount: 2,
   },
 ];

@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { AppShell, Card, CardBody, CardHeader, StatusPill } from '@/components/ui';
 import { daysUntil, effectiveDeadline, formatVnDate, formatVnd } from '@/lib/rfq';
 import type { BuyerAddress } from '@/lib/addresses';
+import { StartChatButton } from '@/components/messages/StartChatButton';
 import { QuoteHistory } from '@/components/quotes/QuoteHistory';
 import { CounterQuoteButton, RejectQuoteButton } from '@/components/quotes/QuoteNegotiation';
 import {
@@ -565,12 +566,13 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
                           />
                         )}
                         <RejectQuoteButton quoteId={quote.id} supplierName={supplierName} />
-                        <Link
-                          href={`/messages/${rfq.id}?quote=${quote.id}`}
-                          className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink rounded-md border-[1.5px] px-3.5 py-2 text-xs font-semibold"
+                        <StartChatButton
+                          supplierId={quote.supplier_id}
+                          context={{ type: 'rfq', id: rfq.id }}
+                          className="border-brand-border text-brand-sub hover:border-brand-ink hover:text-brand-ink min-h-10 rounded-md border-[1.5px] px-3.5 text-xs font-semibold"
                         >
                           💬 Nhắn tin
-                        </Link>
+                        </StartChatButton>
                       </div>
                     )}
                   </div>

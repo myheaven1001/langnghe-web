@@ -24,10 +24,6 @@ function convoTime(iso: string) {
   return formatVnDate(iso);
 }
 
-function threadHref(row: ConversationRow) {
-  return row.quoteId ? `/messages/${row.rfqId}?quote=${row.quoteId}` : `/messages/${row.rfqId}`;
-}
-
 // Danh sách hội thoại đã tải hết ở server component cha (quy mô 1
 // buyer/supplier thấy được nhỏ) — tab/search lọc ở đây, giống RfqInboxClient.
 export function MessagesInboxClient({ conversations }: { conversations: ConversationRow[] }) {
@@ -48,7 +44,6 @@ export function MessagesInboxClient({ conversations }: { conversations: Conversa
       list = list.filter(
         (c) =>
           c.counterpartName.toLowerCase().includes(needle) ||
-          c.rfqTag.toLowerCase().includes(needle) ||
           c.lastMessage.toLowerCase().includes(needle),
       );
     }
@@ -58,7 +53,7 @@ export function MessagesInboxClient({ conversations }: { conversations: Conversa
   async function handleMarkAllRead() {
     setMarkingRead(true);
     const supabase = createClient();
-    await supabase.rpc('mark_all_messages_read');
+    await supabase.rpc('mark_conversation_read');
     setMarkingRead(false);
     router.refresh();
   }
@@ -119,15 +114,15 @@ export function MessagesInboxClient({ conversations }: { conversations: Conversa
         </button>
       </div>
 
-      <div className="mb-3.5 flex items-center gap-2.5">
-        <div className="relative flex-1">
+      <div className="mb-3.5 flex flex-wrap items-center gap-2.5">
+        <div className="relative min-w-[200px] flex-1">
           <span className="text-brand-light pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-xs">
             🔍
           </span>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Tìm theo tên xưởng, nội dung tin nhắn..."
+            placeholder="Tìm theo tên, nội dung tin nhắn..."
             className="border-brand-border focus:border-brand-red w-full rounded-lg border py-2 pr-3 pl-8 text-[13px] outline-none"
           />
         </div>
@@ -150,7 +145,7 @@ export function MessagesInboxClient({ conversations }: { conversations: Conversa
           <div className="text-brand-sub text-xs">
             {tab === 'unread'
               ? 'Bạn đã xem hết các cuộc hội thoại.'
-              : 'Nhắn tin sẽ xuất hiện khi có trao đổi quanh một RFQ.'}
+              : 'Mở hội thoại từ trang sản phẩm, gian hàng, RFQ hoặc đơn hàng.'}
           </div>
         </div>
       ) : (
@@ -159,8 +154,8 @@ export function MessagesInboxClient({ conversations }: { conversations: Conversa
             const unread = c.unreadCount > 0;
             return (
               <Link
-                key={c.quoteId ?? c.rfqId}
-                href={threadHref(c)}
+                key={c.id}
+                href={`/messages/${c.id}`}
                 className={`border-brand-border/70 relative flex items-center gap-3 border-b p-3.5 px-4 transition-colors last:border-b-0 hover:bg-[#FAFAF8] ${
                   unread ? 'bg-[#FFFBF8]' : ''
                 }`}
@@ -176,22 +171,19 @@ export function MessagesInboxClient({ conversations }: { conversations: Conversa
                     >
                       {c.counterpartName}
                     </span>
-                    <span className="text-brand-clay shrink-0 rounded-[5px] bg-[#FDF1E9] px-1.5 py-px text-xs font-semibold">
-                      {c.rfqTag}
-                    </span>
                   </div>
                   <div
                     className={`truncate text-xs ${unread ? 'text-brand-ink font-medium' : 'text-brand-sub'}`}
                   >
                     {c.lastMessageIsMine && <span className="text-brand-light">Bạn: </span>}
-                    {c.lastMessage}
+                    {c.lastMessage || 'Chưa có tin nhắn'}
                   </div>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1.5 text-right">
                   <div
                     className={`text-xs ${unread ? 'text-brand-red font-semibold' : 'text-brand-light'}`}
                   >
-                    {convoTime(c.lastMessageAt)}
+                    {c.lastMessageAt ? convoTime(c.lastMessageAt) : ''}
                   </div>
                   {unread && (
                     <span className="bg-brand-red min-w-[16px] rounded-full px-1.5 py-px text-center text-[10px] font-bold text-white">

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { features } from '@/lib/features';
 import { formatVnd } from '@/lib/format';
+import { StartChatButton } from '@/components/messages/StartChatButton';
 import { AddToCartButtons } from './AddToCartButtons';
 import {
   qtyRangeLabel,
@@ -27,8 +28,8 @@ interface OrderProps {
 }
 
 // Nút hành động theo người xem. Giỏ hàng (5.5) hiện thêm phía trên với buyer
-// khi cờ NEXT_PUBLIC_FEATURE_CART bật và sản phẩm có bảng giá; "Nhắn tin" chờ
-// mô hình tin nhắn mới (5.9).
+// khi cờ NEXT_PUBLIC_FEATURE_CART bật và sản phẩm có bảng giá; buyer có thêm
+// "Nhắn tin cho xưởng" (5.9).
 function PrimaryAction({
   viewer,
   onOpenRfq,
@@ -188,6 +189,17 @@ export function OrderPanel(props: OrderProps) {
 
       <div className="mb-3">
         <PrimaryAction viewer={viewer} onOpenRfq={onOpenRfq} />
+        {viewer.kind === 'buyer' && (
+          <div className="mt-2">
+            <StartChatButton
+              supplierId={supplier.id}
+              context={{ type: 'product', id: product.id }}
+              className="border-brand-border text-brand-ink hover:border-brand-ink min-h-10 w-full rounded-md border-[1.5px] bg-white text-sm font-semibold"
+            >
+              💬 Nhắn tin cho xưởng
+            </StartChatButton>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-1.5 rounded-[5px] border border-[#B3E5FC] bg-[#F0F9FF] p-2.5 text-[11px] text-[#0277BD]">

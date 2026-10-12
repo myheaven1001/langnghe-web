@@ -12,6 +12,7 @@ import {
   StatusPill,
 } from '@/components/ui';
 import { daysUntil, formatVnd, formatVnDateTime, hoursUntil } from '@/lib/format';
+import { StartChatButton } from '@/components/messages/StartChatButton';
 import { QuoteHistory } from '@/components/quotes/QuoteHistory';
 import { CounterQuoteButton, WithdrawQuoteButton } from '@/components/quotes/QuoteNegotiation';
 import {
@@ -231,12 +232,15 @@ export default async function SupplierRfqDetailPage({
                   </div>
                 </div>
               )}
-              <Link
-                href={`/messages/${rfq.id}`}
-                className="text-brand-blue mt-3 inline-flex min-h-10 items-center text-[13px] font-semibold"
-              >
-                💬 Nhắn tin hỏi thêm buyer →
-              </Link>
+              {rfq.buyer_profiles && (
+                <StartChatButton
+                  buyerId={rfq.buyer_profiles.id}
+                  context={{ type: 'rfq', id: rfq.id }}
+                  className="text-brand-blue mt-3 inline-flex min-h-10 items-center text-[13px] font-semibold"
+                >
+                  💬 Nhắn tin hỏi thêm buyer →
+                </StartChatButton>
+              )}
             </CardBody>
           </Card>
 

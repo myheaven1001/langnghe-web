@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getNewRfqCount } from '../supplier/_lib/counts';
-import { loadBuyerConversations, loadSupplierConversations } from '../messages/_lib/conversations';
+import { loadConversations } from '../messages/_lib/conversations';
 import { NotificationsClient, type NotificationRow } from './_components/NotificationsClient';
 
 export const metadata: Metadata = {
@@ -30,9 +30,7 @@ export default async function NotificationsPage() {
       .order('created_at', { ascending: false })
       .limit(300),
     supplier ? getNewRfqCount(supabase, supplier.id) : Promise.resolve(0),
-    buyer
-      ? loadBuyerConversations(supabase, buyer.id)
-      : loadSupplierConversations(supabase, supplier!.id),
+    loadConversations(supabase),
   ]);
 
   const notifications = (notificationsData ?? []) as NotificationRow[];
