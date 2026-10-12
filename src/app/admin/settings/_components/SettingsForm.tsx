@@ -19,7 +19,8 @@ export interface SupportContact {
   hours: string;
 }
 
-type SectionKey = 'payment_account' | 'order_auto_complete_days' | 'support_contact';
+type SectionKey =
+  'payment_account' | 'order_auto_complete_days' | 'order_confirmation_days' | 'support_contact';
 
 const INPUT =
   'border-brand-border focus:border-brand-red w-full rounded-lg border-[1.5px] px-3 py-2 text-[13px] outline-none';
@@ -34,21 +35,24 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   );
 }
 
-// Ba khối cài đặt, mỗi khối lưu riêng qua RPC admin_set_setting(key, value)
+// Bốn khối cài đặt, mỗi khối lưu riêng qua RPC admin_set_setting(key, value)
 // — hàm tự kiểm tra quyền admin, giá trị hợp lệ và ghi admin_audit_log.
 export function SettingsForm({
   payment: initialPayment,
   autoCompleteDays: initialDays,
+  confirmationDays: initialConfirmationDays,
   support: initialSupport,
 }: {
   payment: PaymentAccount;
   autoCompleteDays: number;
+  confirmationDays: number;
   support: SupportContact;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
   const [payment, setPayment] = useState(initialPayment);
   const [days, setDays] = useState(String(initialDays));
+  const [confirmationDays, setConfirmationDays] = useState(String(initialConfirmationDays));
   const [support, setSupport] = useState(initialSupport);
   const [saving, setSaving] = useState<SectionKey | null>(null);
   const [result, setResult] = useState<{ key: SectionKey; ok: boolean; message: string } | null>(
@@ -162,6 +166,29 @@ export function SettingsForm({
           </Field>
         </div>
         {footer('order_auto_complete_days', () => save('order_auto_complete_days', Number(days)))}
+      </section>
+
+      <section className="border-brand-border mb-4 rounded-[10px] border bg-white p-[18px]">
+        <h2 className="mb-1 text-sm font-bold">⏳ Hạn xưởng xác nhận đơn</h2>
+        <p className="text-brand-sub mb-3.5 text-xs">
+          Đơn đặt thẳng từ giỏ hàng mà xưởng không nhận / từ chối trong số ngày này sẽ tự huỷ, kho
+          đã giữ được trả lại.
+        </p>
+        <div className="max-w-[180px]">
+          <Field label="Số ngày (1–14)">
+            <input
+              className={INPUT}
+              type="number"
+              min={1}
+              max={14}
+              value={confirmationDays}
+              onChange={(e) => setConfirmationDays(e.target.value)}
+            />
+          </Field>
+        </div>
+        {footer('order_confirmation_days', () =>
+          save('order_confirmation_days', Number(confirmationDays)),
+        )}
       </section>
 
       <section className="border-brand-border mb-4 rounded-[10px] border bg-white p-[18px]">

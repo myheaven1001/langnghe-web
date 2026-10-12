@@ -2,6 +2,7 @@ import { AppShell, Card, CardBody, CardHeader, CardLink, Pill, StatCard } from '
 import { buildSupplierNavGroups } from '@/app/supplier/_lib/nav';
 import { ProductForm } from '@/app/supplier/products/_components/ProductForm';
 import { AccountSecurity } from '@/components/account/AccountSecurity';
+import { BuyerCancelOrder } from '@/app/orders/[id]/_components/BuyerCancelOrder';
 import { CartClient } from '@/app/cart/_components/CartClient';
 import type { Cart } from '@/lib/cart';
 
@@ -55,7 +56,15 @@ export default async function UiPreviewPage({
       }
     >
       {sp.view === 'cart' ? (
-        <CartClient cart={MOCK_CART} />
+        <>
+          <CartClient cart={MOCK_CART} />
+          <div className="mt-4 max-w-[360px]">
+            <BuyerCancelOrder
+              orderId="00000000-0000-0000-0000-000000000000"
+              deadline="15/10/2026 14:30"
+            />
+          </div>
+        </>
       ) : sp.view === 'account' ? (
         <AccountSecurity email="lan@example.com" />
       ) : showProductForm ? (

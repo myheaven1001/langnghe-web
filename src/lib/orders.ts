@@ -98,6 +98,15 @@ export function orderCode(id: string) {
 }
 
 // Mã lỗi từ trigger/hàm của đơn hàng → câu tiếng Việt.
+// Số ngày xưởng có để nhận / từ chối đơn đặt thẳng (platform_settings
+// 'order_confirmation_days'); quá hạn auto_cancel_unconfirmed_orders() huỷ đơn.
+export const DEFAULT_ORDER_CONFIRMATION_DAYS = 3;
+
+export function orderConfirmationDays(value: unknown): number {
+  const days = Number(value);
+  return Number.isInteger(days) && days > 0 ? days : DEFAULT_ORDER_CONFIRMATION_DAYS;
+}
+
 export function orderErrorMessage(message: string, fallback: string): string {
   if (message.includes('ACCOUNT_SUSPENDED')) return 'Tài khoản của bạn đang bị tạm khóa.';
   if (message.includes('ORDER_TRACKING_REQUIRED')) {

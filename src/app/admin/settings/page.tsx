@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AppShell } from '@/components/ui';
 import { buildAdminNavGroups } from '../_lib/nav';
+import { orderConfirmationDays } from '@/lib/orders';
 import { SettingsForm, type PaymentAccount, type SupportContact } from './_components/SettingsForm';
 
 export const metadata: Metadata = { title: 'Cài đặt sàn — Admin LàngNghề.vn' };
@@ -77,6 +78,7 @@ export default async function AdminSettingsPage() {
           note: payment.note ?? '',
         }}
         autoCompleteDays={Number(byKey.get('order_auto_complete_days') ?? 7)}
+        confirmationDays={orderConfirmationDays(byKey.get('order_confirmation_days'))}
         support={{
           phone: support.phone ?? '',
           zalo: support.zalo ?? '',
@@ -113,5 +115,6 @@ export default async function AdminSettingsPage() {
 const SETTING_LABEL: Record<string, string> = {
   payment_account: 'tài khoản nhận tiền',
   order_auto_complete_days: 'số ngày tự hoàn tất đơn',
+  order_confirmation_days: 'hạn xưởng xác nhận đơn',
   support_contact: 'kênh hỗ trợ',
 };

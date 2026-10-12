@@ -11,11 +11,13 @@ import { formatVnDate, formatVnd, formatVnDateTime } from '@/lib/format';
 import {
   ORDER_ITEMS_DETAIL,
   orderCode,
+  orderConfirmationDays,
   type OrderDocumentRow,
   type OrderEventRow,
   type OrderItemRow,
 } from '@/lib/orders';
 import { OrderItemsTable } from '@/components/orders/OrderItemsTable';
+import { BuyerCancelOrder } from './_components/BuyerCancelOrder';
 import { BuyerOrderActions } from './_components/BuyerOrderActions';
 
 export const metadata: Metadata = {
@@ -23,7 +25,11 @@ export const metadata: Metadata = {
 };
 
 const PAYMENT_STATUS: Record<string, { icon: string; text: string; tone: 'pending' | 'paid' }> = {
-  pending_confirmation: { icon: '🛒', text: 'Chờ xưởng xác nhận — chưa cần chuyển tiền', tone: 'pending' },
+  pending_confirmation: {
+    icon: '🛒',
+    text: 'Chờ xưởng xác nhận — chưa cần chuyển tiền',
+    tone: 'pending',
+  },
   pending_payment: { icon: '⏳', text: 'Chờ thanh toán', tone: 'pending' },
   confirmed: { icon: '✓', text: 'Sàn đã xác nhận thanh toán', tone: 'paid' },
   producing: { icon: '✓', text: 'Sàn đã xác nhận thanh toán', tone: 'paid' },
@@ -138,7 +144,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     supabase
       .from('platform_settings')
       .select('key, value')
-      .in('key', ['payment_account', 'order_auto_complete_days', 'support_contact']),
+      .in('key', [
+        'payment_account',
+        'order_auto_complete_days',
+        'order_confirmation_days',
+        'support_contact',
+      ]),
     supabase
       .from('notifications')
       .select('id', { count: 'exact', head: true })
@@ -165,6 +176,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const account = (settings.get('payment_account') ?? {}) as PaymentAccount;
   const support = (settings.get('support_contact') ?? {}) as SupportContact;
   const autoCompleteDays = Number(settings.get('order_auto_complete_days') ?? 7);
+  const confirmationDeadline = formatVnDateTime(
+    order.created_at,
+    orderConfirmationDays(settings.get('order_confirmation_days')),
+  );
   const hasAccount = !!account.account_number;
   const hasReceipt = documents.some((d) => d.doc_type === 'payment_receipt');
   const isVerifiedSupplier = !!(verifiedRow as { verified?: boolean } | null)?.verified;
@@ -324,6 +339,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             status={order.status}
             autoCompleteDays={autoCompleteDays}
           />
+          {order.status === 'pending_confirmation' && (
+            <BuyerCancelOrder orderId={order.id} deadline={confirmationDeadline} />
+          )}
 
           <div className="border-brand-border mb-4 rounded-[10px] border bg-white p-4">
             <div className="text-brand-sub mb-3 text-xs font-bold tracking-[.04em] uppercase">

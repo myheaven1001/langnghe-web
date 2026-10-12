@@ -38,9 +38,11 @@ export function monthStartIso() {
 // "05/10/2026 14:30" theo giờ Việt Nam, dù chạy trên server (UTC) hay trình
 // duyệt. Các cột TIMESTAMP không múi giờ (orders, order_events…) được DB ghi
 // theo UTC nhưng trả về không kèm "Z" — thêm vào để không lệch 7 tiếng.
-export function formatVnDateTime(iso: string) {
+export function formatVnDateTime(iso: string, addDays = 0) {
   const hasZone = /(Z|[+-]\d{2}:?\d{2})$/.test(iso);
-  return new Date(hasZone ? iso : `${iso}Z`).toLocaleString('vi-VN', {
+  const date = new Date(hasZone ? iso : `${iso}Z`);
+  date.setTime(date.getTime() + addDays * 86_400_000);
+  return date.toLocaleString('vi-VN', {
     timeZone: 'Asia/Ho_Chi_Minh',
     day: '2-digit',
     month: '2-digit',

@@ -11,6 +11,7 @@ import { formatVnDate, formatVnDateTime } from '@/lib/format';
 import {
   ORDER_ITEMS_DETAIL,
   orderCode,
+  orderConfirmationDays,
   type OrderDocumentRow,
   type OrderEventRow,
   type OrderItemRow,
@@ -122,27 +123,41 @@ export default async function SupplierOrderDetailPage({
   if (!orderData) notFound();
   const order = orderData as unknown as OrderDetail;
 
-  const [newRfqCount, unreadCount, { data: eventsData }, { data: documentsData }] =
-    await Promise.all([
-      getNewRfqCount(supabase, supplier.id),
-      getUnreadNotificationCount(supabase, user.id),
-      supabase
-        .from('order_events')
-        .select('id, actor_id, event_type, note, metadata, created_at')
-        .eq('order_id', id)
-        .order('created_at', { ascending: true }),
-      supabase
-        .from('order_documents')
-        .select('id, uploader_role, doc_type, storage_path, file_name, note, created_at')
-        .eq('order_id', id)
-        .order('created_at', { ascending: false }),
-    ]);
+  const [
+    newRfqCount,
+    unreadCount,
+    { data: eventsData },
+    { data: documentsData },
+    { data: confirmationSetting },
+  ] = await Promise.all([
+    getNewRfqCount(supabase, supplier.id),
+    getUnreadNotificationCount(supabase, user.id),
+    supabase
+      .from('order_events')
+      .select('id, actor_id, event_type, note, metadata, created_at')
+      .eq('order_id', id)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('order_documents')
+      .select('id, uploader_role, doc_type, storage_path, file_name, note, created_at')
+      .eq('order_id', id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('platform_settings')
+      .select('value')
+      .eq('key', 'order_confirmation_days')
+      .maybeSingle(),
+  ]);
 
   const events = (eventsData ?? []) as OrderEventRow[];
   const documents = (documentsData ?? []) as OrderDocumentRow[];
   const rfq = order.rfq_quotes?.rfq_requests ?? null;
   const code = orderCode(order.id);
   const nextStep = NEXT_STEP[order.status];
+  const confirmationDeadline = formatVnDateTime(
+    order.created_at,
+    orderConfirmationDays(confirmationSetting?.value),
+  );
   const isPaid = !['pending_confirmation', 'pending_payment', 'cancelled'].includes(order.status);
 
   return (
@@ -247,6 +262,11 @@ export default async function SupplierOrderDetailPage({
               <div className="text-brand-sub mt-1 mb-3 text-xs leading-relaxed">
                 {nextStep.body}
               </div>
+              {order.status === 'pending_confirmation' && (
+                <div className="bg-status-amber-soft text-status-amber mb-3 rounded-lg px-3 py-2 text-xs font-semibold">
+                  ⏳ Hạn xác nhận: {confirmationDeadline}. Quá hạn đơn sẽ tự huỷ.
+                </div>
+              )}
               <OrderActions orderId={order.id} status={order.status} />
             </div>
           )}
