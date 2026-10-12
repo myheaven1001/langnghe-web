@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { features } from '@/lib/features';
 import { formatVnd } from '@/lib/format';
 import { StartChatButton } from '@/components/messages/StartChatButton';
+import { ReportButton, SaveProductButton } from '@/components/engagement/ProductEngagement';
 import { AddToCartButtons } from './AddToCartButtons';
 import {
   qtyRangeLabel,
@@ -198,6 +199,23 @@ export function OrderPanel(props: OrderProps) {
             >
               💬 Nhắn tin cho xưởng
             </StartChatButton>
+          </div>
+        )}
+        {(viewer.kind === 'buyer' || viewer.kind === 'other') && (
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3">
+            {viewer.kind === 'buyer' ? (
+              <SaveProductButton
+                productId={product.id}
+                className="text-brand-ink min-h-10 text-[13px] font-semibold disabled:opacity-60"
+              />
+            ) : (
+              <span />
+            )}
+            <ReportButton
+              targetType="product"
+              targetId={product.id}
+              className="text-brand-sub hover:text-brand-red min-h-10 text-xs"
+            />
           </div>
         )}
       </div>

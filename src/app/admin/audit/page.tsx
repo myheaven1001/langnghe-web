@@ -30,6 +30,8 @@ const ACTION_LABEL: Record<string, string> = {
   'refund.paid': 'Đánh dấu đã hoàn tiền',
   'review.hide': 'Ẩn đánh giá',
   'review.unhide': 'Hiện lại đánh giá',
+  'report.resolved': 'Đóng báo cáo (đã xử lý)',
+  'report.dismissed': 'Đóng báo cáo (không vi phạm)',
   'user.suspend': 'Khoá tài khoản',
   'user.reactivate': 'Mở khoá tài khoản',
   'user.adjust_score': 'Chỉnh điểm',

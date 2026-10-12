@@ -23,6 +23,7 @@ export function buildAdminNavGroups({
         { icon: '👥', label: 'Quản lý user', href: '/admin/users' },
         { icon: '🗂️', label: 'Kiểm duyệt sản phẩm', href: '/admin/products' },
         { icon: '⭐', label: 'Kiểm duyệt đánh giá', href: '/admin/reviews' },
+        { icon: '⚑', label: 'Báo cáo vi phạm', href: '/admin/reports' },
       ],
     },
     {

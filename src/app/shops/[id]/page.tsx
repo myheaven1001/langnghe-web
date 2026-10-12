@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { PublicHeader, Breadcrumb } from '@/components/ui';
 import { CatalogFilters } from '@/components/catalog/CatalogFilters';
 import { CatalogResults } from '@/components/catalog/CatalogResults';
+import { ReportButton } from '@/components/engagement/ProductEngagement';
 import { PublicReviews } from '@/components/reviews/ReviewViews';
 import type { PublicReview, ReviewSummary } from '@/lib/reviews';
 import { parseCatalogFilters, runCatalogSearch, type SearchParamsRecord } from '@/lib/catalog';
@@ -184,6 +185,15 @@ export default async function ShopPage({
               )}
             </div>
           </div>
+          {isBuyer && !isOwner && (
+            <div className="px-4 pb-2 text-right">
+              <ReportButton
+                targetType="supplier"
+                targetId={shop.id}
+                className="text-brand-sub hover:text-brand-red min-h-8 text-xs"
+              />
+            </div>
+          )}
 
           {(facts.length > 0 || shop.contact_phone || websiteUrl) && (
             <div className="border-brand-border text-brand-sub flex flex-wrap gap-x-5 gap-y-1.5 border-t px-4 py-2.5 text-xs">

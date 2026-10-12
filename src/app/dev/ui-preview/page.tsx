@@ -25,6 +25,7 @@ import {
 } from '@/components/reviews/ReviewActions';
 import { PublicReviews, ReviewCard } from '@/components/reviews/ReviewViews';
 import type { PublicReview } from '@/lib/reviews';
+import { ReportButton, SaveProductButton } from '@/components/engagement/ProductEngagement';
 import { CartClient } from '@/app/cart/_components/CartClient';
 import type { Cart } from '@/lib/cart';
 
@@ -155,6 +156,17 @@ export default async function UiPreviewPage({
           <div className="border-brand-border rounded-[10px] border bg-white p-4">
             <div className="mb-2 text-[13px] font-bold">Buyer đánh giá đơn</div>
             <ReviewForm orderId={MOCK_ID} />
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              <SaveProductButton
+                productId={MOCK_ID}
+                className="min-h-10 text-[13px] font-semibold"
+              />
+              <ReportButton
+                targetType="product"
+                targetId={MOCK_ID}
+                className="text-brand-sub min-h-10 text-xs"
+              />
+            </div>
           </div>
           <PublicReviews
             summary={{ count: 12, average: 4.3, stars: { '5': 7, '4': 3, '3': 1, '2': 1, '1': 0 } }}
