@@ -64,7 +64,7 @@ interface OrderRow {
 function buildOrdersUrl(params: {
   status: string;
   q: string;
-  range: string;
+  range: string; source: string;
   sort: string;
   page?: number;
 }) {
@@ -72,6 +72,7 @@ function buildOrdersUrl(params: {
   if (params.status !== 'all') search.set('status', params.status);
   if (params.q) search.set('q', params.q);
   if (params.range !== '30') search.set('range', params.range);
+  if (params.source !== 'all') search.set('source', params.source);
   if (params.sort !== 'newest') search.set('sort', params.sort);
   if (params.page && params.page > 1) search.set('page', String(params.page));
   const qs = search.toString();
@@ -88,6 +89,7 @@ function countOrders(
   sinceIso: string | null,
   supplierIds: string[] | null,
   q: string,
+  source: string,
 ) {
   let query = supabase
     .from('orders')
@@ -101,13 +103,14 @@ function countOrders(
         ? query.or(`tracking_number.ilike.%${q}%,supplier_id.in.(${supplierIds.join(',')})`)
         : query.ilike('tracking_number', `%${q}%`);
   }
+  if (source !== 'all') query = query.eq('source', source);
   return query;
 }
 
 export default async function OrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; range?: string; sort?: string; page?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; range?: string; source?: string; sort?: string; page?: string }>;
 }) {
   const sp = await searchParams;
   const status: StatusKey = STATUS_TABS.some((t) => t.key === sp.status)
@@ -115,6 +118,7 @@ export default async function OrdersPage({
     : 'all';
   const q = (sp.q ?? '').trim();
   const range = sp.range && sp.range in RANGE_DAYS ? sp.range : '30';
+  const source = sp.source === 'rfq' || sp.source === 'direct' ? sp.source : 'all';
   const sort = sp.sort === 'value' ? 'value' : 'newest';
   const page = Math.max(1, parseInt(sp.page ?? '1', 10) || 1);
   const activeTab = STATUS_TABS.find((t) => t.key === status)!;
@@ -156,6 +160,7 @@ export default async function OrdersPage({
     .eq('buyer_id', buyer.id);
   if (activeTab.statuses) listQuery = listQuery.in('status', [...activeTab.statuses]);
   if (sinceIso) listQuery = listQuery.gte('created_at', sinceIso);
+  if (source !== 'all') listQuery = listQuery.eq('source', source);
   if (q) {
     listQuery =
       supplierIdsMatchingSearch && supplierIdsMatchingSearch.length > 0
@@ -185,7 +190,7 @@ export default async function OrdersPage({
         .in('status', ['published', 'quoted', 'negotiating']),
       Promise.all(
         STATUS_TABS.map((tab) =>
-          countOrders(supabase, buyer.id, tab.statuses, sinceIso, supplierIdsMatchingSearch, q),
+          countOrders(supabase, buyer.id, tab.statuses, sinceIso, supplierIdsMatchingSearch, q, source),
         ),
       ),
       listQuery,
@@ -196,10 +201,10 @@ export default async function OrdersPage({
   const totalCount = tabCounts[activeTabIndex]?.count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const allCount = tabCounts[0]?.count ?? 0;
-  const pendingPaymentCount = tabCounts[1]?.count ?? 0;
+  const pendingPaymentCount = tabCounts[2]?.count ?? 0;
   // "đang xử lý" = confirmed + producing + shipped + delivered.
   const processingCount =
-    (tabCounts[2]?.count ?? 0) + (tabCounts[3]?.count ?? 0) + (tabCounts[4]?.count ?? 0) + (tabCounts[5]?.count ?? 0);
+    (tabCounts[3]?.count ?? 0) + (tabCounts[4]?.count ?? 0) + (tabCounts[5]?.count ?? 0) + (tabCounts[6]?.count ?? 0);
 
   return (
     <AppShell
@@ -266,7 +271,7 @@ export default async function OrdersPage({
           return (
             <Link
               key={tab.key}
-              href={buildOrdersUrl({ status: tab.key, q, range, sort })}
+              href={buildOrdersUrl({ status: tab.key, q, range, source, sort })}
               className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold whitespace-nowrap ${
                 isActive
                   ? 'border-brand-red text-brand-red'
@@ -287,7 +292,7 @@ export default async function OrdersPage({
       </div>
 
       <div className="flex items-center justify-between gap-3">
-        <OrderFilterBar status={status} q={q} range={range} sort={sort} />
+        <OrderFilterBar status={status} q={q} range={range} source={source} sort={sort} />
         <span className="text-brand-sub mb-3.5 shrink-0 text-xs">{totalCount} kết quả</span>
       </div>
 
@@ -396,7 +401,7 @@ export default async function OrdersPage({
       {totalPages > 1 && (
         <div className="mt-[22px] flex items-center justify-center gap-1.5">
           <Link
-            href={buildOrdersUrl({ status, q, range, sort, page: page - 1 })}
+            href={buildOrdersUrl({ status, q, range, source, sort, page: page - 1 })}
             aria-disabled={page <= 1}
             className={`border-brand-border flex h-8 w-8 items-center justify-center rounded-md border text-[13px] ${
               page <= 1
@@ -410,7 +415,7 @@ export default async function OrdersPage({
             Trang {page}/{totalPages}
           </span>
           <Link
-            href={buildOrdersUrl({ status, q, range, sort, page: page + 1 })}
+            href={buildOrdersUrl({ status, q, range, source, sort, page: page + 1 })}
             aria-disabled={page >= totalPages}
             className={`border-brand-border flex h-8 w-8 items-center justify-center rounded-md border text-[13px] ${
               page >= totalPages

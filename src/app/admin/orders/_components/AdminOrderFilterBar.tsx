@@ -8,10 +8,12 @@ export function AdminOrderFilterBar({
   status,
   q,
   range,
+  source,
 }: {
   status: string;
   q: string;
   range: string;
+  source: string;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -46,6 +48,18 @@ export function AdminOrderFilterBar({
         <option value="30">30 ngày qua</option>
         <option value="90">90 ngày qua</option>
         <option value="all">Toàn bộ thời gian</option>
+      </select>
+
+      <select
+        aria-label="Nguồn đơn"
+        name="source"
+        defaultValue={source}
+        onChange={() => formRef.current?.submit()}
+        className="border-brand-border focus:border-brand-forest rounded-lg border bg-white px-3 py-2 text-[13px] outline-none"
+      >
+        <option value="all">Mọi nguồn</option>
+        <option value="rfq">Từ báo giá (RFQ)</option>
+        <option value="direct">Đặt thẳng (giỏ hàng)</option>
       </select>
 
       <button

@@ -53,11 +53,12 @@ interface ActiveDispute {
   reason: string;
 }
 
-function buildOrdersUrl(params: { status: string; q: string; range: string; page?: number }) {
+function buildOrdersUrl(params: { status: string; q: string; range: string; source: string; page?: number }) {
   const search = new URLSearchParams();
   if (params.status !== 'all') search.set('status', params.status);
   if (params.q) search.set('q', params.q);
   if (params.range !== '30') search.set('range', params.range);
+  if (params.source !== 'all') search.set('source', params.source);
   if (params.page && params.page > 1) search.set('page', String(params.page));
   const qs = search.toString();
   return qs ? `/admin/orders?${qs}` : '/admin/orders';
@@ -76,6 +77,7 @@ function countOrders(
   buyerIds: string[],
   supplierIds: string[],
   q: string,
+  source: string,
 ) {
   let query = supabase.from('orders').select('id', { count: 'exact', head: true });
   if (tab.key === 'disputed') {
@@ -92,13 +94,14 @@ function countOrders(
     if (supplierIds.length > 0) orParts.push(`supplier_id.in.(${supplierIds.join(',')})`);
     query = query.or(orParts.join(','));
   }
+  if (source !== 'all') query = query.eq('source', source);
   return query;
 }
 
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; range?: string; page?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; range?: string; source?: string; page?: string }>;
 }) {
   const sp = await searchParams;
   const status: StatusKey = TABS.some((t) => t.key === sp.status)
@@ -106,6 +109,7 @@ export default async function AdminOrdersPage({
     : 'all';
   const q = (sp.q ?? '').trim();
   const range = sp.range && sp.range in RANGE_DAYS ? sp.range : '30';
+  const source = sp.source === 'rfq' || sp.source === 'direct' ? sp.source : 'all';
   const page = Math.max(1, parseInt(sp.page ?? '1', 10) || 1);
   const activeTab = TABS.find((t) => t.key === status)!;
 
@@ -160,6 +164,7 @@ export default async function AdminOrdersPage({
     }
   }
   if (sinceIso) listQuery = listQuery.gte('created_at', sinceIso);
+  if (source !== 'all') listQuery = listQuery.eq('source', source);
   if (q) {
     const orParts = [`tracking_number.ilike.%${q}%`];
     if (buyerIdsMatchingSearch.length > 0) {
@@ -196,7 +201,7 @@ export default async function AdminOrdersPage({
           sinceIso,
           buyerIdsMatchingSearch,
           supplierIdsMatchingSearch,
-          q,
+          q, source,
         ),
       ),
     ),
@@ -243,7 +248,7 @@ export default async function AdminOrdersPage({
           return (
             <Link
               key={tab.key}
-              href={buildOrdersUrl({ status: tab.key, q, range })}
+              href={buildOrdersUrl({ status: tab.key, q, range, source })}
               className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold whitespace-nowrap ${
                 isActive
                   ? 'border-brand-forest text-brand-forest'
@@ -264,7 +269,7 @@ export default async function AdminOrdersPage({
       </div>
 
       <div className="flex items-center justify-between gap-3">
-        <AdminOrderFilterBar status={status} q={q} range={range} />
+        <AdminOrderFilterBar status={status} q={q} range={range} source={source} />
         <span className="text-brand-sub mb-3.5 shrink-0 text-xs">{totalCount} kết quả</span>
       </div>
 
@@ -342,7 +347,7 @@ export default async function AdminOrdersPage({
       {totalPages > 1 && (
         <div className="mt-[22px] flex items-center justify-center gap-1.5">
           <Link
-            href={buildOrdersUrl({ status, q, range, page: page - 1 })}
+            href={buildOrdersUrl({ status, q, range, source, page: page - 1 })}
             aria-disabled={page <= 1}
             className={`border-brand-border flex h-8 w-8 items-center justify-center rounded-md border text-[13px] ${
               page <= 1
@@ -356,7 +361,7 @@ export default async function AdminOrdersPage({
             Trang {page}/{totalPages}
           </span>
           <Link
-            href={buildOrdersUrl({ status, q, range, page: page + 1 })}
+            href={buildOrdersUrl({ status, q, range, source, page: page + 1 })}
             aria-disabled={page >= totalPages}
             className={`border-brand-border flex h-8 w-8 items-center justify-center rounded-md border text-[13px] ${
               page >= totalPages
