@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AppShell, Card, CardBody, CardHeader, StatusPill } from '@/components/ui';
+import { OrderDisputeCard } from '@/components/disputes/DisputeViews';
 import { OrderDocuments } from '@/components/orders/OrderDocuments';
 import { OrderNoteForm } from '@/components/orders/OrderNoteForm';
 import { OrderRealtime } from '@/components/orders/OrderRealtime';
@@ -17,6 +18,8 @@ import {
   type OrderItemRow,
 } from '@/lib/orders';
 import { OrderItemsTable } from '@/components/orders/OrderItemsTable';
+import { loadOrderDisputes } from '@/lib/disputes';
+import { features } from '@/lib/features';
 import { BuyerCancelOrder } from './_components/BuyerCancelOrder';
 import { BuyerOrderActions } from './_components/BuyerOrderActions';
 
@@ -170,6 +173,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       : Promise.resolve({ data: null }),
   ]);
 
+  const orderDisputes = features.disputes ? await loadOrderDisputes(supabase, order.id) : [];
   const events = (eventsData ?? []) as OrderEventRow[];
   const documents = (documentsData ?? []) as OrderDocumentRow[];
   const settings = new Map((settingsData ?? []).map((s) => [s.key as string, s.value]));
@@ -334,6 +338,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
         {/* RIGHT RAIL */}
         <div className="min-w-0">
+          {features.disputes && (
+            <OrderDisputeCard
+              orderId={order.id}
+              orderStatus={order.status}
+              viewer="buyer"
+              disputes={orderDisputes}
+            />
+          )}
           <BuyerOrderActions
             orderId={order.id}
             status={order.status}

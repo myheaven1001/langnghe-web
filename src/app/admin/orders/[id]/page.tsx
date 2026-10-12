@@ -286,6 +286,12 @@ export default async function AdminOrderDetailPage({
                     {d.resolution_note && (
                       <div className="text-brand-sub mt-0.5">Quyết định: {d.resolution_note}</div>
                     )}
+                    <Link
+                      href={`/admin/disputes/${d.id}`}
+                      className="text-brand-blue mt-1 inline-flex min-h-8 items-center font-semibold"
+                    >
+                      Xem trao đổi / khoản hoàn →
+                    </Link>
                   </div>
                 ))}
               </CardBody>

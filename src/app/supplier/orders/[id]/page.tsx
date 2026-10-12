@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AppShell, Card, CardBody, CardHeader, StatusPill } from '@/components/ui';
+import { OrderDisputeCard } from '@/components/disputes/DisputeViews';
 import { OrderDocuments } from '@/components/orders/OrderDocuments';
 import { OrderNoteForm } from '@/components/orders/OrderNoteForm';
 import { OrderRealtime } from '@/components/orders/OrderRealtime';
@@ -19,6 +20,8 @@ import {
 import { OrderItemsTable } from '@/components/orders/OrderItemsTable';
 import { buildSupplierNavGroups } from '../../_lib/nav';
 import { getNewRfqCount, getUnreadNotificationCount } from '../../_lib/counts';
+import { loadOrderDisputes } from '@/lib/disputes';
+import { features } from '@/lib/features';
 import { OrderActions } from '../_components/OrderActions';
 
 export const metadata: Metadata = {
@@ -149,6 +152,7 @@ export default async function SupplierOrderDetailPage({
       .maybeSingle(),
   ]);
 
+  const orderDisputes = features.disputes ? await loadOrderDisputes(supabase, order.id) : [];
   const events = (eventsData ?? []) as OrderEventRow[];
   const documents = (documentsData ?? []) as OrderDocumentRow[];
   const rfq = order.rfq_quotes?.rfq_requests ?? null;
@@ -256,6 +260,14 @@ export default async function SupplierOrderDetailPage({
 
         {/* RIGHT RAIL */}
         <div className="min-w-0">
+          {features.disputes && (
+            <OrderDisputeCard
+              orderId={order.id}
+              orderStatus={order.status}
+              viewer="supplier"
+              disputes={orderDisputes}
+            />
+          )}
           {nextStep && (
             <div className="border-brand-border mb-4 rounded-[10px] border bg-white p-4">
               <div className="text-[13px] font-bold">{nextStep.title}</div>

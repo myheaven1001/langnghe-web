@@ -1,4 +1,5 @@
 import type { SidebarNavGroup } from '@/components/ui';
+import { features } from '@/lib/features';
 
 // Cùng 1 bộ nav cho mọi trang /supplier/* — tách ra đây để 8 trang Giai
 // đoạn 4 không copy-paste cùng 1 mảng navGroups (và lệch nhau khi 1 trang
@@ -26,6 +27,9 @@ export function buildSupplierNavGroups({
         },
         { icon: '💰', label: 'Báo giá đã gửi', href: '/supplier/quotes' },
         { icon: '📦', label: 'Quản lý đơn hàng', href: '/supplier/orders' },
+        ...(features.disputes
+          ? [{ icon: '⚖️', label: 'Tranh chấp', href: '/supplier/disputes' }]
+          : []),
       ],
     },
     {

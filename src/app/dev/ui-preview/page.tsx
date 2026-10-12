@@ -10,6 +10,12 @@ import {
   WithdrawQuoteButton,
 } from '@/components/quotes/QuoteNegotiation';
 import type { QuoteRevision } from '@/lib/quotes';
+import {
+  DisputeDetailView,
+  DisputeListView,
+  OrderDisputeCard,
+} from '@/components/disputes/DisputeViews';
+import type { DisputeMessageRow, DisputeRow, RefundRow } from '@/lib/disputes';
 import { CartClient } from '@/app/cart/_components/CartClient';
 import type { Cart } from '@/lib/cart';
 
@@ -106,6 +112,26 @@ export default async function UiPreviewPage({
             </div>
           </div>
         </div>
+      ) : sp.view === 'dispute' ? (
+        <>
+          <DisputeDetailView
+            dispute={MOCK_DISPUTE}
+            messages={MOCK_DISPUTE_MESSAGES}
+            refunds={MOCK_REFUNDS}
+            viewer={sp.as === 'admin' ? 'admin' : 'buyer'}
+          />
+          <div className="mt-6">
+            <DisputeListView disputes={[MOCK_DISPUTE]} viewer="buyer" filter="all" />
+          </div>
+          <div className="mt-6 max-w-[340px]">
+            <OrderDisputeCard
+              orderId={MOCK_ID}
+              orderStatus="shipped"
+              viewer="buyer"
+              disputes={[]}
+            />
+          </div>
+        </>
       ) : sp.view === 'account' ? (
         <AccountSecurity email="lan@example.com" />
       ) : showProductForm ? (
@@ -327,5 +353,64 @@ const MOCK_REVISIONS: QuoteRevision[] = [
     lead_time_days: null,
     note: null,
     created_at: '2026-10-11T08:15:00Z',
+  },
+];
+
+const MOCK_DISPUTE: DisputeRow = {
+  id: MOCK_ID,
+  order_id: 'a1b2c3d4-0000-0000-0000-000000000000',
+  reason: 'Nhận 100 cái, 20 cái sứt mẻ, sai màu men so với mẫu đã chốt.',
+  status: 'resolved',
+  reporter_role: 'buyer',
+  resolution: 'partial',
+  refund_ratio: 0.4,
+  resolution_note: 'Hoàn 40% vì 20 cái sứt, xưởng đồng ý.',
+  created_at: '2026-10-08T02:00:00Z',
+  resolved_at: '2026-10-11T09:00:00Z',
+  orders: {
+    id: 'a1b2c3d4-0000-0000-0000-000000000000',
+    total: 5000000,
+    status: 'shipped',
+    buyer_profiles: { company_name: 'Decor Hà Nội' },
+    supplier_profiles: { shop_name: 'Gốm Bát Tràng Minh Long' },
+  },
+};
+const MOCK_DISPUTE_MESSAGES: DisputeMessageRow[] = [
+  {
+    id: 'm1',
+    sender_role: 'buyer',
+    body: 'Tôi gửi ảnh các bát bị sứt.',
+    attachment_path: 'x/anh.jpg',
+    attachment_name: 'bat-sut-me-thung-so-3.jpg',
+    created_at: '2026-10-08T02:05:00Z',
+  },
+  {
+    id: 'm2',
+    sender_role: 'supplier',
+    body: 'Xưởng đóng gói đủ, có video lúc giao cho đơn vị vận chuyển.',
+    attachment_path: null,
+    attachment_name: null,
+    created_at: '2026-10-08T06:30:00Z',
+  },
+  {
+    id: 'm3',
+    sender_role: 'admin',
+    body: 'Sàn đã nhận ảnh của hai bên, đang đối chiếu với biên bản giao nhận.',
+    attachment_path: null,
+    attachment_name: null,
+    created_at: '2026-10-09T03:00:00Z',
+  },
+];
+const MOCK_REFUNDS: RefundRow[] = [
+  {
+    id: 'f1',
+    order_id: MOCK_DISPUTE.order_id,
+    dispute_id: MOCK_ID,
+    amount: 2000000,
+    status: 'pending',
+    note: null,
+    bank_ref: null,
+    created_at: '2026-10-11T09:00:00Z',
+    paid_at: null,
   },
 ];

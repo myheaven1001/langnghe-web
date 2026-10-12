@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { features } from '@/lib/features';
 import { createClient } from '@/lib/supabase/client';
 import { AppShell } from '@/components/ui';
 import { buildSupplierNavGroups } from '../../supplier/_lib/nav';
@@ -48,6 +49,7 @@ const NOTIFICATION_META: Record<string, { icon: string; bg: string; category: Ca
   order_delivered: { icon: '📬', bg: '#E1F5EE', category: 'order' },
   dispute_opened: { icon: '⚠️', bg: '#FDECEC', category: 'order' },
   dispute_resolved: { icon: '⚖️', bg: '#E1F5EE', category: 'order' },
+  dispute_reply: { icon: '💬', bg: '#FFF4E0', category: 'order' },
   verification_approved: { icon: '✅', bg: '#E1F5EE', category: 'account' },
   verification_rejected: { icon: '⚠️', bg: '#FDECEC', category: 'account' },
   account_suspended: { icon: '🚫', bg: '#FDECEC', category: 'account' },
@@ -89,9 +91,17 @@ function resolveHref(n: NotificationRow, role: 'buyer' | 'supplier'): string | n
     case 'order_confirmed':
     case 'order_shipped':
     case 'order_delivered':
+      return orderHref;
     case 'dispute_opened':
     case 'dispute_resolved':
+    case 'dispute_reply': {
+      // Có trang tranh chấp (5.8) thì dẫn thẳng tới đó, chưa bật thì về đơn.
+      const disputeId = typeof n.payload?.dispute_id === 'string' ? n.payload.dispute_id : null;
+      if (features.disputes && disputeId) {
+        return `${role === 'buyer' ? '/disputes' : '/supplier/disputes'}/${disputeId}`;
+      }
       return orderHref;
+    }
     case 'verification_approved':
     case 'verification_rejected':
       return role === 'buyer' ? '/settings/profile' : '/supplier/settings/profile';
