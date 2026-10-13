@@ -74,6 +74,19 @@ export function ImageGallery({
         </div>
       )}
 
+      {product.videoUrl && (
+        <div className="mt-2.5">
+          <div className="text-brand-sub mb-1 text-xs font-semibold">🎬 Video từ xưởng</div>
+          <video
+            src={product.videoUrl}
+            controls
+            playsInline
+            preload="metadata"
+            className="max-h-[360px] w-full rounded-md bg-black"
+          />
+        </div>
+      )}
+
       {tags.length > 0 && (
         <div className="mt-2.5 flex flex-wrap gap-1.5">
           {tags.map((tag) => (

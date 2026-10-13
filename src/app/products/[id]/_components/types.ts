@@ -12,6 +12,8 @@ export interface ProductView {
   acceptCustom: boolean;
   status: string;
   category: { id: string; name: string; slug: string } | null;
+  /** URL video của sản phẩm (bucket product-videos), null = không có. */
+  videoUrl: string | null;
 }
 
 export interface TierView {

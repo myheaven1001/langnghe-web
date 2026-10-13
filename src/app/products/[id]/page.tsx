@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { productVideoUrl } from '@/lib/product-video';
 import { ProductDetailClient } from './_components/ProductDetailClient';
 import type {
   MediaView,
@@ -27,7 +28,7 @@ const loadProduct = cache(async (key: string) => {
   const { data: p } = await supabase
     .from('products')
     .select(
-      'id, slug, name, description, min_order_qty, lead_time_days, accept_oem, accept_custom, status, supplier_id, categories(id, name, slug)',
+      'id, slug, name, description, min_order_qty, lead_time_days, accept_oem, accept_custom, status, supplier_id, video_path, categories(id, name, slug)',
     )
     .eq(UUID_RE.test(key) ? 'id' : 'slug', key)
     .maybeSingle();
@@ -103,6 +104,7 @@ const loadProduct = cache(async (key: string) => {
     acceptCustom: p.accept_custom,
     status: p.status,
     category: category ?? null,
+    videoUrl: productVideoUrl(p.video_path),
   };
 
   const tiers: TierView[] = (tiersRes.data ?? []).map((t) => ({

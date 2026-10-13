@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { AppShell } from '@/components/ui';
 import { buildSupplierNavGroups } from '../../../_lib/nav';
 import { getNewRfqCount, getUnreadNotificationCount } from '../../../_lib/counts';
+import { ProductVideoField } from '../../_components/ProductVideoField';
 import { ProductForm } from '../../_components/ProductForm';
 
 export const metadata: Metadata = {
@@ -31,7 +32,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const { data: product } = await supabase
     .from('products')
     .select(
-      'id, name, category_id, description, accept_oem, accept_custom, min_order_qty, lead_time_days, status, is_ready_stock, stock_qty, price_tiers(min_qty, max_qty, unit_price), product_variants(id, color, size, material, stock_qty, price_adjustment, sku, is_active), product_media(id, r2_key, cdn_url, thumbnail_url, is_primary, sort_order, variant_id)',
+      'id, name, category_id, description, accept_oem, accept_custom, min_order_qty, lead_time_days, status, is_ready_stock, stock_qty, video_path, price_tiers(min_qty, max_qty, unit_price), product_variants(id, color, size, material, stock_qty, price_adjustment, sku, is_active), product_media(id, r2_key, cdn_url, thumbnail_url, is_primary, sort_order, variant_id)',
     )
     .eq('id', id)
     .eq('supplier_id', supplier.id)
@@ -88,6 +89,13 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           Cập nhật thông tin — thay đổi hiển thị ngay cho buyer sau khi lưu.
         </div>
       </div>
+
+      <ProductVideoField
+        productId={product.id}
+        supplierId={supplier.id}
+        initialPath={product.video_path ?? null}
+        blocked={product.status === 'blocked'}
+      />
 
       <ProductForm
         mode="edit"
