@@ -20,6 +20,7 @@ export function buildAdminNavGroups({
         },
         { icon: '📦', label: 'Quản lý đơn hàng', href: '/admin/orders' },
         { icon: '⚖️', label: 'Tranh chấp & hoàn tiền', href: '/admin/disputes' },
+        { icon: '📋', label: 'Giám sát RFQ', href: '/admin/rfq' },
         { icon: '👥', label: 'Quản lý user', href: '/admin/users' },
         { icon: '🗂️', label: 'Kiểm duyệt sản phẩm', href: '/admin/products' },
         { icon: '⭐', label: 'Kiểm duyệt đánh giá', href: '/admin/reviews' },
@@ -29,6 +30,7 @@ export function buildAdminNavGroups({
     {
       label: 'Hệ thống',
       items: [
+        { icon: '📈', label: 'Báo cáo toàn sàn', href: '/admin/analytics' },
         { icon: '🏷️', label: 'Danh mục ngành hàng', href: '/admin/categories' },
         { icon: '🧾', label: 'Nhật ký hoạt động', href: '/admin/audit' },
         { icon: '⚙️', label: 'Cài đặt sàn', href: '/admin/settings' },
