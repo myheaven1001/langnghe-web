@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { RichText } from '@/components/ui';
 import { formatVnd } from '@/lib/format';
 import {
   qtyRangeLabel,
@@ -50,9 +51,13 @@ export function ProductTabs({
       </div>
       <div className="p-4 sm:p-5">
         {active === 'desc' && (
-          <div className="text-brand-ink text-[13px] leading-[1.7] whitespace-pre-line">
-            {product.description || (
-              <span className="text-brand-sub">Xưởng chưa viết mô tả cho sản phẩm này.</span>
+          <div className="text-brand-ink">
+            {product.description ? (
+              <RichText text={product.description} />
+            ) : (
+              <span className="text-brand-sub text-[13px]">
+                Xưởng chưa viết mô tả cho sản phẩm này.
+              </span>
             )}
           </div>
         )}

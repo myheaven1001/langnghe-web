@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Button, Field, Input, Select, Textarea } from '@/components/ui';
+import { Button, Field, Input, RichTextEditor, Select } from '@/components/ui';
 import { formatVnd } from '@/lib/format';
 import { IMAGE_ACCEPT, isSupportedImage, prepareImage } from '@/lib/image-prep';
 
@@ -541,12 +541,12 @@ export function ProductForm({
               label="Mô tả chi tiết"
               required
               error={errors.description}
-              hint={`${description.length}/1500 ký tự — chất liệu, hoa văn, kích thước, cách đóng gói.`}
+              hint={`${description.length}/3000 ký tự — chất liệu, hoa văn, kích thước, cách đóng gói. Dùng thanh nút để in đậm, tạo tiêu đề và gạch đầu dòng.`}
             >
-              <Textarea
+              <RichTextEditor
                 value={description}
-                onChange={(e) => setDescription(e.target.value.slice(0, 1500))}
-                rows={5}
+                onChange={setDescription}
+                maxLength={3000}
                 placeholder="Chất liệu, hoa văn, kích thước, cách đóng gói, khả năng tùy chỉnh..."
               />
             </Field>

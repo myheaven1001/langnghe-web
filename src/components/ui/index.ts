@@ -11,3 +11,5 @@ export * from './UserMenu';
 export * from './Button';
 export * from './Field';
 export * from './Tiles';
+export * from './RichText';
+export * from './RichTextEditor';

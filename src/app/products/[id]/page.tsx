@@ -3,6 +3,7 @@ import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { productVideoUrl } from '@/lib/product-video';
+import { stripRichText } from '@/lib/rich-text';
 import { ProductDetailClient } from './_components/ProductDetailClient';
 import type {
   MediaView,
@@ -188,7 +189,7 @@ export async function generateMetadata({
 
   const { product, supplier, media } = data;
   const description = (
-    product.description ??
+    stripRichText(product.description) ||
     `${product.name} — ${supplier.shopName}${supplier.villageOrigin ? `, ${supplier.villageOrigin}` : ''}`
   ).slice(0, 160);
 
