@@ -78,9 +78,12 @@ export function ReviewCard({
 export function PublicReviews({
   summary,
   reviews,
+  renderFooter,
 }: {
   summary: ReviewSummary;
   reviews: PublicReview[];
+  /** Nút hành động dưới mỗi đánh giá (vd. "Báo cáo" cho người đã đăng nhập). */
+  renderFooter?: (review: PublicReview) => ReactNode;
 }) {
   if (summary.count === 0) return null;
 
@@ -123,6 +126,7 @@ export function PublicReviews({
             comment={r.comment}
             reply={r.supplier_reply}
             repliedAt={r.replied_at}
+            footer={renderFooter?.(r)}
           />
         ))}
       </div>

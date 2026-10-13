@@ -88,6 +88,27 @@ export default async function AdminDashboardPage() {
       .limit(5),
   ]);
 
+  // Hàng đợi của các tính năng thêm ở bước 5–6 (đếm thẳng qua RLS của admin;
+  // bảng / hàm chưa có thì coi như 0).
+  const [
+    { count: payoutsPending },
+    { count: refundsPending },
+    { count: reportsOpen },
+    { data: rfqMonitor },
+  ] = await Promise.all([
+    supabase
+      .from('supplier_payouts')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending'),
+    supabase.from('refunds').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase
+      .from('content_reports')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'open'),
+    supabase.rpc('admin_rfq_monitor', { p_limit: 300 }),
+  ]);
+  const staleRfqCount = ((rfqMonitor ?? []) as { stale: boolean }[]).filter((r) => r.stale).length;
+
   const counts = { ...EMPTY_COUNTS, ...((countsData ?? {}) as Partial<QueueCounts>) };
   const pendingVerificationCount = counts.pending_verifications;
 
@@ -161,7 +182,7 @@ export default async function AdminDashboardPage() {
           }
         />
         <TodoTile
-          href="/admin/orders?status=disputed&range=all"
+          href="/admin/disputes"
           icon="⚠️"
           count={counts.open_disputes}
           label="Tranh chấp đang mở"
@@ -171,6 +192,30 @@ export default async function AdminDashboardPage() {
           icon="🔒"
           count={counts.suspended_users}
           label="Tài khoản đang bị khoá"
+        />
+        <TodoTile
+          href="/admin/finance"
+          icon="💵"
+          count={payoutsPending ?? 0}
+          label="Khoản chờ chuyển cho xưởng"
+        />
+        <TodoTile
+          href="/admin/disputes"
+          icon="💸"
+          count={refundsPending ?? 0}
+          label="Hoàn tiền chờ chuyển cho buyer"
+        />
+        <TodoTile
+          href="/admin/reports"
+          icon="⚑"
+          count={reportsOpen ?? 0}
+          label="Báo cáo vi phạm chờ xử lý"
+        />
+        <TodoTile
+          href="/admin/rfq"
+          icon="📋"
+          count={staleRfqCount}
+          label="RFQ quá 48 giờ chưa có báo giá"
         />
       </div>
 

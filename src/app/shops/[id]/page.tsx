@@ -243,6 +243,17 @@ export default async function ShopPage({
             <PublicReviews
               summary={reviewSummary}
               reviews={(reviewsData ?? []) as PublicReview[]}
+              renderFooter={
+                isBuyer && !isOwner
+                  ? (review) => (
+                      <ReportButton
+                        targetType="review"
+                        targetId={review.id}
+                        className="text-brand-light hover:text-brand-red min-h-8 text-xs"
+                      />
+                    )
+                  : undefined
+              }
             />
           </div>
         )}
