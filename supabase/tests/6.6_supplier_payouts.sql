@@ -112,6 +112,9 @@ BEGIN
 END $$;
 
 -- ── Số liệu trước ──────────────────────────────────────────────────────
+-- Mốc "trước" lấy SAU khi đã có 3 đơn test: sàn đã thu 15.000.000, cả 3 đơn
+-- đang được giữ tiền, 1.000.000 chờ hoàn. Các phép so bên dưới là chênh lệch
+-- so với mốc này.
 SELECT pg_temp.login('xuong.a@langnghe.test');
 SELECT pg_temp.expect_error('xưởng gọi đối soát của admin', 'FORBIDDEN_NOT_ADMIN',
     $q$SELECT public.admin_finance_summary()$q$);
@@ -173,9 +176,9 @@ CREATE FUNCTION pg_temp.sdelta(p_key TEXT) RETURNS NUMERIC LANGUAGE sql AS $$
     SELECT (public.supplier_finance_summary() ->> p_key)::NUMERIC
          - (current_setting('test.s_before')::JSONB ->> p_key)::NUMERIC;
 $$;
-SELECT pg_temp.check('số liệu của xưởng: chờ sàn trả +8.550.000, phí +450.000, đang giữ +5.000.000 (đơn 3)',
+SELECT pg_temp.check('số liệu của xưởng: chờ sàn trả +8.550.000, phí +450.000, đang giữ −10.000.000 (2 đơn vừa hoàn tất)',
     pg_temp.sdelta('payout_pending') = 8550000 AND pg_temp.sdelta('fees') = 450000
-    AND pg_temp.sdelta('held_in_progress') = 5000000
+    AND pg_temp.sdelta('held_in_progress') = -10000000
     AND (public.supplier_finance_summary() ->> 'commission_percent')::NUMERIC = 5,
     public.supplier_finance_summary()::TEXT);
 
@@ -208,11 +211,11 @@ CREATE FUNCTION pg_temp.adelta(p_key TEXT) RETURNS NUMERIC LANGUAGE sql AS $$
     SELECT (public.admin_finance_summary() ->> p_key)::NUMERIC
          - (current_setting('test.a_before')::JSONB ->> p_key)::NUMERIC;
 $$;
-SELECT pg_temp.check('đối soát: thu +15.000.000, đã trả xưởng +4.275.000, chờ trả +3.800.000, chờ hoàn +1.500.000, đang giữ +5.000.000',
-    pg_temp.adelta('collected') = 15000000 AND pg_temp.adelta('paid_out') = 4275000
-    AND pg_temp.adelta('payout_pending') = 3800000 AND pg_temp.adelta('refund_pending') = 1500000
-    AND pg_temp.adelta('held_in_progress') = 5000000 AND pg_temp.adelta('fees') = 425000
-    AND pg_temp.adelta('expected_balance') = 15000000 - 4275000,
+SELECT pg_temp.check('đối soát: tiền thu không đổi, đã trả xưởng +4.275.000, chờ trả +3.800.000, chờ hoàn +500.000, đang giữ −10.000.000, số dư phải có −4.275.000',
+    pg_temp.adelta('collected') = 0 AND pg_temp.adelta('paid_out') = 4275000
+    AND pg_temp.adelta('payout_pending') = 3800000 AND pg_temp.adelta('refund_pending') = 500000
+    AND pg_temp.adelta('held_in_progress') = -10000000 AND pg_temp.adelta('fees') = 425000
+    AND pg_temp.adelta('expected_balance') = -4275000,
     public.admin_finance_summary()::TEXT);
 
 SELECT pg_temp.login('xuong.a@langnghe.test');
