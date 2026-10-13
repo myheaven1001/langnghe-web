@@ -6,6 +6,7 @@ import { features } from '@/lib/features';
 import { createClient } from '@/lib/supabase/client';
 import { AppShell } from '@/components/ui';
 import { buildSupplierNavGroups } from '../../supplier/_lib/nav';
+import { buildBuyerNavGroups } from '@/lib/buyer-nav';
 
 export interface NotificationRow {
   id: string;
@@ -286,44 +287,7 @@ export function NotificationsClient({
   };
 
   const navGroups = buyer
-    ? [
-        { items: [{ icon: '🏠', label: 'Dashboard', href: '/dashboard' }] },
-        {
-          label: 'Mua hàng',
-          items: [
-            { icon: '📝', label: 'Gửi RFQ mới', href: '/rfq/new' },
-            { icon: '📋', label: 'RFQ của tôi', href: '/rfq' },
-            { icon: '📦', label: 'Đơn hàng', href: '/orders' },
-          ],
-        },
-        {
-          label: 'Kết nối',
-          items: [
-            {
-              icon: '💬',
-              label: 'Nhắn tin',
-              href: '/messages',
-              count: unreadMessageThreadCount || undefined,
-            },
-            {
-              icon: '🔔',
-              label: 'Thông báo',
-              href: '/notifications',
-              count: unreadCount || undefined,
-            },
-          ],
-        },
-        {
-          label: 'Tài khoản',
-          items: [
-            { icon: '🏢', label: 'Hồ sơ & xác minh', href: '/settings/profile' },
-            { icon: '📍', label: 'Sổ địa chỉ', href: '/settings/addresses' },
-            { icon: '💳', label: 'Membership & credit', href: '/settings/membership' },
-            { icon: '⚙️', label: 'Cài đặt thông báo', href: '/settings/notifications' },
-            { icon: '🔑', label: 'Tài khoản & bảo mật', href: '/settings/account' },
-          ],
-        },
-      ]
+    ? buildBuyerNavGroups({ unreadCount, unreadMessageCount: unreadMessageThreadCount })
     : buildSupplierNavGroups({ newRfqCount, unreadCount });
 
   return (

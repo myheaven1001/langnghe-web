@@ -1,5 +1,6 @@
 import { buildSupplierNavGroups } from '../../supplier/_lib/nav';
 import type { HeaderProps, SidebarNavGroup } from '@/components/ui';
+import { buildBuyerNavGroups } from '@/lib/buyer-nav';
 
 // AppShell header/nav cho cả 2 trang /messages* — trích ra vì cả inbox
 // (5.1) và chat chi tiết (5.2) đều cần dựng đúng shell theo role
@@ -28,44 +29,7 @@ export function buildMessagesShell({
   };
 
   const navGroups: SidebarNavGroup[] = buyer
-    ? [
-        { items: [{ icon: '🏠', label: 'Dashboard', href: '/dashboard' }] },
-        {
-          label: 'Mua hàng',
-          items: [
-            { icon: '📝', label: 'Gửi RFQ mới', href: '/rfq/new' },
-            { icon: '📋', label: 'RFQ của tôi', href: '/rfq' },
-            { icon: '📦', label: 'Đơn hàng', href: '/orders' },
-          ],
-        },
-        {
-          label: 'Kết nối',
-          items: [
-            {
-              icon: '💬',
-              label: 'Nhắn tin',
-              href: '/messages',
-              count: unreadThreadCount || undefined,
-            },
-            {
-              icon: '🔔',
-              label: 'Thông báo',
-              href: '/notifications',
-              count: unreadCount || undefined,
-            },
-          ],
-        },
-        {
-          label: 'Tài khoản',
-          items: [
-            { icon: '🏢', label: 'Hồ sơ & xác minh', href: '/settings/profile' },
-            { icon: '📍', label: 'Sổ địa chỉ', href: '/settings/addresses' },
-            { icon: '💳', label: 'Membership & credit', href: '/settings/membership' },
-            { icon: '⚙️', label: 'Cài đặt thông báo', href: '/settings/notifications' },
-            { icon: '🔑', label: 'Tài khoản & bảo mật', href: '/settings/account' },
-          ],
-        },
-      ]
+    ? buildBuyerNavGroups({ unreadCount, unreadMessageCount: unreadThreadCount })
     : buildSupplierNavGroups({ newRfqCount, unreadCount });
 
   return { header, navGroups };

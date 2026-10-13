@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AppShell } from '@/components/ui';
 import RfqCreateForm from './RfqCreateForm';
+import { buildBuyerNavGroups } from '@/lib/buyer-nav';
 
 export const metadata: Metadata = {
   title: 'Gửi yêu cầu báo giá (RFQ) — LàngNghề.vn',
@@ -92,34 +93,7 @@ export default async function RfqNewPage({
           { icon: '🔔', title: 'Thông báo' },
         ],
       }}
-      navGroups={[
-        { items: [{ icon: '🏠', label: 'Dashboard', href: '/dashboard' }] },
-        {
-          label: 'Mua hàng',
-          items: [
-            { icon: '📝', label: 'Gửi RFQ mới', href: '/rfq/new' },
-            { icon: '📋', label: 'RFQ của tôi', href: '/rfq' },
-            { icon: '📦', label: 'Đơn hàng', href: '/orders' },
-          ],
-        },
-        {
-          label: 'Kết nối',
-          items: [
-            { icon: '💬', label: 'Nhắn tin', href: '/messages' },
-            { icon: '🔔', label: 'Thông báo', href: '/notifications' },
-          ],
-        },
-        {
-          label: 'Tài khoản',
-          items: [
-            { icon: '🏢', label: 'Hồ sơ & xác minh', href: '/settings/profile' },
-            { icon: '📍', label: 'Sổ địa chỉ', href: '/settings/addresses' },
-            { icon: '💳', label: 'Membership & credit', href: '/settings/membership' },
-            { icon: '⚙️', label: 'Cài đặt thông báo', href: '/settings/notifications' },
-            { icon: '🔑', label: 'Tài khoản & bảo mật', href: '/settings/account' },
-          ],
-        },
-      ]}
+      navGroups={buildBuyerNavGroups({})}
     >
       <RfqCreateForm
         categories={categories ?? []}

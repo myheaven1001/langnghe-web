@@ -14,6 +14,7 @@ import {
 } from '@/components/ui';
 import { formatVnd } from '@/lib/format';
 import { ORDER_ITEMS_BRIEF, summarizeOrderItems, type OrderItemRow } from '@/lib/orders';
+import { buildBuyerNavGroups } from '@/lib/buyer-nav';
 
 export const metadata: Metadata = {
   title: 'Dashboard — LàngNghề.vn',
@@ -187,44 +188,7 @@ export default async function DashboardPage() {
         userName: buyer.company_name,
         userRole: 'Buyer',
       }}
-      navGroups={[
-        { items: [{ icon: '🏠', label: 'Dashboard', href: '/dashboard' }] },
-        {
-          label: 'Mua hàng',
-          items: [
-            { icon: '📝', label: 'Gửi RFQ mới', href: '/rfq/new' },
-            {
-              icon: '📋',
-              label: 'RFQ của tôi',
-              href: '/rfq',
-              count: activeRfqCount || undefined,
-            },
-            { icon: '📦', label: 'Đơn hàng', href: '/orders' },
-          ],
-        },
-        {
-          label: 'Kết nối',
-          items: [
-            { icon: '💬', label: 'Nhắn tin', href: '/messages' },
-            {
-              icon: '🔔',
-              label: 'Thông báo',
-              href: '/notifications',
-              count: unreadNotificationCount || undefined,
-            },
-          ],
-        },
-        {
-          label: 'Tài khoản',
-          items: [
-            { icon: '🏢', label: 'Hồ sơ & xác minh', href: '/settings/profile' },
-            { icon: '📍', label: 'Sổ địa chỉ', href: '/settings/addresses' },
-            { icon: '💳', label: 'Membership & credit', href: '/settings/membership' },
-            { icon: '⚙️', label: 'Cài đặt thông báo', href: '/settings/notifications' },
-            { icon: '🔑', label: 'Tài khoản & bảo mật', href: '/settings/account' },
-          ],
-        },
-      ]}
+      navGroups={buildBuyerNavGroups({ activeRfqCount: activeRfqCount ?? 0, unreadCount: unreadNotificationCount ?? 0 })}
     >
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>

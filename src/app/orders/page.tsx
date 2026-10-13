@@ -6,6 +6,7 @@ import { ORDER_ITEMS_BRIEF, summarizeOrderItems, type OrderItemRow } from '@/lib
 import { AppShell, StatusPill } from '@/components/ui';
 import { daysAgoIso, formatVnDate, formatVnd } from '@/lib/format';
 import { OrderFilterBar } from './_components/OrderFilterBar';
+import { buildBuyerNavGroups } from '@/lib/buyer-nav';
 
 export const metadata: Metadata = {
   title: 'Đơn hàng của tôi — LàngNghề.vn',
@@ -216,39 +217,7 @@ export default async function OrdersPage({
         userName: buyer.company_name,
         userRole: 'Buyer',
       }}
-      navGroups={[
-        { items: [{ icon: '🏠', label: 'Dashboard', href: '/dashboard' }] },
-        {
-          label: 'Mua hàng',
-          items: [
-            { icon: '📝', label: 'Gửi RFQ mới', href: '/rfq/new' },
-            { icon: '📋', label: 'RFQ của tôi', href: '/rfq', count: activeRfqCount || undefined },
-            { icon: '📦', label: 'Đơn hàng', href: '/orders' },
-          ],
-        },
-        {
-          label: 'Kết nối',
-          items: [
-            { icon: '💬', label: 'Nhắn tin', href: '/messages' },
-            {
-              icon: '🔔',
-              label: 'Thông báo',
-              href: '/notifications',
-              count: unreadCount || undefined,
-            },
-          ],
-        },
-        {
-          label: 'Tài khoản',
-          items: [
-            { icon: '🏢', label: 'Hồ sơ & xác minh', href: '/settings/profile' },
-            { icon: '📍', label: 'Sổ địa chỉ', href: '/settings/addresses' },
-            { icon: '💳', label: 'Membership & credit', href: '/settings/membership' },
-            { icon: '⚙️', label: 'Cài đặt thông báo', href: '/settings/notifications' },
-            { icon: '🔑', label: 'Tài khoản & bảo mật', href: '/settings/account' },
-          ],
-        },
-      ]}
+      navGroups={buildBuyerNavGroups({ activeRfqCount: activeRfqCount ?? 0, unreadCount: unreadCount ?? 0 })}
     >
       <div className="text-brand-light mb-2 flex items-center gap-1.5 text-xs">
         <Link href="/dashboard" className="text-brand-sub hover:text-brand-red">
