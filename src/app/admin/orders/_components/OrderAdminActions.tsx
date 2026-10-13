@@ -334,8 +334,8 @@ export function OrderAdminActions({
             <span className="text-brand-sub text-xs">% hoàn cho buyer</span>
             <input
               type="range"
-              min={0}
-              max={100}
+              min={1}
+              max={99}
               value={ratio}
               onChange={(e) => setRatio(Number(e.target.value))}
               className="flex-1"

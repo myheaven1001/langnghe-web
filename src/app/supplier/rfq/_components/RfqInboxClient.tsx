@@ -49,7 +49,9 @@ const PAGE_SIZE = 10;
 function bucketFor(rfq: InboxRfqRow, quote: MyQuoteRow | undefined): Bucket {
   if (quote) {
     if (quote.status === 'accepted') return 'won';
-    if (quote.status === 'rejected') return 'lost';
+    // Buyer từ chối báo giá khi RFQ còn mở (5.7): xưởng được báo giá lại nên
+    // RFQ quay về mục "mới"; RFQ đã đóng thì mới là "đã đóng".
+    if (quote.status === 'rejected') return RFQ_OPEN_STATUSES.includes(rfq.status) ? 'new' : 'lost';
     return 'quoted';
   }
   // Chưa có báo giá của mình: còn mở (kể cả xưởng khác đã báo giá) thì vẫn là "mới".
@@ -244,6 +246,11 @@ export function RfqInboxClient({ rfqs, myQuotes }: { rfqs: InboxRfqRow[]; myQuot
                       <span>Báo giá: {formatVnd(quote.unit_price)}</span>
                     ) : (
                       <span>{budgetLabel(rfq.budgetMin, rfq.budgetMax)}</span>
+                    )}
+                    {bucket === 'new' && quote?.status === 'rejected' && (
+                      <span className="text-status-amber font-semibold">
+                        Buyer đã từ chối báo giá {formatVnd(quote.unit_price)} — báo giá lại được
+                      </span>
                     )}
                     <span>
                       {bucket === 'won'
