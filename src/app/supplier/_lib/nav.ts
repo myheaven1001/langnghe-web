@@ -27,6 +27,7 @@ export function buildSupplierNavGroups({
         },
         { icon: '💰', label: 'Báo giá đã gửi', href: '/supplier/quotes' },
         { icon: '📦', label: 'Quản lý đơn hàng', href: '/supplier/orders' },
+        { icon: '💵', label: 'Tài chính', href: '/supplier/finance' },
         { icon: '🤝', label: 'Khách hàng', href: '/supplier/customers' },
         { icon: '⭐', label: 'Đánh giá', href: '/supplier/reviews' },
         ...(features.disputes

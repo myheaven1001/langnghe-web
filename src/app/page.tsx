@@ -68,8 +68,8 @@ export default async function HomePage() {
             </Section>
           )}
 
-          {/* Thay mục "Ưu đãi lô hàng tuần này" của bản mẫu tới khi chốt
-              câu hỏi 7 (có làm khuyến mãi hay không). */}
+          {/* Thay mục "Ưu đãi lô hàng tuần này" của bản mẫu — đã chốt câu
+              hỏi 7 (13/10/2026): không làm khuyến mãi, giữ "Sản phẩm mới". */}
           {hasProducts && (
             <Section title={<>🆕 Sản phẩm mới</>} moreHref="/search">
               <div className={PRODUCT_GRID}>

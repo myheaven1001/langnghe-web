@@ -20,6 +20,7 @@ export function buildAdminNavGroups({
         },
         { icon: '📦', label: 'Quản lý đơn hàng', href: '/admin/orders' },
         { icon: '⚖️', label: 'Tranh chấp & hoàn tiền', href: '/admin/disputes' },
+        { icon: '💵', label: 'Tài chính & đối soát', href: '/admin/finance' },
         { icon: '📋', label: 'Giám sát RFQ', href: '/admin/rfq' },
         { icon: '👥', label: 'Quản lý user', href: '/admin/users' },
         { icon: '🗂️', label: 'Kiểm duyệt sản phẩm', href: '/admin/products' },

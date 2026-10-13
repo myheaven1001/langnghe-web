@@ -20,7 +20,11 @@ export interface SupportContact {
 }
 
 type SectionKey =
-  'payment_account' | 'order_auto_complete_days' | 'order_confirmation_days' | 'support_contact';
+  | 'payment_account'
+  | 'order_auto_complete_days'
+  | 'order_confirmation_days'
+  | 'commission_percent'
+  | 'support_contact';
 
 const INPUT =
   'border-brand-border focus:border-brand-red w-full rounded-lg border-[1.5px] px-3 py-2 text-[13px] outline-none';
@@ -35,17 +39,19 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   );
 }
 
-// Bốn khối cài đặt, mỗi khối lưu riêng qua RPC admin_set_setting(key, value)
+// Năm khối cài đặt, mỗi khối lưu riêng qua RPC admin_set_setting(key, value)
 // — hàm tự kiểm tra quyền admin, giá trị hợp lệ và ghi admin_audit_log.
 export function SettingsForm({
   payment: initialPayment,
   autoCompleteDays: initialDays,
   confirmationDays: initialConfirmationDays,
+  commissionPercent: initialCommission,
   support: initialSupport,
 }: {
   payment: PaymentAccount;
   autoCompleteDays: number;
   confirmationDays: number;
+  commissionPercent: number;
   support: SupportContact;
 }) {
   const supabase = useMemo(() => createClient(), []);
@@ -53,6 +59,7 @@ export function SettingsForm({
   const [payment, setPayment] = useState(initialPayment);
   const [days, setDays] = useState(String(initialDays));
   const [confirmationDays, setConfirmationDays] = useState(String(initialConfirmationDays));
+  const [commission, setCommission] = useState(String(initialCommission));
   const [support, setSupport] = useState(initialSupport);
   const [saving, setSaving] = useState<SectionKey | null>(null);
   const [result, setResult] = useState<{ key: SectionKey; ok: boolean; message: string } | null>(
@@ -189,6 +196,29 @@ export function SettingsForm({
         {footer('order_confirmation_days', () =>
           save('order_confirmation_days', Number(confirmationDays)),
         )}
+      </section>
+
+      <section className="border-brand-border mb-4 rounded-[10px] border bg-white p-[18px]">
+        <h2 className="mb-1 text-sm font-bold">💵 Phí sàn</h2>
+        <p className="text-brand-sub mb-3.5 text-xs">
+          Phần trăm sàn giữ lại khi trả tiền cho xưởng lúc đơn hoàn tất (tính trên tiền thu trừ tiền
+          đã hoàn buyer). 0 = không thu phí. Chỉ áp cho đơn hoàn tất sau khi đổi; xưởng thấy mức phí
+          này ở trang Tài chính.
+        </p>
+        <div className="max-w-[180px]">
+          <Field label="Phí (0–30%)">
+            <input
+              className={INPUT}
+              type="number"
+              min={0}
+              max={30}
+              step={0.5}
+              value={commission}
+              onChange={(e) => setCommission(e.target.value)}
+            />
+          </Field>
+        </div>
+        {footer('commission_percent', () => save('commission_percent', Number(commission)))}
       </section>
 
       <section className="border-brand-border mb-4 rounded-[10px] border bg-white p-[18px]">

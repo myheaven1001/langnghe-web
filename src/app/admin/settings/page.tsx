@@ -79,6 +79,7 @@ export default async function AdminSettingsPage() {
         }}
         autoCompleteDays={Number(byKey.get('order_auto_complete_days') ?? 7)}
         confirmationDays={orderConfirmationDays(byKey.get('order_confirmation_days'))}
+        commissionPercent={Number(byKey.get('commission_percent') ?? 0)}
         support={{
           phone: support.phone ?? '',
           zalo: support.zalo ?? '',
@@ -116,5 +117,6 @@ const SETTING_LABEL: Record<string, string> = {
   payment_account: 'tài khoản nhận tiền',
   order_auto_complete_days: 'số ngày tự hoàn tất đơn',
   order_confirmation_days: 'hạn xưởng xác nhận đơn',
+  commission_percent: 'phí sàn',
   support_contact: 'kênh hỗ trợ',
 };
