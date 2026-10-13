@@ -1,4 +1,4 @@
--- Test bước 6 (Vận hành): notification_templates, trigger áp mẫu / công tắc,
+-- Test bước 6 (Vận hành): notification_overrides, trigger áp mẫu / công tắc,
 -- tôn trọng notification_preferences, admin_save_notification_template().
 --
 -- Chạy trên STAGING sau `npm run seed:staging`. Dán cả file vào SQL Editor
@@ -88,7 +88,7 @@ BEGIN
     UPDATE users SET status = 'active'
     WHERE id IN (SELECT u.id FROM auth.users u
                  WHERE u.email IN ('buyer.a@langnghe.test', 'admin@langnghe.test'));
-    DELETE FROM notification_templates;
+    DELETE FROM notification_overrides;
     DELETE FROM notification_preferences WHERE user_id = v_user;
     PERFORM set_config('test.user', v_user::TEXT, TRUE);
 END $$;
@@ -104,7 +104,7 @@ SELECT pg_temp.login('buyer.a@langnghe.test');
 SELECT pg_temp.expect_error('buyer lưu mẫu thông báo', 'FORBIDDEN_NOT_ADMIN',
     $q$SELECT public.admin_save_notification_template('order_shipped', 'x', NULL, TRUE)$q$);
 SELECT pg_temp.check('buyer không đọc được bảng mẫu',
-    (SELECT count(*) = 0 FROM notification_templates), 'lộ bảng mẫu');
+    (SELECT count(*) = 0 FROM notification_overrides), 'lộ bảng mẫu');
 
 SELECT pg_temp.login('admin@langnghe.test');
 SELECT pg_temp.expect_error('loại thông báo không tồn tại', 'INVALID_TEMPLATE',
@@ -112,7 +112,7 @@ SELECT pg_temp.expect_error('loại thông báo không tồn tại', 'INVALID_TE
 SELECT pg_temp.expect_error('tắt thông báo khoá tài khoản', 'INVALID_TEMPLATE',
     $q$SELECT public.admin_save_notification_template('account_suspended', NULL, NULL, FALSE)$q$);
 SELECT pg_temp.expect_error('admin ghi thẳng bảng mẫu', 'DENIED',
-    $q$INSERT INTO notification_templates (type, is_enabled) VALUES ('order_shipped', FALSE)$q$);
+    $q$INSERT INTO notification_overrides (type, is_enabled) VALUES ('order_shipped', FALSE)$q$);
 
 -- ── Mẫu có ô thay thế ──────────────────────────────────────────────────
 SELECT public.admin_save_notification_template('order_shipped',
@@ -151,7 +151,7 @@ SELECT pg_temp.check('sàn tắt loại thông báo → không ghi, không báo 
 SELECT pg_temp.login('admin@langnghe.test');
 SELECT public.admin_save_notification_template('order_shipped', NULL, NULL, TRUE);
 SELECT pg_temp.check('lưu "mặc định" → bỏ dòng mẫu; mỗi lần lưu đều có nhật ký',
-    (SELECT count(*) = 0 FROM notification_templates WHERE type = 'order_shipped')
+    (SELECT count(*) = 0 FROM notification_overrides WHERE type = 'order_shipped')
     AND (SELECT count(*) = 4 FROM admin_audit_log
          WHERE action = 'notification_template.save' AND entity_id = 'order_shipped'
            AND admin_id = auth.uid() AND created_at >= NOW()),

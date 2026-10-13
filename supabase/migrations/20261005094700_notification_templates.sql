@@ -6,7 +6,7 @@
 -- Nội dung thông báo đang ghi cứng trong khoảng 20 hàm database. Thay vì viết
 -- lại từng hàm, một trigger duy nhất trên bảng notifications áp quy tắc ngay
 -- lúc ghi:
---   notification_templates   Mỗi loại thông báo tối đa một dòng do admin đặt:
+--   notification_overrides   Mỗi loại thông báo tối đa một dòng do admin đặt:
 --       is_enabled = FALSE   → sàn tắt hẳn loại này, không ghi thông báo;
 --       title_template / body_template (NULL = giữ nguyên bản gốc) với các ô
 --       thay thế:  {tieu_de_goc}  {noi_dung_goc}  {ma_don}  {ma_rfq}.
@@ -19,6 +19,10 @@
 --       không áp dụng (trang cài đặt vốn đã khoá các ô này).
 --   admin_save_notification_template(type, title, body, enabled)   Có nhật ký.
 --
+-- Bảng notification_templates có từ 20261001090000 (mẫu email dạng {{biến}}, chưa
+-- nơi nào dùng) KHÔNG bị đụng tới: nó dành cho việc gửi email sau này và có
+-- cấu trúc khác. Bảng mới ở đây tên notification_overrides.
+--
 -- Trigger là BEFORE INSERT trả NULL để bỏ dòng: các hàm ghi thông báo không
 -- cần sửa và không bị lỗi khi thông báo bị bỏ.
 --
@@ -29,15 +33,15 @@ BEGIN;
 
 DO $$
 BEGIN
-    IF to_regclass('public.notification_templates') IS NOT NULL THEN
-        RAISE EXCEPTION 'notification_templates đã tồn tại. Migration này đã chạy rồi.';
+    IF to_regclass('public.notification_overrides') IS NOT NULL THEN
+        RAISE EXCEPTION 'notification_overrides đã tồn tại. Migration này đã chạy rồi.';
     END IF;
     IF to_regprocedure('public.assert_admin()') IS NULL THEN
         RAISE EXCEPTION 'Thiếu assert_admin(). Chạy 20261005092000 trước.';
     END IF;
 END $$;
 
-CREATE TABLE public.notification_templates (
+CREATE TABLE public.notification_overrides (
     type           notification_type PRIMARY KEY,
     title_template TEXT        CHECK (title_template IS NULL OR char_length(title_template) BETWEEN 1 AND 255),
     body_template  TEXT        CHECK (body_template IS NULL OR char_length(body_template) BETWEEN 1 AND 1000),
@@ -46,18 +50,18 @@ CREATE TABLE public.notification_templates (
     updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-COMMENT ON TABLE public.notification_templates IS
+COMMENT ON TABLE public.notification_overrides IS
     'Mẫu / công tắc của từng loại thông báo do admin đặt (bước 6). Không có dòng
      = dùng nội dung gốc. Trigger trg_apply_notification_rules áp dụng lúc ghi.';
 
-ALTER TABLE public.notification_templates ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.notification_templates FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.notification_overrides ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notification_overrides FORCE ROW LEVEL SECURITY;
 
-CREATE POLICY notification_templates_select_admin ON public.notification_templates
+CREATE POLICY notification_overrides_select_admin ON public.notification_overrides
     FOR SELECT TO authenticated USING (public.is_admin());
 
-REVOKE ALL ON public.notification_templates FROM PUBLIC, anon, authenticated;
-GRANT SELECT ON public.notification_templates TO authenticated;
+REVOKE ALL ON public.notification_overrides FROM PUBLIC, anon, authenticated;
+GRANT SELECT ON public.notification_overrides TO authenticated;
 
 -- Thay các ô {…} trong mẫu. Ô không có dữ liệu thành chuỗi rỗng.
 CREATE FUNCTION public.render_notification_template(
@@ -84,13 +88,13 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-    v_template notification_templates%ROWTYPE;
+    v_template notification_overrides%ROWTYPE;
     v_title    TEXT := NEW.title;
     v_body     TEXT := NEW.body;
     -- Thông báo về chính tài khoản: luôn gửi, không ai tắt được.
     v_locked   BOOLEAN := NEW.type IN ('verification_approved', 'verification_rejected', 'account_suspended');
 BEGIN
-    SELECT * INTO v_template FROM notification_templates WHERE type = NEW.type;
+    SELECT * INTO v_template FROM notification_overrides WHERE type = NEW.type;
     IF FOUND AND NOT v_template.is_enabled AND NOT v_locked THEN
         RETURN NULL;   -- sàn đã tắt loại thông báo này
     END IF;
@@ -160,9 +164,9 @@ BEGIN
 
     IF v_title IS NULL AND v_body IS NULL AND p_enabled THEN
         -- Về mặc định: bỏ dòng để bảng chỉ chứa những gì admin thật sự đổi.
-        DELETE FROM notification_templates WHERE type = v_type;
+        DELETE FROM notification_overrides WHERE type = v_type;
     ELSE
-        INSERT INTO notification_templates (type, title_template, body_template, is_enabled, updated_by)
+        INSERT INTO notification_overrides (type, title_template, body_template, is_enabled, updated_by)
         VALUES (v_type, v_title, v_body, p_enabled, auth.uid())
         ON CONFLICT (type) DO UPDATE
         SET title_template = EXCLUDED.title_template, body_template = EXCLUDED.body_template,
@@ -183,7 +187,7 @@ DECLARE
 BEGIN
     SELECT count(*) INTO v_off FROM public.notification_preferences WHERE channel = 'in_app' AND NOT enabled;
     RAISE NOTICE 'Lưu ý: % lựa chọn "tắt thông báo trong ứng dụng" của người dùng bắt đầu có hiệu lực.', v_off;
-    RAISE NOTICE 'Migration OK — notification_templates, trg_apply_notification_rules, admin_save_notification_template()';
+    RAISE NOTICE 'Migration OK — notification_overrides, trg_apply_notification_rules, admin_save_notification_template()';
 END $$;
 
 COMMIT;

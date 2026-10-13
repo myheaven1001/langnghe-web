@@ -60,12 +60,12 @@ const TYPES: { type: string; label: string; audience: string; locked?: boolean }
 ];
 
 // Mẫu thông báo (bước 6 — Vận hành): bật / tắt từng loại thông báo toàn sàn
-// và chỉnh tiêu đề, nội dung. Không có dòng trong notification_templates =
+// và chỉnh tiêu đề, nội dung. Không có dòng trong notification_overrides =
 // đang dùng nội dung gốc.
 export default async function AdminNotificationTemplatesPage() {
   const { supabase, shell } = await requireAdmin();
   const { data } = await supabase
-    .from('notification_templates')
+    .from('notification_overrides')
     .select('type, title_template, body_template, is_enabled');
   const saved = new Map((data ?? []).map((t) => [t.type as string, t]));
 
