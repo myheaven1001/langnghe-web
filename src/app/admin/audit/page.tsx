@@ -29,6 +29,7 @@ const ACTION_LABEL: Record<string, string> = {
   'dispute.resolve': 'Giải quyết tranh chấp',
   'refund.paid': 'Đánh dấu đã hoàn tiền',
   'payout.paid': 'Đánh dấu đã trả xưởng',
+  'notification_template.save': 'Sửa mẫu thông báo',
   'review.hide': 'Ẩn đánh giá',
   'review.unhide': 'Hiện lại đánh giá',
   'report.resolved': 'Đóng báo cáo (đã xử lý)',

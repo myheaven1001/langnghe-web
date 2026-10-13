@@ -33,6 +33,7 @@ export function buildAdminNavGroups({
       items: [
         { icon: '📈', label: 'Báo cáo toàn sàn', href: '/admin/analytics' },
         { icon: '🏷️', label: 'Danh mục ngành hàng', href: '/admin/categories' },
+        { icon: '🔔', label: 'Mẫu thông báo', href: '/admin/notifications' },
         { icon: '🧾', label: 'Nhật ký hoạt động', href: '/admin/audit' },
         { icon: '⚙️', label: 'Cài đặt sàn', href: '/admin/settings' },
       ],
