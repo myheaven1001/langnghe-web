@@ -107,6 +107,16 @@ export function orderConfirmationDays(value: unknown): number {
   return Number.isInteger(days) && days > 0 ? days : DEFAULT_ORDER_CONFIRMATION_DAYS;
 }
 
+// Số ngày buyer có để chuyển khoản (platform_settings 'order_payment_days'),
+// tính từ lúc xưởng nhận đơn (đơn đặt thẳng) hoặc lúc tạo đơn (đơn từ báo giá);
+// quá hạn mà chưa tải biên lai thì auto_cancel_unpaid_orders() huỷ đơn.
+export const DEFAULT_ORDER_PAYMENT_DAYS = 3;
+
+export function orderPaymentDays(value: unknown): number {
+  const days = Number(value);
+  return Number.isInteger(days) && days > 0 ? days : DEFAULT_ORDER_PAYMENT_DAYS;
+}
+
 export function orderErrorMessage(message: string, fallback: string): string {
   if (message.includes('ACCOUNT_SUSPENDED')) return 'Tài khoản của bạn đang bị tạm khóa.';
   if (message.includes('ORDER_TRACKING_REQUIRED')) {

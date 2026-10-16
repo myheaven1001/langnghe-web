@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AppShell } from '@/components/ui';
 import { buildAdminNavGroups } from '../_lib/nav';
-import { orderConfirmationDays } from '@/lib/orders';
+import { orderConfirmationDays, orderPaymentDays } from '@/lib/orders';
 import { SettingsForm, type PaymentAccount, type SupportContact } from './_components/SettingsForm';
 
 export const metadata: Metadata = { title: 'Cài đặt sàn — Admin LàngNghề.vn' };
@@ -79,6 +79,7 @@ export default async function AdminSettingsPage() {
         }}
         autoCompleteDays={Number(byKey.get('order_auto_complete_days') ?? 7)}
         confirmationDays={orderConfirmationDays(byKey.get('order_confirmation_days'))}
+        paymentDays={orderPaymentDays(byKey.get('order_payment_days'))}
         commissionPercent={Number(byKey.get('commission_percent') ?? 0)}
         support={{
           phone: support.phone ?? '',
@@ -117,6 +118,7 @@ const SETTING_LABEL: Record<string, string> = {
   payment_account: 'tài khoản nhận tiền',
   order_auto_complete_days: 'số ngày tự hoàn tất đơn',
   order_confirmation_days: 'hạn xưởng xác nhận đơn',
+  order_payment_days: 'hạn buyer chuyển khoản',
   commission_percent: 'phí sàn',
   support_contact: 'kênh hỗ trợ',
 };

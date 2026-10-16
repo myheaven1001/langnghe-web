@@ -37,7 +37,7 @@ const NEXT_STEP: Record<string, { title: string; body: string }> = {
   },
   pending_payment: {
     title: '⏳ Chờ buyer thanh toán',
-    body: 'Buyer chuyển khoản cho sàn; sàn xác nhận xong bạn sẽ nhận thông báo. Chưa cần sản xuất.',
+    body: 'Buyer chuyển khoản cho sàn; sàn xác nhận xong bạn sẽ nhận thông báo. Chưa cần sản xuất. Buyer không chuyển khoản đúng hạn thì đơn tự huỷ và kho được trả lại.',
   },
   confirmed: {
     title: '💳 Sàn đã xác nhận thanh toán',

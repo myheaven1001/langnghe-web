@@ -38,7 +38,7 @@ const PROGRESS_STATUSES = ['pending_payment', 'confirmed', 'producing', 'shipped
 
 const STATUS_NOTE: Record<string, string> = {
   pending_confirmation: '🛒 Chờ xưởng xác nhận đơn — chưa cần chuyển tiền',
-  pending_payment: '⏳ Xác nhận thanh toán trong 48h để giữ đơn hàng',
+  pending_payment: '⏳ Chờ bạn chuyển khoản — quá hạn chưa tải biên lai thì đơn tự huỷ',
   confirmed: '✓ Đã thanh toán · xưởng sẽ bắt đầu sản xuất',
   producing: '🧵 Xưởng đang sản xuất đơn hàng của bạn',
   delivered: '📬 Đã giao hàng',

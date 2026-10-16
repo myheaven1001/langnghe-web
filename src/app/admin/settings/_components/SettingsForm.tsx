@@ -24,6 +24,7 @@ type SectionKey =
   | 'order_auto_complete_days'
   | 'order_confirmation_days'
   | 'commission_percent'
+  | 'order_payment_days'
   | 'support_contact';
 
 const INPUT =
@@ -45,12 +46,14 @@ export function SettingsForm({
   payment: initialPayment,
   autoCompleteDays: initialDays,
   confirmationDays: initialConfirmationDays,
+  paymentDays: initialPaymentDays,
   commissionPercent: initialCommission,
   support: initialSupport,
 }: {
   payment: PaymentAccount;
   autoCompleteDays: number;
   confirmationDays: number;
+  paymentDays: number;
   commissionPercent: number;
   support: SupportContact;
 }) {
@@ -60,6 +63,7 @@ export function SettingsForm({
   const [days, setDays] = useState(String(initialDays));
   const [confirmationDays, setConfirmationDays] = useState(String(initialConfirmationDays));
   const [commission, setCommission] = useState(String(initialCommission));
+  const [paymentDays, setPaymentDays] = useState(String(initialPaymentDays));
   const [support, setSupport] = useState(initialSupport);
   const [saving, setSaving] = useState<SectionKey | null>(null);
   const [result, setResult] = useState<{ key: SectionKey; ok: boolean; message: string } | null>(
@@ -196,6 +200,27 @@ export function SettingsForm({
         {footer('order_confirmation_days', () =>
           save('order_confirmation_days', Number(confirmationDays)),
         )}
+      </section>
+
+      <section className="border-brand-border mb-4 rounded-[10px] border bg-white p-[18px]">
+        <h2 className="mb-1 text-sm font-bold">💳 Hạn buyer chuyển khoản</h2>
+        <p className="text-brand-sub mb-3.5 text-xs">
+          Tính từ lúc xưởng nhận đơn (đơn đặt thẳng) hoặc lúc chốt báo giá. Quá hạn mà buyer chưa
+          tải biên lai thì đơn tự huỷ và kho đã giữ được trả lại; đơn đã có biên lai không bị huỷ.
+        </p>
+        <div className="max-w-[180px]">
+          <Field label="Số ngày (1–14)">
+            <input
+              className={INPUT}
+              type="number"
+              min={1}
+              max={14}
+              value={paymentDays}
+              onChange={(e) => setPaymentDays(e.target.value)}
+            />
+          </Field>
+        </div>
+        {footer('order_payment_days', () => save('order_payment_days', Number(paymentDays)))}
       </section>
 
       <section className="border-brand-border mb-4 rounded-[10px] border bg-white p-[18px]">

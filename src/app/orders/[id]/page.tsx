@@ -14,6 +14,7 @@ import {
   ORDER_ITEMS_DETAIL,
   orderCode,
   orderConfirmationDays,
+  orderPaymentDays,
   type OrderDocumentRow,
   type OrderEventRow,
   type OrderItemRow,
@@ -156,6 +157,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         'payment_account',
         'order_auto_complete_days',
         'order_confirmation_days',
+        'order_payment_days',
         'support_contact',
       ]),
     supabase
@@ -195,6 +197,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     order.created_at,
     orderConfirmationDays(settings.get('order_confirmation_days')),
   );
+  // Hạn chuyển khoản: từ lúc xưởng nhận đơn (event order_accepted) hoặc lúc tạo đơn.
+  const paymentStartedAt =
+    [...events].reverse().find((e) => e.event_type === 'order_accepted')?.created_at ??
+    order.created_at;
+  const paymentDeadline = formatVnDateTime(
+    paymentStartedAt,
+    orderPaymentDays(settings.get('order_payment_days')),
+  );
   const hasAccount = !!account.account_number;
   const hasReceipt = documents.some((d) => d.doc_type === 'payment_receipt');
   const isVerifiedSupplier = !!(verifiedRow as { verified?: boolean } | null)?.verified;
@@ -220,7 +230,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         userName: buyer.company_name,
         userRole: 'Buyer',
       }}
-      navGroups={buildBuyerNavGroups({ activeRfqCount: activeRfqCount ?? 0, unreadCount: unreadCount ?? 0 })}
+      navGroups={buildBuyerNavGroups({
+        activeRfqCount: activeRfqCount ?? 0,
+        unreadCount: unreadCount ?? 0,
+      })}
     >
       <OrderRealtime orderId={order.id} />
 
@@ -380,6 +393,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                     Chuyển khoản đúng số tiền và nội dung dưới đây, rồi tải biên lai ở mục{' '}
                     <strong>Chứng từ</strong>. Sàn sẽ xác nhận và báo xưởng bắt đầu sản xuất.
                   </div>
+                  {!hasReceipt && (
+                    <div className="bg-status-amber-soft text-status-amber mb-2 rounded-lg px-3 py-2 text-xs font-semibold">
+                      ⏳ Hạn chuyển khoản: {paymentDeadline}. Quá hạn mà chưa tải biên lai thì đơn
+                      tự huỷ.
+                    </div>
+                  )}
                   <InfoRow label="Ngân hàng" value={account.bank_name} />
                   {account.branch && <InfoRow label="Chi nhánh" value={account.branch} />}
                   <InfoRow label="Số tài khoản" value={account.account_number} />
