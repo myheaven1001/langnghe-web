@@ -177,7 +177,7 @@ SELECT pg_temp.check('giỏ có hàng của 2 xưởng → đúng 2 đơn, giỏ
     AND (SELECT count(*) = 0 FROM cart_items),
     current_setting('test.result'));
 SELECT pg_temp.check('giá tính lại phía server theo TỔNG 100 cái: Xanh 20.000, Trắng 21.000 → 2.040.000',
-    (SELECT total = 60 * 20000 + 40 * 21000 AND total_amount = total
+    (SELECT total = 60 * 20000 + 40 * 21000 
             AND status = 'pending_confirmation' AND source = 'direct' AND rfq_quote_id IS NULL
             AND shipping_address = E'Nguyễn Văn A — 0912345678\n12 Phố Gốm, Hà Nội'
      FROM orders WHERE id = current_setting('test.order_a')::UUID)

@@ -1,10 +1,10 @@
 -- Test kế hoạch 5.9: conversations / conversation_messages,
 -- start_conversation(), send_message(), mark_conversation_read(),
--- list_conversations(); rfq_messages thành chỉ đọc.
+-- list_conversations().
 --
 -- Chạy trên STAGING sau `npm run seed:staging`. Dán cả file vào SQL Editor
 -- rồi Run, hoặc psql -v ON_ERROR_STOP=1 -f.
--- Đạt: kết quả cuối là "5.9: TẤT CẢ ĐẠT (24 ca)". Hỏng: "FAIL …".
+-- Đạt: kết quả cuối là "5.9: TẤT CẢ ĐẠT (23 ca)". Hỏng: "FAIL …".
 -- Cả file ROLLBACK ở cuối: không đổi dữ liệu.
 -- Hai ca về "chưa có quan hệ" tự bỏ qua (ghi SKIP) nếu buyer.b và xuong.b trên
 -- staging đã có RFQ / đơn chung.
@@ -231,13 +231,10 @@ SELECT pg_temp.check('admin đọc được hội thoại',
 SELECT pg_temp.expect_error('admin gửi tin vào hội thoại của hai bên', 'NOT_A_PARTICIPANT',
     $q$SELECT public.send_message(current_setting('test.c1')::UUID, 'sàn xin chen ngang')$q$);
 
-SELECT pg_temp.login('buyer.a@langnghe.test');
-SELECT pg_temp.expect_error('ghi vào bảng tin nhắn cũ rfq_messages', 'DENIED',
-    $q$INSERT INTO rfq_messages (rfq_id, sender_id, content, sender_role)
-       VALUES (current_setting('test.rfq')::UUID, auth.uid(), 'đường cũ', 'buyer')$q$);
+-- Ca 'ghi vào rfq_messages bị từ chối' bỏ từ 5.10: bảng đã xoá hẳn (xem test 5.10).
 
 DO $$ BEGIN RAISE NOTICE '5.9: TẤT CẢ ĐẠT'; END $$;
 
 ROLLBACK;
 
-SELECT '5.9: TẤT CẢ ĐẠT (24 ca)' AS ket_qua;
+SELECT '5.9: TẤT CẢ ĐẠT (23 ca)' AS ket_qua;

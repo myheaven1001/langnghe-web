@@ -97,9 +97,9 @@ BEGIN
         INSERT INTO rfq_quotes (rfq_id, supplier_id, unit_price, min_qty, lead_time_days, status)
         VALUES (v_rfq, v_xa, 50000, 100, 10, 'accepted')
         RETURNING id INTO v_quote;
-        INSERT INTO orders (rfq_quote_id, buyer_id, supplier_id, quantity, unit_price, status,
+        INSERT INTO orders (rfq_quote_id, buyer_id, supplier_id, status,
                             confirmed_at, paid_amount, paid_at)
-        VALUES (v_quote, v_buyer, v_xa, 100, 50000,
+        VALUES (v_quote, v_buyer, v_xa,
                 (CASE WHEN i = 3 THEN 'producing' ELSE 'delivered' END)::order_status,
                 NOW() AT TIME ZONE 'UTC', 5000000, NOW())
         RETURNING id INTO v_order;

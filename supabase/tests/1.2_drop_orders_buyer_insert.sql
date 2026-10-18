@@ -63,9 +63,9 @@ SELECT pg_temp.login('buyer.a@langnghe.test');
 DO $$
 BEGIN
     BEGIN
-        INSERT INTO orders (rfq_quote_id, buyer_id, supplier_id, quantity, unit_price, status)
+        INSERT INTO orders (rfq_quote_id, buyer_id, supplier_id, status)
         VALUES (current_setting('test.quote')::UUID, current_setting('test.buyer_a')::UUID,
-                current_setting('test.xuong_a')::UUID, 1000, 1, 'confirmed');
+                current_setting('test.xuong_a')::UUID, 'confirmed');
     EXCEPTION WHEN insufficient_privilege THEN
         RAISE NOTICE 'PASS  buyer tạo đơn thẳng bị từ chối (%)', SQLERRM;
         RETURN;
@@ -87,10 +87,12 @@ BEGIN
     END IF;
     RAISE NOTICE 'PASS  chấp nhận báo giá vẫn tạo đơn';
 
-    IF v_order.unit_price <> 99000 OR v_order.quantity <> 200
-       OR v_order.status <> 'pending_payment' THEN
-        RAISE EXCEPTION 'FAIL  đơn sai: giá %, số lượng %, trạng thái %',
-            v_order.unit_price, v_order.quantity, v_order.status;
+    -- Từ 5.10 giá / số lượng nằm ở order_items.
+    IF v_order.status <> 'pending_payment'
+       OR NOT EXISTS (SELECT 1 FROM order_items
+                      WHERE order_id = v_order.id AND unit_price = 99000 AND quantity = 200) THEN
+        RAISE EXCEPTION 'FAIL  đơn sai: trạng thái % hoặc dòng hàng không phải 99.000đ × 200',
+            v_order.status;
     END IF;
     RAISE NOTICE 'PASS  đơn lấy giá 99.000đ × 200 từ báo giá, chờ thanh toán';
 END $$;

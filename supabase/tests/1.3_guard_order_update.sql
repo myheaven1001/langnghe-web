@@ -37,8 +37,8 @@ BEGIN
         INSERT INTO rfq_quotes (rfq_id, supplier_id, unit_price, status)
         VALUES (v_rfq, v_supplier, 50000, 'accepted')
         RETURNING id INTO v_quote;
-        INSERT INTO orders (rfq_quote_id, buyer_id, supplier_id, quantity, unit_price, status)
-        VALUES (v_quote, v_buyer, v_supplier, 100, 50000,
+        INSERT INTO orders (rfq_quote_id, buyer_id, supplier_id, status)
+        VALUES (v_quote, v_buyer, v_supplier,
                 CASE i WHEN 2 THEN 'producing' ELSE 'pending_payment' END::order_status)
         RETURNING id INTO v_order;
         PERFORM set_config('test.order' || i, v_order::TEXT, TRUE);
@@ -98,14 +98,14 @@ END $$;
 SELECT pg_temp.login('xuong.a@langnghe.test');
 SELECT pg_temp.expect_error('xưởng tự đặt "đã xác nhận thanh toán"', 'FORBIDDEN_ORDER_STATUS_CHANGE',
     $q$UPDATE orders SET status = 'confirmed' WHERE id = current_setting('test.order1')::UUID$q$);
-SELECT pg_temp.expect_error('xưởng sửa số lượng', 'FORBIDDEN_ORDER_FIELD_CHANGE',
-    $q$UPDATE orders SET quantity = 1 WHERE id = current_setting('test.order1')::UUID$q$);
+SELECT pg_temp.expect_error('xưởng sửa tổng tiền', 'FORBIDDEN_ORDER_FIELD_CHANGE',
+    $q$UPDATE orders SET total = 1 WHERE id = current_setting('test.order1')::UUID$q$);
 SELECT pg_temp.expect_error('xưởng sửa địa chỉ nhận hàng', 'FORBIDDEN_ORDER_FIELD_CHANGE',
     $q$UPDATE orders SET shipping_address = 'x' WHERE id = current_setting('test.order1')::UUID$q$);
 
 SELECT pg_temp.login('buyer.a@langnghe.test');
-SELECT pg_temp.expect_error('buyer sửa đơn giá', 'FORBIDDEN_ORDER_FIELD_CHANGE',
-    $q$UPDATE orders SET unit_price = 1 WHERE id = current_setting('test.order1')::UUID$q$);
+SELECT pg_temp.expect_error('buyer sửa tổng tiền', 'FORBIDDEN_ORDER_FIELD_CHANGE',
+    $q$UPDATE orders SET total = 1 WHERE id = current_setting('test.order1')::UUID$q$);
 SELECT pg_temp.expect_error('buyer tự ghi "đã thanh toán"', 'FORBIDDEN_ORDER_FIELD_CHANGE',
     $q$UPDATE orders SET payment_note = 'Đã CK' WHERE id = current_setting('test.order1')::UUID$q$);
 SELECT pg_temp.expect_error('buyer tự đặt hoàn tất', 'FORBIDDEN_ORDER_STATUS_CHANGE',
@@ -117,7 +117,7 @@ SELECT pg_temp.expect_ok('buyer sửa địa chỉ nhận hàng',
 -- không còn UPDATE thẳng orders: 20261005092200).
 SELECT pg_temp.login('admin@langnghe.test');
 SELECT pg_temp.expect_ok('admin xác nhận thanh toán (hàm admin_confirm_payment)',
-    $q$SELECT public.admin_confirm_payment(o.id, o.total_amount, NULL, 'Chuyển khoản', 'TEST', NULL)
+    $q$SELECT public.admin_confirm_payment(o.id, o.total, NULL, 'Chuyển khoản', 'TEST', NULL)
        FROM orders o WHERE o.id = current_setting('test.order1')::UUID$q$);
 
 -- ── Đơn 1: đã xác nhận → sản xuất → giao ───────────────────────────────

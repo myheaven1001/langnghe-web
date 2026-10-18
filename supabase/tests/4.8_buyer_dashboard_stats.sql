@@ -89,8 +89,8 @@ BEGIN
             INSERT INTO rfq_quotes (rfq_id, supplier_id, unit_price, status)
             VALUES (v_rfq, v_xa, 50000, 'accepted')
             RETURNING id INTO v_quote;
-            INSERT INTO orders (rfq_quote_id, buyer_id, supplier_id, quantity, unit_price, status)
-            VALUES (v_quote, v_buyer, v_xa, 100, 50000,
+            INSERT INTO orders (rfq_quote_id, buyer_id, supplier_id, status)
+            VALUES (v_quote, v_buyer, v_xa,
                     CASE WHEN i = 4 THEN 'pending_payment' ELSE 'shipped' END::order_status);
         END IF;
     END LOOP;

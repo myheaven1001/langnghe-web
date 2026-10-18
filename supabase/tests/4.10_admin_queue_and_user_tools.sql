@@ -116,9 +116,9 @@ BEGIN
         INSERT INTO rfq_quotes (rfq_id, supplier_id, unit_price, status)
         VALUES (v_rfq, current_setting('test.xa')::UUID, 50000, 'accepted')
         RETURNING id INTO v_quote;
-        INSERT INTO orders (rfq_quote_id, buyer_id, supplier_id, quantity, unit_price, status,
+        INSERT INTO orders (rfq_quote_id, buyer_id, supplier_id, status,
                             confirmed_at, paid_amount)
-        VALUES (v_quote, current_setting('test.buyer')::UUID, current_setting('test.xa')::UUID, 100, 50000,
+        VALUES (v_quote, current_setting('test.buyer')::UUID, current_setting('test.xa')::UUID,
                 CASE WHEN i = 3 THEN 'confirmed' ELSE 'pending_payment' END::order_status,
                 CASE WHEN i = 3 THEN NOW() AT TIME ZONE 'UTC' END,
                 CASE WHEN i = 3 THEN 5000000 END)

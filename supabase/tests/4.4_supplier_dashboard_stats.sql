@@ -83,8 +83,8 @@ BEGIN
                 CASE WHEN i = 1 THEN 'pending' ELSE 'accepted' END::quote_status)
         RETURNING id INTO v_quote;
         IF i > 1 THEN
-            INSERT INTO orders (rfq_quote_id, buyer_id, supplier_id, quantity, unit_price, status, confirmed_at)
-            VALUES (v_quote, v_buyer, v_xa, 100, 50000,
+            INSERT INTO orders (rfq_quote_id, buyer_id, supplier_id, status, confirmed_at)
+            VALUES (v_quote, v_buyer, v_xa,
                     CASE WHEN i = 2 THEN 'confirmed' ELSE 'pending_payment' END::order_status,
                     CASE WHEN i = 2 THEN NOW() AT TIME ZONE 'UTC' END);
         END IF;

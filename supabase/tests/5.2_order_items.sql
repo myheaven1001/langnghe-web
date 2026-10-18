@@ -61,16 +61,17 @@ BEGIN
 END $$;
 
 -- ── Đơn cũ đã được chuyển đúng ─────────────────────────────────────────
-SELECT pg_temp.check('mọi đơn có đúng 1 dòng hàng trở lên và total = total_amount',
+-- Từ 5.10 không còn cột total_amount để đối chiếu: kiểm tra total = tổng dòng hàng.
+SELECT pg_temp.check('mọi đơn có 1 dòng hàng trở lên và total = tổng các dòng hàng',
     (SELECT count(*) = 0 FROM orders o
-     WHERE o.total IS DISTINCT FROM o.total_amount
+     WHERE o.total IS DISTINCT FROM (SELECT COALESCE(sum(line_total), 0) FROM order_items i WHERE i.order_id = o.id)
         OR NOT EXISTS (SELECT 1 FROM order_items i WHERE i.order_id = o.id)),
     (SELECT count(*)::TEXT || ' đơn lệch' FROM orders o
-     WHERE o.total IS DISTINCT FROM o.total_amount
+     WHERE o.total IS DISTINCT FROM (SELECT COALESCE(sum(line_total), 0) FROM order_items i WHERE i.order_id = o.id)
         OR NOT EXISTS (SELECT 1 FROM order_items i WHERE i.order_id = o.id)));
-SELECT pg_temp.check('tổng mọi dòng hàng = tổng total_amount của mọi đơn',
+SELECT pg_temp.check('tổng mọi dòng hàng = tổng total của mọi đơn',
     (SELECT COALESCE(sum(line_total), 0) FROM order_items)
-        = (SELECT COALESCE(sum(total_amount), 0) FROM orders),
+        = (SELECT COALESCE(sum(total), 0) FROM orders),
     'tổng tiền lệch');
 
 -- Dữ liệu riêng cho test: 1 RFQ đang mở của buyer A + báo giá của xưởng A.
@@ -109,7 +110,7 @@ SELECT pg_temp.login('buyer.a@langnghe.test');
 SELECT set_config('test.order',
                   public.accept_quote(current_setting('test.quote')::UUID) ->> 'order_id', TRUE);
 SELECT pg_temp.check('chấp nhận báo giá → đơn source = rfq, total = 120 × 45.000 = 5.400.000',
-    (SELECT source = 'rfq' AND total = 5400000 AND total = total_amount
+    (SELECT source = 'rfq' AND total = 5400000
      FROM orders WHERE id = current_setting('test.order')::UUID),
     (SELECT total::TEXT FROM orders WHERE id = current_setting('test.order')::UUID));
 SELECT pg_temp.check('đơn có đúng 1 dòng hàng, chép tên và đơn vị từ RFQ',
@@ -154,8 +155,8 @@ DO $$
 DECLARE
     v_order UUID;
 BEGIN
-    INSERT INTO orders (source, buyer_id, supplier_id, quantity, unit_price, status)
-    VALUES ('direct', current_setting('test.buyer')::UUID, current_setting('test.xa')::UUID, 1, 0, 'pending_confirmation')
+    INSERT INTO orders (source, buyer_id, supplier_id, status)
+    VALUES ('direct', current_setting('test.buyer')::UUID, current_setting('test.xa')::UUID, 'pending_confirmation')
     RETURNING id INTO v_order;
     INSERT INTO order_items (order_id, product_name, variant_label, unit, quantity, unit_price, sort_order)
     VALUES (v_order, 'Bát gốm', 'Xanh', 'cái', 60, 20000, 0),
@@ -171,8 +172,8 @@ SELECT pg_temp.check('bỏ 1 dòng hàng → total tự giảm còn 1.200.000',
     (SELECT total = 1200000 FROM orders WHERE id = current_setting('test.direct')::UUID),
     (SELECT total::TEXT FROM orders WHERE id = current_setting('test.direct')::UUID));
 SELECT pg_temp.expect_error('đơn rfq mà không có báo giá', 'CHECK',
-    $q$INSERT INTO orders (source, buyer_id, supplier_id, quantity, unit_price)
-       VALUES ('rfq', current_setting('test.buyer')::UUID, current_setting('test.xa')::UUID, 1, 1)$q$);
+    $q$INSERT INTO orders (source, buyer_id, supplier_id)
+       VALUES ('rfq', current_setting('test.buyer')::UUID, current_setting('test.xa')::UUID)$q$);
 
 DO $$ BEGIN RAISE NOTICE '5.2: TẤT CẢ ĐẠT'; END $$;
 

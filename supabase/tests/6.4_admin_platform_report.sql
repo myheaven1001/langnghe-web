@@ -126,11 +126,11 @@ BEGIN
     RETURNING id INTO v_rfq2;
     INSERT INTO rfq_targets (rfq_id, supplier_id) VALUES (v_rfq2, v_xa);
 
-    INSERT INTO orders (rfq_quote_id, buyer_id, supplier_id, quantity, unit_price, status,
+    INSERT INTO orders (rfq_quote_id, buyer_id, supplier_id, status,
                         confirmed_at, paid_amount, paid_at)
-    VALUES (v_quote, v_buyer, v_xa, 100, 50000, 'confirmed', NOW() AT TIME ZONE 'UTC', 5000000, NOW());
-    INSERT INTO orders (source, buyer_id, supplier_id, quantity, unit_price, status, cancel_reason)
-    VALUES ('direct', v_buyer, v_xa, 1, 700000, 'cancelled', 'test 6.4');
+    VALUES (v_quote, v_buyer, v_xa, 'confirmed', NOW() AT TIME ZONE 'UTC', 5000000, NOW());
+    INSERT INTO orders (source, buyer_id, supplier_id, status, cancel_reason)
+    VALUES ('direct', v_buyer, v_xa, 'cancelled', 'test 6.4');
 
     PERFORM set_config('test.rfq2', v_rfq2::TEXT, TRUE), set_config('test.xa', v_xa::TEXT, TRUE);
 END $$;
