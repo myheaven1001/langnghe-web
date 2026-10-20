@@ -100,7 +100,7 @@ function SubmitButton() {
       disabled={pending}
       className="w-full rounded-md bg-[#E53333] py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#c62828] disabled:cursor-not-allowed disabled:bg-[#E0DDD8]"
     >
-      {pending ? '⏳ Đang gửi mã...' : 'Gửi mã xác minh'}
+      {pending ? '⏳ Đang tạo tài khoản...' : 'Tạo tài khoản'}
     </button>
   );
 }
@@ -164,7 +164,7 @@ export default function RegisterForm({
       <div className="flex flex-col justify-center bg-white px-9 py-10">
         <div className="text-[22px] font-bold">Tạo tài khoản</div>
         <div className="mt-1 mb-7 text-[13px] leading-normal text-[#555]">
-          Miễn phí — đặt mật khẩu, rồi xác minh email bằng mã 6 số.
+          Miễn phí — chỉ cần email và mật khẩu.
         </div>
 
         <div className="mb-6 flex gap-1 rounded-lg bg-[#F5F3EF] p-1">
@@ -214,8 +214,7 @@ export default function RegisterForm({
               className="w-full rounded-md border-[1.5px] border-[#E0DDD8] px-3 py-2.5 text-[13px] transition-colors outline-none focus:border-[#E53333]"
             />
             <div className="mt-1.5 text-[11px] text-[#999]">
-              Chúng tôi gửi mã xác minh 6 số đến email này để tạo tài khoản{' '}
-              {role === 'buyer' ? 'mua sỉ' : 'nhà cung cấp'}.
+              Dùng để đăng nhập vào tài khoản {role === 'buyer' ? 'mua sỉ' : 'nhà cung cấp'}.
             </div>
           </div>
 

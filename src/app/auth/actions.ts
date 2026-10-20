@@ -147,6 +147,27 @@ function verifyUrl(
   return `/verify-email?${params.toString()}`;
 }
 
+type ServerSupabase = Awaited<ReturnType<typeof createClient>>;
+
+// Tạo đúng 1 profile theo role, tên hiển thị tạm = phần trước @ của email (chỉ
+// để insert hợp lệ: company_name/shop_name NOT NULL; người dùng sửa ở Cài đặt
+// hoặc bước "Hoàn thiện hồ sơ"). 23505 (đã có profile, ví dụ quay lại xác minh
+// lần 2 khi còn 'pending') không phải lỗi. Trả về message lỗi hoặc null.
+async function createStarterProfile(
+  supabase: ServerSupabase,
+  userId: string,
+  role: string,
+  email: string,
+): Promise<string | null> {
+  const displayName = email.split('@')[0];
+  const { error } = await tryAuth<null>(() =>
+    role === 'supplier'
+      ? supabase.from('supplier_profiles').insert({ user_id: userId, shop_name: displayName })
+      : supabase.from('buyer_profiles').insert({ user_id: userId, company_name: displayName }),
+  );
+  return error && !/duplicate key value/i.test(error) ? error : null;
+}
+
 // ── 1. Đăng ký: email + mật khẩu + role → Supabase gửi mã xác nhận 6 số ──
 // role được lưu vào auth.users.raw_user_meta_data qua options.data — trigger
 // public.handle_new_user() (xem supabase/migrations) tự đọc field này khi
@@ -155,6 +176,11 @@ function verifyUrl(
 // Cần "Confirm email" BẬT trong Supabase Auth và mẫu email "Confirm signup"
 // chứa {{ .Token }}: signUp() khi đó tạo user chưa xác nhận + gửi mã, chưa có
 // session cho tới khi confirmOtp() (verifyOtp type 'signup') thành công.
+//
+// Đăng ký nhanh (tạm thời, khi chưa có SMTP riêng): TẮT "Confirm email" trong
+// Supabase Auth thì signUp() trả session ngay → tạo profile, kích hoạt và vào
+// thẳng khu của mình, bỏ qua OTP và bước "Hoàn thiện hồ sơ". Bật lại "Confirm
+// email" là quay về luồng OTP, không cần sửa mã.
 export async function registerAccount(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
   const role = formData.get('role');
@@ -192,6 +218,31 @@ export async function registerAccount(formData: FormData) {
   // lỗi mà trả về user "giả" với identities rỗng và KHÔNG gửi mã.
   if (data?.user && data.user.identities?.length === 0) {
     back('Email này đã có tài khoản. Vui lòng đăng nhập (hoặc chọn "Quên mật khẩu").');
+  }
+
+  if (data?.session && data.user) {
+    const userId = data.user.id;
+    // Role thật đọc lại từ public.users (trigger handle_new_user() tạo từ metadata).
+    const { data: profile, error: profileError } = await tryAuth<{ role: string }>(() =>
+      supabase.from('users').select('role').eq('id', userId).single(),
+    );
+    const realRole = profile?.role ?? (isRole(role) ? role : 'buyer');
+    const setupError =
+      profileError ??
+      (await createStarterProfile(supabase, userId, realRole, email)) ??
+      (
+        await tryAuth<null>(() =>
+          supabase.from('users').update({ status: 'active' }).eq('id', userId),
+        )
+      ).error;
+    if (setupError) {
+      // Tài khoản vẫn 'pending' → lần đăng ký lại sẽ được reclaim_incomplete_signup
+      // dọn đi. Không đưa sang bước hồ sơ: completeProfile() chỉ UPDATE profile,
+      // thiếu dòng profile thì sẽ kích hoạt một tài khoản không có hồ sơ.
+      await supabase.auth.signOut();
+      back('Không thể khởi tạo tài khoản. Vui lòng đăng ký lại.');
+    }
+    redirect(next ?? homePathFor(realRole));
   }
 
   redirect(verifyUrl(email, 'register', { next }));
@@ -370,20 +421,8 @@ export async function confirmOtp(formData: FormData) {
     // ở đây: người dùng sửa lại tên thật + điền vài field hồ sơ ở bước
     // "Hoàn thiện hồ sơ" ngay sau đây (xem completeProfile() bên dưới)
     // trước khi tài khoản được coi là active.
-    const displayName = email.split('@')[0];
-
-    const { error: insertError } = await tryAuth<null>(() =>
-      profile!.role === 'supplier'
-        ? supabase.from('supplier_profiles').insert({ user_id: user.id, shop_name: displayName })
-        : supabase.from('buyer_profiles').insert({ user_id: user.id, company_name: displayName }),
-    );
-
-    // 23505 = unique_violation: bình thường nếu user quay lại xác minh lần
-    // 2 trong lúc vẫn 'pending' (dòng profile đã insert ở lần trước) — bỏ
-    // qua (tryAuth() đã dịch message, nên check qua chuỗi gốc thay vì mã
-    // lỗi Postgres — chấp nhận được vì đây là câu message cố định của
-    // Postgres, không phải input người dùng).
-    if (insertError && !/duplicate key value/i.test(insertError)) {
+    const insertError = await createStarterProfile(supabase, user.id, profile!.role, email);
+    if (insertError) {
       redirect(
         verifyUrl(email, mode, {
           type: 'error',
