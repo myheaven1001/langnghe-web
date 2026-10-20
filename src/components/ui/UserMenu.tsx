@@ -5,10 +5,17 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
-function homePathFor(role: string | null): string {
-  if (role === 'admin') return '/admin';
-  if (role === 'supplier') return '/supplier/dashboard';
-  return '/dashboard';
+// Link vào khu làm việc theo vai trò. Trước đây chỉ hiện phần trước @ của
+// email nên người dùng không đoán được đó là đường vào dashboard.
+function areaLinksFor(role: string | null): { href: string; label: string }[] {
+  if (role === 'admin') return [{ href: '/admin', label: 'Vào trang quản lý' }];
+  if (role === 'supplier') return [{ href: '/supplier/dashboard', label: 'Khu bán hàng' }];
+  if (role === 'both')
+    return [
+      { href: '/dashboard', label: 'Khu mua hàng' },
+      { href: '/supplier/dashboard', label: 'Khu bán hàng' },
+    ];
+  return [{ href: '/dashboard', label: 'Khu mua hàng' }];
 }
 
 type State =
@@ -27,10 +34,14 @@ type State =
 // disappearing.
 export function UserMenu({
   variant = 'muted',
+  ctaClassName,
 }: {
   /** 'muted' matches SiteHeader's semi-transparent border buttons; 'solid'
    * matches PublicHeader's white/red pair used on the other public pages. */
   variant?: 'muted' | 'solid';
+  /** Có thì hiện thêm nút "Mua sỉ ngay" theo vai trò: khách → /register,
+   * buyer → /rfq/new, xưởng/admin → ẩn (đã có link vào khu của mình). */
+  ctaClassName?: string;
 }) {
   const supabase = createClient();
   const router = useRouter();
@@ -93,18 +104,32 @@ export function UserMenu({
         <Link href="/register" className={linkClass}>
           Đăng ký
         </Link>
+        {ctaClassName && (
+          <Link href="/register" className={ctaClassName}>
+            Mua sỉ ngay
+          </Link>
+        )}
       </>
     );
   }
 
+  const canBuy = state.role === 'buyer' || state.role === 'both' || state.role === null;
+
   return (
     <>
-      <Link href={homePathFor(state.role)} className={linkClass}>
-        {state.email.split('@')[0]}
-      </Link>
+      {areaLinksFor(state.role).map((a) => (
+        <Link key={a.href} href={a.href} title={state.email} className={linkClass}>
+          {a.label}
+        </Link>
+      ))}
       <button type="button" onClick={signOut} className={linkClass}>
         Đăng xuất
       </button>
+      {ctaClassName && canBuy && (
+        <Link href="/rfq/new" className={ctaClassName}>
+          Mua sỉ ngay
+        </Link>
+      )}
     </>
   );
 }

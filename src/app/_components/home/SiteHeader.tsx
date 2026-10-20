@@ -79,14 +79,12 @@ export function SiteHeader() {
             </button>
           </Form>
 
-          <div className="order-2 ml-auto flex shrink-0 items-center gap-3 sm:order-3 sm:ml-0">
-            <UserMenu variant="muted" />
-            <Link
-              href="/register"
-              className="rounded bg-white px-3 py-[5px] text-xs font-semibold whitespace-nowrap text-[#B5482E]"
-            >
-              Mua sỉ ngay
-            </Link>
+          {/* flex-wrap: tài khoản vừa mua vừa bán có 4 nút, ở 320px phải xuống dòng. */}
+          <div className="order-2 ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2 sm:order-3 sm:ml-0 sm:shrink-0 sm:flex-nowrap sm:gap-3">
+            <UserMenu
+              variant="muted"
+              ctaClassName="rounded bg-white px-3 py-[5px] text-xs font-semibold whitespace-nowrap text-[#B5482E]"
+            />
           </div>
         </div>
       </header>

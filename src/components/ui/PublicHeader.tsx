@@ -141,7 +141,7 @@ export function PublicHeader({
           </Form>
         )}
 
-        <div className="ml-auto flex shrink-0 items-center gap-2">
+        <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2 sm:shrink-0 sm:flex-nowrap">
           <UserMenu variant="solid" />
           <Link
             href={primaryButtonHref ?? '#'}
